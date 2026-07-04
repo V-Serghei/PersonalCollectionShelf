@@ -28,6 +28,9 @@ jobs:
       - name: Install MAUI workload
         run: dotnet workload install maui
 
+      - name: Restore Windows runtime pack
+        run: dotnet restore PersonalCollectionShelf.App/PersonalCollectionShelf.App.csproj -p:TargetFrameworks=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64
+
       - name: Restore
         run: dotnet restore PersonalCollectionShelf.sln
 
