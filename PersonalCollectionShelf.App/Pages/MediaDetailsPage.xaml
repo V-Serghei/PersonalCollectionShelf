@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.MediaDetailsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:MediaDetailsViewModel"
+    Title="{Binding PageTitle}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+            <Label
+                FontAttributes="Bold"
+                FontSize="24"
+                Text="{Binding PageTitle}" />
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="#B91C1C" />
+
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
+                <Label Grid.Row="0" Grid.Column="0" FontAttributes="Bold" Text="{Binding TypeLabel}" />
+                <Label Grid.Row="0" Grid.Column="1" Text="{Binding TypeValue}" />
+                <Label Grid.Row="1" Grid.Column="0" FontAttributes="Bold" Text="{Binding StatusLabel}" />
+                <Label Grid.Row="1" Grid.Column="1" Text="{Binding StatusValue}" />
+                <Label Grid.Row="2" Grid.Column="0" FontAttributes="Bold" Text="{Binding ProgressLabel}" />
+                <Label Grid.Row="2" Grid.Column="1" Text="{Binding ProgressValue}" />
+                <Label Grid.Row="3" Grid.Column="0" FontAttributes="Bold" Text="{Binding RatingLabel}" />
+                <Label Grid.Row="3" Grid.Column="1" Text="{Binding RatingValue}" />
+                <Label Grid.Row="4" Grid.Column="0" FontAttributes="Bold" Text="{Binding OriginalTitleLabel}" />
+                <Label Grid.Row="4" Grid.Column="1" Text="{Binding OriginalTitleValue}" />
+                <Label Grid.Row="5" Grid.Column="0" FontAttributes="Bold" Text="{Binding DescriptionLabel}" />
+                <Label Grid.Row="5" Grid.Column="1" Text="{Binding DescriptionValue}" />
+                <Label Grid.Row="6" Grid.Column="0" FontAttributes="Bold" Text="{Binding NotesLabel}" />
+                <Label Grid.Row="6" Grid.Column="1" Text="{Binding NotesValue}" />
+                <Label Grid.Row="7" Grid.Column="0" FontAttributes="Bold" Text="{Binding StartDateLabel}" />
+                <Label Grid.Row="7" Grid.Column="1" Text="{Binding StartDateValue}" />
+                <Label Grid.Row="8" Grid.Column="0" FontAttributes="Bold" Text="{Binding FinishDateLabel}" />
+                <Label Grid.Row="8" Grid.Column="1" Text="{Binding FinishDateValue}" />
+                <Label Grid.Row="9" Grid.Column="0" FontAttributes="Bold" Text="{Binding ReleaseYearLabel}" />
+                <Label Grid.Row="9" Grid.Column="1" Text="{Binding ReleaseYearValue}" />
+                <Label Grid.Row="10" Grid.Column="0" FontAttributes="Bold" Text="{Binding FavoriteLabel}" />
+                <Label Grid.Row="10" Grid.Column="1" Text="{Binding FavoriteValue}" />
+                <Label Grid.Row="11" Grid.Column="0" FontAttributes="Bold" Text="{Binding CreatedAtLabel}" />
+                <Label Grid.Row="11" Grid.Column="1" Text="{Binding CreatedAtValue}" />
+                <Label Grid.Row="12" Grid.Column="0" FontAttributes="Bold" Text="{Binding UpdatedAtLabel}" />
+                <Label Grid.Row="12" Grid.Column="1" Text="{Binding UpdatedAtValue}" />
+            </Grid>
+
+            <HorizontalStackLayout Spacing="10">
+                <Button Command="{Binding EditCommand}" Text="{Binding EditButtonText}" />
+                <Button Command="{Binding DeleteCommand}" Text="{Binding DeleteButtonText}" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

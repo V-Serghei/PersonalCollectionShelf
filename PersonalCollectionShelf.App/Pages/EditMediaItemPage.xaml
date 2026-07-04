@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.EditMediaItemPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:EditMediaItemViewModel"
+    Title="{Binding PageTitle}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="#B91C1C" />
+
+            <Label Text="{Binding TitleLabel}" />
+            <Entry Placeholder="{Binding TitlePlaceholder}" Text="{Binding ItemTitle}" />
+
+            <Label Text="{Binding OriginalTitleLabel}" />
+            <Entry Placeholder="{Binding OriginalTitlePlaceholder}" Text="{Binding OriginalTitle}" />
+
+            <Label Text="{Binding DescriptionLabel}" />
+            <Editor AutoSize="TextChanges" Placeholder="{Binding DescriptionPlaceholder}" Text="{Binding Description}" />
+
+            <Label Text="{Binding MediaTypeLabel}" />
+            <Picker
+                ItemDisplayBinding="{Binding DisplayName}"
+                ItemsSource="{Binding MediaTypes}"
+                SelectedItem="{Binding SelectedMediaType}"
+                Title="{Binding MediaTypeLabel}" />
+
+            <Label Text="{Binding StatusLabel}" />
+            <Picker
+                ItemDisplayBinding="{Binding DisplayName}"
+                ItemsSource="{Binding Statuses}"
+                SelectedItem="{Binding SelectedStatus}"
+                Title="{Binding StatusLabel}" />
+
+            <Label Text="{Binding RatingLabel}" />
+            <Entry Keyboard="Numeric" Placeholder="{Binding RatingPlaceholder}" Text="{Binding Rating}" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0">
+                    <Label Text="{Binding ProgressCurrentLabel}" />
+                    <Entry Keyboard="Numeric" Placeholder="{Binding ProgressCurrentPlaceholder}" Text="{Binding ProgressCurrent}" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1">
+                    <Label Text="{Binding ProgressTotalLabel}" />
+                    <Entry Keyboard="Numeric" Placeholder="{Binding ProgressTotalPlaceholder}" Text="{Binding ProgressTotal}" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <HorizontalStackLayout Spacing="10">
+                <Switch IsToggled="{Binding HasStartDate}" />
+                <Label Text="{Binding StartDateLabel}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <DatePicker Date="{Binding StartDate}" IsVisible="{Binding HasStartDate}" />
+
+            <HorizontalStackLayout Spacing="10">
+                <Switch IsToggled="{Binding HasFinishDate}" />
+                <Label Text="{Binding FinishDateLabel}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <DatePicker Date="{Binding FinishDate}" IsVisible="{Binding HasFinishDate}" />
+
+            <Label Text="{Binding ReleaseYearLabel}" />
+            <Entry Keyboard="Numeric" Placeholder="{Binding ReleaseYearPlaceholder}" Text="{Binding ReleaseYear}" />
+
+            <Label Text="{Binding CoverUrlLabel}" />
+            <Entry Placeholder="{Binding CoverUrlPlaceholder}" Text="{Binding CoverUrl}" />
+
+            <Label Text="{Binding NotesLabel}" />
+            <Editor AutoSize="TextChanges" Placeholder="{Binding NotesPlaceholder}" Text="{Binding Notes}" />
+
+            <HorizontalStackLayout Spacing="10">
+                <Switch IsToggled="{Binding IsFavorite}" />
+                <Label Text="{Binding FavoriteLabel}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Spacing="10">
+                <Button Command="{Binding SaveCommand}" Text="{Binding SaveButtonText}" />
+                <Button Command="{Binding CancelCommand}" Text="{Binding CancelButtonText}" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
