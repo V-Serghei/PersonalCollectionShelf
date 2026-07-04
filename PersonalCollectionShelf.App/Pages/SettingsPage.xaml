@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:SettingsViewModel"
+    Title="{Binding PageTitle}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <VerticalStackLayout Spacing="4">
+                <Label FontAttributes="Bold" FontSize="18" Text="{Binding AccountSectionTitle}" />
+                <Label Text="{Binding AccountDescription}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label FontAttributes="Bold" FontSize="18" Text="{Binding SyncSectionTitle}" />
+                <Label Text="{Binding SyncDescription}" />
+                <Label Text="{Binding StatusMessage}" />
+                <Button Command="{Binding SyncNowCommand}" Text="{Binding SyncNowButtonText}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label FontAttributes="Bold" FontSize="18" Text="{Binding ExportImportSectionTitle}" />
+                <HorizontalStackLayout Spacing="10">
+                    <Button Command="{Binding ExportCommand}" Text="{Binding ExportButtonText}" />
+                    <Button Command="{Binding ImportCommand}" Text="{Binding ImportButtonText}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="4">
+                <Label FontAttributes="Bold" FontSize="18" Text="{Binding ThemeSectionTitle}" />
+                <Label Text="{Binding ThemeDescription}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label FontAttributes="Bold" FontSize="18" Text="{Binding LanguageSectionTitle}" />
+                <Label Text="{Binding LanguageDescription}" />
+                <Picker
+                    ItemDisplayBinding="{Binding DisplayName}"
+                    ItemsSource="{Binding LanguageOptions}"
+                    SelectedItem="{Binding SelectedLanguageOption}"
+                    Title="{Binding LanguageSectionTitle}" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

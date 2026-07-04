@@ -1,0 +1,22 @@
+using Microsoft.Extensions.DependencyInjection;
+using PersonalCollectionShelf.Application.Interfaces;
+using PersonalCollectionShelf.Domain.Abstractions;
+using PersonalCollectionShelf.Infrastructure.Persistence;
+using PersonalCollectionShelf.Infrastructure.Repositories;
+using PersonalCollectionShelf.Infrastructure.Services;
+
+namespace PersonalCollectionShelf.Infrastructure.DependencyInjection;
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string databasePath)
+    {
+        services.AddSingleton(new LocalDatabaseService(databasePath));
+        services.AddSingleton<IMediaItemRepository, MediaItemRepository>();
+        services.AddSingleton<IAuthService, FirebaseAuthService>();
+        services.AddSingleton<FirestoreSyncService>();
+        services.AddSingleton<ISyncService, SyncService>();
+
+        return services;
+    }
+}

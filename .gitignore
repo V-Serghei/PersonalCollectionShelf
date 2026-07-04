@@ -1,0 +1,73 @@
+# Build outputs
+bin/
+obj/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.rsuser
+*.cache
+*.log
+*.tmp
+*.temp
+
+# Visual Studio
+.vs/
+*.userosscache
+*.sln.docstates
+
+# Rider and JetBrains
+.idea/
+*.DotSettings.user
+
+# VS Code local state
+.vscode/
+
+# .NET and NuGet
+packages/
+*.nupkg
+project.lock.json
+project.assets.json
+
+# Android and MAUI generated files
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.keystore
+*.jks
+Resources/Raw/*.db
+Resources/Raw/*.db3
+
+# Local app data
+*.db
+*.db3
+*.sqlite
+*.sqlite3
+*.bak
+
+# Firebase and secrets
+google-services.json
+GoogleService-Info.plist
+firebase.json
+.firebaserc
+serviceAccount*.json
+*.p8
+*.p12
+*.pem
+*.key
+*.pfx
+*.cer
+*.crt
+secrets.json
+appsettings.Local.json
+local.settings.json
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

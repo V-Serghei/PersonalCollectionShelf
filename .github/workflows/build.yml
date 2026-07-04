@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Restore
+        run: dotnet restore PersonalCollectionShelf.sln
+
+      - name: Build app for Windows
+        run: dotnet build PersonalCollectionShelf.App/PersonalCollectionShelf.App.csproj --configuration Release --framework net10.0-windows10.0.19041.0 --no-restore
+
+      - name: Build app for Android
+        run: dotnet build PersonalCollectionShelf.App/PersonalCollectionShelf.App.csproj --configuration Release --framework net10.0-android --no-restore
+
+      - name: Test
+        run: dotnet test PersonalCollectionShelf.Tests/PersonalCollectionShelf.Tests.csproj --configuration Release --no-restore
