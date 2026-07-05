@@ -74,7 +74,7 @@ Long-term ideas:
 4. Run tests with `dotnet test PersonalCollectionShelf.Tests/PersonalCollectionShelf.Tests.csproj`.
 5. Run the Windows desktop app with `.\scripts\run-windows.cmd`.
 
-The app project targets Windows by default so Rider can build and run the desktop app without touching Android tooling. Android is opt-in and must be enabled explicitly with `-p:EnableAndroidTarget=true`.
+The app project targets Windows by default so Rider can build and run the desktop app without touching Android tooling. Windows builds are self-contained for the Windows App SDK runtime. Android is opt-in and must be enabled explicitly with `-p:EnableAndroidTarget=true`.
 
 Useful commands:
 
