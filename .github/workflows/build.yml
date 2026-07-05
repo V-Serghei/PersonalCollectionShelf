@@ -38,7 +38,7 @@ jobs:
         run: dotnet build PersonalCollectionShelf.App/PersonalCollectionShelf.App.csproj --configuration Release --framework net10.0-windows10.0.19041.0 --runtime win-x64 --no-restore
 
       - name: Build app for Android
-        run: dotnet build PersonalCollectionShelf.App/PersonalCollectionShelf.App.csproj --configuration Release --framework net10.0-android --no-restore
+        run: dotnet build PersonalCollectionShelf.App/PersonalCollectionShelf.App.csproj --configuration Release --framework net10.0-android -p:EnableAndroidTarget=true
 
       - name: Test
-        run: dotnet test PersonalCollectionShelf.Tests/PersonalCollectionShelf.Tests.csproj --configuration Release --no-restore
+        run: dotnet test PersonalCollectionShelf.Tests/PersonalCollectionShelf.Tests.csproj --configuration Release

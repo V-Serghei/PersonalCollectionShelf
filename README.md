@@ -72,9 +72,22 @@ Long-term ideas:
 2. Install MAUI workloads with `dotnet workload install maui`.
 3. Restore dependencies with `dotnet restore PersonalCollectionShelf.sln`.
 4. Run tests with `dotnet test PersonalCollectionShelf.Tests/PersonalCollectionShelf.Tests.csproj`.
-5. Build the Windows app with `dotnet build PersonalCollectionShelf.App/PersonalCollectionShelf.App.csproj -f net10.0-windows10.0.19041.0`.
+5. Run the Windows desktop app with `.\scripts\run-windows.cmd`.
 
-Android builds require the Android tooling installed by the MAUI workload and a configured emulator or device.
+The app project targets Windows by default so Rider can build and run the desktop app without touching Android tooling. Android is opt-in and must be enabled explicitly with `-p:EnableAndroidTarget=true`.
+
+Useful commands:
+
+```powershell
+.\scripts\run-windows.cmd
+.\scripts\run-windows.ps1
+.\scripts\run-android.cmd
+.\scripts\run-android.ps1
+dotnet build PersonalCollectionShelf.App\PersonalCollectionShelf.App.csproj -f net10.0-windows10.0.19041.0 -r win-x64
+dotnet build PersonalCollectionShelf.App\PersonalCollectionShelf.App.csproj -f net10.0-android -p:EnableAndroidTarget=true
+```
+
+Android builds require JDK 11 or newer, Android SDK tooling, and a configured emulator or device.
 
 ## Development Workflow
 
