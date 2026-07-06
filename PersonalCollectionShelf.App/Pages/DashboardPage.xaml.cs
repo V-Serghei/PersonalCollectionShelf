@@ -4,14 +4,14 @@ using PersonalCollectionShelf.App.ViewModels;
 
 namespace PersonalCollectionShelf.App.Pages;
 
-public partial class SettingsPage : ContentPage
+public partial class DashboardPage : ContentPage
 {
-    public SettingsPage()
-        : this(App.Services.GetRequiredService<SettingsViewModel>())
+    public DashboardPage()
+        : this(App.Services.GetRequiredService<LibraryViewModel>())
     {
     }
 
-    public SettingsPage(SettingsViewModel viewModel)
+    public DashboardPage(LibraryViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
@@ -21,15 +21,15 @@ public partial class SettingsPage : ContentPage
     {
         base.OnAppearing();
 
-        if (BindingContext is SettingsViewModel viewModel)
+        if (BindingContext is LibraryViewModel viewModel)
         {
             try
             {
-                await viewModel.LoadSyncStatusAsync();
+                await viewModel.LoadAsync();
             }
             catch (Exception exception)
             {
-                await CrashReporter.ReportAsync(exception, "SettingsPage.OnAppearing");
+                await CrashReporter.ReportAsync(exception, "DashboardPage.OnAppearing");
             }
         }
     }

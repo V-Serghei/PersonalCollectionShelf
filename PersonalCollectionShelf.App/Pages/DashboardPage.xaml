@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.DashboardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:LibraryViewModel"
+    Shell.NavBarIsVisible="False"
+    Title="Home">
+    <Grid RowDefinitions="52,*">
+        <Grid
+            Grid.Row="0"
+            Padding="18,7"
+            BackgroundColor="#CC0D0B14"
+            ColumnDefinitions="310,Auto,*"
+            ColumnSpacing="10">
+            <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Label
+                        FontSize="15"
+                        Text="⌕"
+                        TextColor="{StaticResource MutedForeground}"
+                        VerticalTextAlignment="Center" />
+                    <Entry
+                        Grid.Column="1"
+                        BackgroundColor="Transparent"
+                        Placeholder="Search..."
+                        Text="{Binding SearchTerm}" />
+                    <Border
+                        Grid.Column="2"
+                        Padding="6,2"
+                        BackgroundColor="{StaticResource MutedSoft}"
+                        Stroke="{StaticResource Border}"
+                        StrokeShape="RoundRectangle 4"
+                        StrokeThickness="1"
+                        VerticalOptions="Center">
+                        <Label FontSize="10" Text="⌘K" TextColor="{StaticResource MutedForeground}" />
+                    </Border>
+                </Grid>
+            </Border>
+            <Button
+                Grid.Column="1"
+                Command="{Binding CreateMediaItemCommand}"
+                Text="+  Add Item" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout
+                Padding="0,24,0,30"
+                HorizontalOptions="Center"
+                MaximumWidthRequest="920"
+                Spacing="28"
+                WidthRequest="920">
+                <VerticalStackLayout Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        FontFamily="serif"
+                        FontSize="30"
+                        Text="{Binding DashboardTitle}" />
+                    <Label
+                        FontSize="14"
+                        Text="{Binding DashboardSubtitle}"
+                        TextColor="{StaticResource Primary}" />
+                </VerticalStackLayout>
+
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                    <Border Grid.Column="0" Padding="16" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="8">
+                            <Border BackgroundColor="#269D7FF4" HeightRequest="30" StrokeThickness="0" StrokeShape="RoundRectangle 15" WidthRequest="30">
+                                <Label FontSize="14" HorizontalTextAlignment="Center" Text="◇" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
+                            </Border>
+                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="26" Text="{Binding TotalItemCount}" />
+                            <Label FontSize="12" Text="Total Items" TextColor="{StaticResource Primary}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="8">
+                            <Border BackgroundColor="#224ADE80" HeightRequest="30" StrokeThickness="0" StrokeShape="RoundRectangle 15" WidthRequest="30">
+                                <Label FontSize="14" HorizontalTextAlignment="Center" Text="✓" TextColor="{StaticResource Success}" VerticalTextAlignment="Center" />
+                            </Border>
+                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="26" Text="{Binding CompletedItemCount}" />
+                            <Label FontSize="12" Text="{Binding CompletedItemsLabel}" TextColor="{StaticResource Primary}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2" Padding="16" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="8">
+                            <Border BackgroundColor="#2260A5FA" HeightRequest="30" StrokeThickness="0" StrokeShape="RoundRectangle 15" WidthRequest="30">
+                                <Label FontSize="14" HorizontalTextAlignment="Center" Text="◷" TextColor="{StaticResource Info}" VerticalTextAlignment="Center" />
+                            </Border>
+                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="26" Text="{Binding InProgressItemCount}" />
+                            <Label FontSize="12" Text="In Progress" TextColor="{StaticResource Primary}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="3" Padding="16" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="8">
+                            <Border BackgroundColor="#22FBBF24" HeightRequest="30" StrokeThickness="0" StrokeShape="RoundRectangle 15" WidthRequest="30">
+                                <Label FontSize="14" HorizontalTextAlignment="Center" Text="▱" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
+                            </Border>
+                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="26" Text="{Binding WishlistItemCount}" />
+                            <Label FontSize="12" Text="Wishlist" TextColor="{StaticResource Primary}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="{Binding ContinueSectionTitle}" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding OpenLibraryCommand}"
+                            Style="{StaticResource LinkButtonStyle}"
+                            Text="{Binding SeeAllText}" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding InProgressItems}" SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout ItemSpacing="12" Orientation="Horizontal" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
+                                <VerticalStackLayout Spacing="8" WidthRequest="124">
+                                    <Border BackgroundColor="{StaticResource Muted}" HeightRequest="178" StrokeThickness="0" StrokeShape="RoundRectangle 8" WidthRequest="124">
+                                        <Grid>
+                                            <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                                            <Label FontAttributes="Bold" FontSize="36" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                            <ProgressBar BackgroundColor="#33FFFFFF" Progress="{Binding ProgressPercent}" ProgressColor="{StaticResource Info}" VerticalOptions="End" />
+                                        </Grid>
+                                    </Border>
+                                    <Label FontAttributes="Bold" FontSize="12" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding Title}" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="{Binding RecentlyAddedSectionTitle}" />
+                        <Button Grid.Column="1" Command="{Binding OpenLibraryCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding SeeAllText}" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding RecentItems}" SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout ItemSpacing="12" Orientation="Horizontal" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
+                                <Border Padding="0" Style="{StaticResource CardBorderStyle}" WidthRequest="142">
+                                    <Grid RowDefinitions="212,Auto">
+                                        <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                                        <Label FontAttributes="Bold" FontSize="38" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                        <Grid Grid.Row="1" Padding="10" RowDefinitions="Auto,Auto">
+                                            <Label FontAttributes="Bold" FontSize="12" LineBreakMode="TailTruncation" Text="{Binding Title}" />
+                                            <Label Grid.Row="1" FontSize="11" Text="{Binding ReleaseYearText}" TextColor="{StaticResource MutedForeground}" />
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="{Binding FavoritesSectionTitle}" />
+                        <Label Grid.Column="1" FontSize="18" Text="♡" TextColor="#F07CB8" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding FavoriteItems}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
+                                <Grid Padding="16,10" ColumnDefinitions="48,*,Auto,Auto" ColumnSpacing="12">
+                                    <Border BackgroundColor="{StaticResource Muted}" HeightRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="48">
+                                        <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label FontAttributes="Bold" FontSize="14" Text="{Binding Title}" />
+                                        <Label FontSize="12" Text="{Binding Metadata}" TextColor="{StaticResource Primary}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" FontAttributes="Bold" Text="{Binding RatingShort}" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
+                                    <Border Grid.Column="3" Padding="8,3" BackgroundColor="{Binding StatusBackgroundColor}" Stroke="{Binding StatusForegroundColor}" StrokeShape="RoundRectangle 10" StrokeThickness="1" VerticalOptions="Center">
+                                        <Label FontAttributes="Bold" FontSize="10" Text="{Binding StatusLabel}" TextColor="{Binding StatusForegroundColor}" />
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="{Binding CategoryOverviewTitle}" />
+                        <Button Grid.Column="1" Command="{Binding OpenStatisticsCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding FullStatsText}" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding CategorySummaries}" SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout HorizontalItemSpacing="12" Orientation="Vertical" Span="3" VerticalItemSpacing="12" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:CategorySummaryViewModel">
+                                <Border Padding="16" Style="{StaticResource CardBorderStyle}">
+                                    <Grid ColumnDefinitions="42,*" ColumnSpacing="12">
+                                        <Border BackgroundColor="{Binding Color}" HeightRequest="34" StrokeThickness="0" StrokeShape="RoundRectangle 17" WidthRequest="34">
+                                            <Label FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="Center" Text="•" TextColor="White" VerticalTextAlignment="Center" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label FontAttributes="Bold" FontSize="14" Text="{Binding Label}" />
+                                            <Label FontSize="11" Text="{Binding CountText}" TextColor="{StaticResource Primary}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

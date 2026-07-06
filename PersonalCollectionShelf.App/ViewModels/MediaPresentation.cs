@@ -63,4 +63,19 @@ internal static class MediaPresentation
 
         return Math.Clamp((double)current / total.Value, 0d, 1d);
     }
+
+    public static bool HasValidCoverUrl(string? coverUrl)
+    {
+        if (string.IsNullOrWhiteSpace(coverUrl))
+        {
+            return false;
+        }
+
+        if (!Uri.TryCreate(coverUrl, UriKind.Absolute, out var uri))
+        {
+            return false;
+        }
+
+        return uri.Scheme is "http" or "https" or "file";
+    }
 }

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.StatisticsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:LibraryViewModel"
+    Shell.NavBarIsVisible="False"
+    Title="Statistics">
+    <Grid RowDefinitions="52,*">
+        <Grid
+            Grid.Row="0"
+            Padding="18,7"
+            BackgroundColor="#CC0D0B14"
+            ColumnDefinitions="310,Auto,*"
+            ColumnSpacing="10">
+            <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Label FontSize="15" Text="⌕" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                    <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." Text="{Binding SearchTerm}" />
+                    <Border Grid.Column="2" Padding="6,2" BackgroundColor="{StaticResource MutedSoft}" Stroke="{StaticResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
+                        <Label FontSize="10" Text="⌘K" TextColor="{StaticResource MutedForeground}" />
+                    </Border>
+                </Grid>
+            </Border>
+            <Button Grid.Column="1" Command="{Binding CreateMediaItemCommand}" Text="+  Add Item" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout
+                Padding="0,24,0,30"
+                HorizontalOptions="Center"
+                MaximumWidthRequest="800"
+                Spacing="28"
+                WidthRequest="800">
+                <Label FontAttributes="Bold" FontFamily="serif" FontSize="30" Text="Statistics" />
+
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="14">
+                    <Border Grid.Column="0" Padding="18" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="7">
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="AVG RATING" />
+                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="34" Text="{Binding AverageRatingText}" />
+                            <Label FontSize="13" Text="★ ★ ★ ★ ☆" TextColor="{StaticResource Warning}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Padding="18" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="7">
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="COMPLETION" />
+                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="34" Text="{Binding CompletionPercentText}" />
+                            <Label FontSize="12" Text="{Binding CompletionSubtitle}" TextColor="{StaticResource Primary}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2" Padding="18" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="7">
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="COLLECTION" />
+                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="34" Text="{Binding TotalItemCount}" />
+                            <Label FontSize="12" Text="{Binding CollectionSubtitle}" TextColor="{StaticResource Primary}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Border Padding="18" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="14">
+                        <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="Monthly Activity" />
+                        <GraphicsView x:Name="MonthlyChart" HeightRequest="210" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+                    <Border Grid.Column="0" Padding="18" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="14">
+                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="By Category" />
+                            <GraphicsView x:Name="DonutChart" HeightRequest="220" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Padding="18" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="14">
+                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="By Status" />
+                            <GraphicsView x:Name="BarChart" HeightRequest="220" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

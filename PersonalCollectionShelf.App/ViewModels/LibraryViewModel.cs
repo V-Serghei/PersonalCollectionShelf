@@ -31,6 +31,16 @@ public partial class LibraryViewModel : BaseViewModel
 
     public ObservableCollection<MediaItemListItemViewModel> MediaItems { get; } = [];
 
+    public ObservableCollection<MediaItemListItemViewModel> InProgressItems { get; } = [];
+
+    public ObservableCollection<MediaItemListItemViewModel> RecentItems { get; } = [];
+
+    public ObservableCollection<MediaItemListItemViewModel> FavoriteItems { get; } = [];
+
+    public ObservableCollection<CategorySummaryViewModel> CategorySummaries { get; } = [];
+
+    public ObservableCollection<StatusSummaryViewModel> StatusSummaries { get; } = [];
+
     public ObservableCollection<LocalizedOption<MediaType?>> MediaTypeFilters { get; } = [];
 
     public ObservableCollection<LocalizedOption<MediaStatus?>> StatusFilters { get; } = [];
@@ -162,6 +172,60 @@ public partial class LibraryViewModel : BaseViewModel
 
     public string FavoritesItemsLabel => T("Library.QuickFilter.Favorites");
 
+    public int WishlistItemCount => _visibleItems.Count(item => item.Status is MediaStatus.Planned or MediaStatus.OnHold);
+
+    public string WishlistItemsLabel => T("MediaStatus.Planned");
+
+    public string DashboardTitle => $"{GetGreeting()}, Alex";
+
+    public string DashboardSubtitle => $"You have {InProgressItemCount} items in progress - {WishlistItemCount} in wishlist";
+
+    public string ContinueSectionTitle => "Continue";
+
+    public string RecentlyAddedSectionTitle => "Recently Added";
+
+    public string FavoritesSectionTitle => T("Library.QuickFilter.Favorites");
+
+    public string CategoryOverviewTitle => "Category Overview";
+
+    public string SeeAllText => "See all";
+
+    public string FullStatsText => "Full Stats";
+
+    public string LibraryCountText => $"{TotalItemCount} items";
+
+    public string AverageRatingText
+    {
+        get
+        {
+            var ratedItems = _visibleItems.Where(item => item.Rating.HasValue).ToList();
+            if (ratedItems.Count == 0)
+            {
+                return "--";
+            }
+
+            return (ratedItems.Sum(item => item.Rating!.Value) / (double)ratedItems.Count).ToString("0.0", CultureInfo.InvariantCulture);
+        }
+    }
+
+    public string CompletionPercentText
+    {
+        get
+        {
+            if (_visibleItems.Count == 0)
+            {
+                return "0%";
+            }
+
+            var percent = CompletedItemCount / (double)_visibleItems.Count;
+            return percent.ToString("P0", CultureInfo.InvariantCulture);
+        }
+    }
+
+    public string CompletionSubtitle => $"{CompletedItemCount} of {TotalItemCount} items";
+
+    public string CollectionSubtitle => $"across {CategorySummaries.Count(summary => summary.Count > 0)} categories";
+
     protected override void RefreshLocalizedProperties()
     {
         base.RefreshLocalizedProperties();
@@ -221,6 +285,41 @@ public partial class LibraryViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private async Task OpenLibraryAsync()
+    {
+        try
+        {
+            await Shell.Current.GoToAsync("//Library");
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, "LibraryViewModel.OpenLibraryAsync");
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenStatisticsAsync()
+    {
+        try
+        {
+            await Shell.Current.GoToAsync("//Statistics");
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, "LibraryViewModel.OpenStatisticsAsync");
+        }
+    }
+
+    [RelayCommand]
+    private void SelectMediaTypeFilter(LocalizedOption<MediaType?>? option)
+    {
+        if (option is not null)
+        {
+            SelectedMediaTypeFilter = option;
+        }
+    }
+
+    [RelayCommand]
     public async Task LoadAsync()
     {
         if (IsBusy)
@@ -257,7 +356,14 @@ public partial class LibraryViewModel : BaseViewModel
     [RelayCommand]
     private async Task CreateMediaItemAsync()
     {
-        await Shell.Current.GoToAsync(nameof(EditMediaItemPage));
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(EditMediaItemPage));
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, "LibraryViewModel.CreateMediaItemAsync");
+        }
     }
 
     [RelayCommand]
@@ -268,7 +374,14 @@ public partial class LibraryViewModel : BaseViewModel
             return;
         }
 
-        await Shell.Current.GoToAsync($"{nameof(MediaDetailsPage)}?id={item.Id}");
+        try
+        {
+            await Shell.Current.GoToAsync($"{nameof(MediaDetailsPage)}?id={item.Id}");
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, $"LibraryViewModel.OpenMediaItemAsync id={item.Id}");
+        }
     }
 
     [RelayCommand]
@@ -395,6 +508,7 @@ public partial class LibraryViewModel : BaseViewModel
         var tagsLine = string.IsNullOrWhiteSpace(item.Tags)
             ? T("Library.NoTags")
             : string.Format(T("Library.TagsFormat"), item.Tags);
+        var hasCoverUrl = MediaPresentation.HasValidCoverUrl(item.CoverUrl);
 
         return new MediaItemListItemViewModel(
             item.Id,
@@ -414,9 +528,9 @@ public partial class LibraryViewModel : BaseViewModel
             item.Rating?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             item.Rating.HasValue,
             item.ReleaseYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
-            item.CoverUrl ?? string.Empty,
-            !string.IsNullOrWhiteSpace(item.CoverUrl),
-            string.IsNullOrWhiteSpace(item.CoverUrl),
+            hasCoverUrl ? item.CoverUrl ?? string.Empty : string.Empty,
+            hasCoverUrl,
+            !hasCoverUrl,
             GetInitial(item.Title),
             item.IsFavorite,
             item.IsFavorite ? T("Library.FavoriteMarker") : string.Empty,
@@ -425,13 +539,65 @@ public partial class LibraryViewModel : BaseViewModel
 
     private void PopulateMediaItems(IEnumerable<MediaItemDto> items)
     {
+        var itemList = items.ToList();
+
         MediaItems.Clear();
-        foreach (var item in items)
+        foreach (var item in itemList)
         {
             MediaItems.Add(ToListItem(item));
         }
 
+        PopulateDashboardCollections(itemList);
         RefreshCollectionSummary();
+    }
+
+    private void PopulateDashboardCollections(IReadOnlyList<MediaItemDto> items)
+    {
+        InProgressItems.Clear();
+        foreach (var item in items
+                     .Where(item => item.Status is MediaStatus.InProgress or MediaStatus.Rewatching or MediaStatus.Rereading)
+                     .Take(6))
+        {
+            InProgressItems.Add(ToListItem(item));
+        }
+
+        RecentItems.Clear();
+        foreach (var item in items
+                     .OrderByDescending(item => item.CreatedAt)
+                     .Take(6))
+        {
+            RecentItems.Add(ToListItem(item));
+        }
+
+        FavoriteItems.Clear();
+        foreach (var item in items
+                     .Where(item => item.IsFavorite)
+                     .Take(6))
+        {
+            FavoriteItems.Add(ToListItem(item));
+        }
+
+        CategorySummaries.Clear();
+        foreach (var mediaType in Enum.GetValues<MediaType>())
+        {
+            var matchingItems = items.Where(item => item.MediaType == mediaType).ToList();
+            CategorySummaries.Add(new CategorySummaryViewModel(
+                mediaType,
+                T($"MediaType.{mediaType}"),
+                matchingItems.Count,
+                matchingItems.Count(item => item.Status == MediaStatus.Completed),
+                MediaPresentation.GetMediaTypeColor(mediaType)));
+        }
+
+        StatusSummaries.Clear();
+        foreach (var status in Enum.GetValues<MediaStatus>())
+        {
+            StatusSummaries.Add(new StatusSummaryViewModel(
+                status,
+                T($"MediaStatus.{status}"),
+                items.Count(item => item.Status == status),
+                MediaPresentation.GetStatusForegroundColor(status)));
+        }
     }
 
     private void RefreshCollectionSummary()
@@ -440,6 +606,14 @@ public partial class LibraryViewModel : BaseViewModel
         OnPropertyChanged(nameof(CompletedItemCount));
         OnPropertyChanged(nameof(InProgressItemCount));
         OnPropertyChanged(nameof(FavoritesItemCount));
+        OnPropertyChanged(nameof(WishlistItemCount));
+        OnPropertyChanged(nameof(DashboardTitle));
+        OnPropertyChanged(nameof(DashboardSubtitle));
+        OnPropertyChanged(nameof(LibraryCountText));
+        OnPropertyChanged(nameof(AverageRatingText));
+        OnPropertyChanged(nameof(CompletionPercentText));
+        OnPropertyChanged(nameof(CompletionSubtitle));
+        OnPropertyChanged(nameof(CollectionSubtitle));
     }
 
     private IEnumerable<MediaItemDto> ApplyQuickFilter(IEnumerable<MediaItemDto> items)
@@ -481,5 +655,16 @@ public partial class LibraryViewModel : BaseViewModel
     private async Task<string> GetCurrentUserIdAsync()
     {
         return await _authService.GetCurrentUserIdAsync() ?? "local-user";
+    }
+
+    private static string GetGreeting()
+    {
+        var hour = DateTime.Now.Hour;
+        return hour switch
+        {
+            < 12 => "Good morning",
+            < 18 => "Good afternoon",
+            _ => "Good evening"
+        };
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PersonalCollectionShelf.App.Services;
 using PersonalCollectionShelf.App.ViewModels;
 
 namespace PersonalCollectionShelf.App.Pages;
@@ -20,10 +21,17 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("id", out var value) && Guid.TryParse(value?.ToString(), out var mediaItemId))
+        try
         {
-            _mediaItemId = mediaItemId;
-            await ViewModel.LoadAsync(mediaItemId);
+            if (query.TryGetValue("id", out var value) && Guid.TryParse(value?.ToString(), out var mediaItemId))
+            {
+                _mediaItemId = mediaItemId;
+                await ViewModel.LoadAsync(mediaItemId);
+            }
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, "MediaDetailsPage.ApplyQueryAttributes");
         }
     }
 
@@ -33,7 +41,14 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
 
         if (_mediaItemId.HasValue)
         {
-            await ViewModel.ReloadAsync();
+            try
+            {
+                await ViewModel.ReloadAsync();
+            }
+            catch (Exception exception)
+            {
+                await CrashReporter.ReportAsync(exception, "MediaDetailsPage.OnAppearing");
+            }
         }
     }
 

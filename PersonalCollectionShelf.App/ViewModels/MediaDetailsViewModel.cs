@@ -160,9 +160,9 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string UpdatedAtValue => FormatDate(Item?.UpdatedAt);
 
-    public string CoverUrl => Item?.CoverUrl ?? string.Empty;
+    public string CoverUrl => HasCoverUrl ? Item?.CoverUrl ?? string.Empty : string.Empty;
 
-    public bool HasCoverUrl => !string.IsNullOrWhiteSpace(Item?.CoverUrl);
+    public bool HasCoverUrl => MediaPresentation.HasValidCoverUrl(Item?.CoverUrl);
 
     public bool HasNoCoverUrl => !HasCoverUrl;
 
@@ -201,7 +201,14 @@ public partial class MediaDetailsViewModel : BaseViewModel
             return;
         }
 
-        await Shell.Current.GoToAsync($"{nameof(EditMediaItemPage)}?id={Item.Id}");
+        try
+        {
+            await Shell.Current.GoToAsync($"{nameof(EditMediaItemPage)}?id={Item.Id}");
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, $"MediaDetailsViewModel.EditAsync id={Item.Id}");
+        }
     }
 
     [RelayCommand]
@@ -225,7 +232,14 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
         var userId = await GetCurrentUserIdAsync();
         await _mediaItemService.DeleteMediaItemAsync(Item.Id, userId);
-        await Shell.Current.GoToAsync("..");
+        try
+        {
+            await Shell.Current.GoToAsync("..");
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, $"MediaDetailsViewModel.DeleteAsync navigation id={Item.Id}");
+        }
     }
 
     private void RefreshItemProperties()

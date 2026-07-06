@@ -383,7 +383,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
                 });
             }
 
-            await Shell.Current.GoToAsync("..");
+            await NavigateBackAsync("EditMediaItemViewModel.SaveAsync");
         }
         catch (ValidationException exception)
         {
@@ -398,7 +398,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
     [RelayCommand]
     private async Task CancelAsync()
     {
-        await Shell.Current.GoToAsync("..");
+        await NavigateBackAsync("EditMediaItemViewModel.CancelAsync");
     }
 
     [RelayCommand]
@@ -483,5 +483,17 @@ public partial class EditMediaItemViewModel : BaseViewModel
     private async Task<string> GetCurrentUserIdAsync()
     {
         return await _authService.GetCurrentUserIdAsync() ?? "local-user";
+    }
+
+    private static async Task NavigateBackAsync(string context)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync("..");
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, context);
+        }
     }
 }

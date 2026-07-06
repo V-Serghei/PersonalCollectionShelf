@@ -8,6 +8,7 @@ using Microsoft.Maui.Storage;
 using PersonalCollectionShelf.Application.DTOs;
 using PersonalCollectionShelf.Application.Interfaces;
 using PersonalCollectionShelf.App.Models;
+using PersonalCollectionShelf.App.Pages;
 using PersonalCollectionShelf.App.Services;
 
 namespace PersonalCollectionShelf.App.ViewModels;
@@ -207,6 +208,19 @@ public partial class SettingsViewModel : BaseViewModel
         }
 
         StatusMessage = string.Format(T("Settings.Import.Completed"), imported, updated);
+    }
+
+    [RelayCommand]
+    private async Task CreateMediaItemAsync()
+    {
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(EditMediaItemPage));
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, "SettingsViewModel.CreateMediaItemAsync");
+        }
     }
 
     private void InitializeLanguageOptions()

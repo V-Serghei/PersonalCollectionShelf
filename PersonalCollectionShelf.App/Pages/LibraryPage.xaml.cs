@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PersonalCollectionShelf.App.Services;
 using PersonalCollectionShelf.App.ViewModels;
 
 namespace PersonalCollectionShelf.App.Pages;
@@ -22,7 +23,14 @@ public partial class LibraryPage : ContentPage
 
         if (BindingContext is LibraryViewModel viewModel)
         {
-            await viewModel.LoadAsync();
+            try
+            {
+                await viewModel.LoadAsync();
+            }
+            catch (Exception exception)
+            {
+                await CrashReporter.ReportAsync(exception, "LibraryPage.OnAppearing");
+            }
         }
     }
 }

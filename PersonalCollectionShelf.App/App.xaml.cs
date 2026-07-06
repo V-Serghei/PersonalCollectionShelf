@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PersonalCollectionShelf.App.Services;
 
 namespace PersonalCollectionShelf.App;
 
@@ -10,6 +11,7 @@ public partial class App : Microsoft.Maui.Controls.Application
     {
         InitializeComponent();
 
+        CrashReporter.InstallGlobalHandlers();
         UserAppTheme = AppTheme.Dark;
         _services = services;
         Services = services;
