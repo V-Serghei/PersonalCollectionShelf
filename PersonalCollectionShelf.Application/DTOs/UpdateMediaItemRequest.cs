@@ -14,6 +14,10 @@ public sealed record UpdateMediaItemRequest
 
     public string? Description { get; init; }
 
+    public string? Category { get; init; }
+
+    public string? Tags { get; init; }
+
     public MediaType MediaType { get; init; } = MediaType.Other;
 
     public MediaStatus Status { get; init; } = MediaStatus.Planned;

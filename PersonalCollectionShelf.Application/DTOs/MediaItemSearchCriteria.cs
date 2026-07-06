@@ -11,4 +11,8 @@ public sealed record MediaItemSearchCriteria
     public MediaType? MediaType { get; init; }
 
     public MediaStatus? Status { get; init; }
+
+    public string? Category { get; init; }
+
+    public string? Tag { get; init; }
 }

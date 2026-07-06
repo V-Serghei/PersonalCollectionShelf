@@ -20,5 +20,7 @@ public interface IMediaItemRepository
         string? searchTerm,
         MediaType? mediaType,
         MediaStatus? status,
+        string? category,
+        string? tag,
         CancellationToken cancellationToken = default);
 }

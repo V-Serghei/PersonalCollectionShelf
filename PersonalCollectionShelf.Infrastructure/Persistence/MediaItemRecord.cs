@@ -19,6 +19,11 @@ public sealed class MediaItemRecord
     public string? Description { get; set; }
 
     [Indexed]
+    public string? Category { get; set; }
+
+    public string? Tags { get; set; }
+
+    [Indexed]
     public int MediaType { get; set; }
 
     [Indexed]

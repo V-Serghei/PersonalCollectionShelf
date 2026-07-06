@@ -44,6 +44,12 @@ public partial class EditMediaItemViewModel : BaseViewModel
     private string description = string.Empty;
 
     [ObservableProperty]
+    private string category = string.Empty;
+
+    [ObservableProperty]
+    private string tags = string.Empty;
+
+    [ObservableProperty]
     private LocalizedOption<MediaType>? selectedMediaType;
 
     [ObservableProperty]
@@ -102,6 +108,14 @@ public partial class EditMediaItemViewModel : BaseViewModel
     public string DescriptionLabel => T("Edit.Label.Description");
 
     public string DescriptionPlaceholder => T("Edit.Placeholder.Description");
+
+    public string CategoryLabel => T("Edit.Label.Category");
+
+    public string CategoryPlaceholder => T("Edit.Placeholder.Category");
+
+    public string TagsLabel => T("Edit.Label.Tags");
+
+    public string TagsPlaceholder => T("Edit.Placeholder.Tags");
 
     public string MediaTypeLabel => T("Edit.Label.MediaType");
 
@@ -164,6 +178,8 @@ public partial class EditMediaItemViewModel : BaseViewModel
         ItemTitle = item.Title;
         OriginalTitle = item.OriginalTitle ?? string.Empty;
         Description = item.Description ?? string.Empty;
+        Category = item.Category ?? string.Empty;
+        Tags = item.Tags ?? string.Empty;
         SelectedMediaType = MediaTypes.First(option => option.Value == item.MediaType);
         SelectedStatus = Statuses.First(option => option.Value == item.Status);
         Rating = item.Rating?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
@@ -223,6 +239,8 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Title = ItemTitle,
                     OriginalTitle = OriginalTitle,
                     Description = Description,
+                    Category = Category,
+                    Tags = Tags,
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -244,6 +262,8 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Title = ItemTitle,
                     OriginalTitle = OriginalTitle,
                     Description = Description,
+                    Category = Category,
+                    Tags = Tags,
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -302,6 +322,8 @@ public partial class EditMediaItemViewModel : BaseViewModel
         ItemTitle = string.Empty;
         OriginalTitle = string.Empty;
         Description = string.Empty;
+        Category = string.Empty;
+        Tags = string.Empty;
         SelectedMediaType = MediaTypes.First(option => option.Value == MediaType.Other);
         SelectedStatus = Statuses.First(option => option.Value == MediaStatus.Planned);
         Rating = string.Empty;

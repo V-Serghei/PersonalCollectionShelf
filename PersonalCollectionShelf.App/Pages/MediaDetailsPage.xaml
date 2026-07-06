@@ -9,41 +9,80 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="14">
             <Label
-                FontAttributes="Bold"
-                FontSize="24"
-                Text="{Binding PageTitle}" />
-            <Label
                 IsVisible="{Binding HasErrorMessage}"
                 Text="{Binding ErrorMessage}"
                 TextColor="#B91C1C" />
 
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="18">
+                <Border
+                    Grid.Column="0"
+                    BackgroundColor="{AppThemeBinding Light=#E5E7EB, Dark=#111827}"
+                    HeightRequest="204"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8"
+                    WidthRequest="136">
+                    <Grid>
+                        <Image
+                            Aspect="AspectFill"
+                            HeightRequest="204"
+                            IsVisible="{Binding HasCoverUrl}"
+                            Source="{Binding CoverUrl}"
+                            WidthRequest="136" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="42"
+                            HorizontalOptions="Center"
+                            IsVisible="{Binding HasNoCoverUrl}"
+                            Text="{Binding Initial}"
+                            TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}"
+                            VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="8">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="26"
+                        Text="{Binding PageTitle}" />
+                    <Label Text="{Binding OriginalTitleValue}" TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}" />
+                    <Label Text="{Binding TypeValue}" />
+                    <Label Text="{Binding StatusValue}" />
+                    <Label Text="{Binding CategoryValue}" />
+                    <Label Text="{Binding TagsValue}" TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
                 <Label Grid.Row="0" Grid.Column="0" FontAttributes="Bold" Text="{Binding TypeLabel}" />
                 <Label Grid.Row="0" Grid.Column="1" Text="{Binding TypeValue}" />
                 <Label Grid.Row="1" Grid.Column="0" FontAttributes="Bold" Text="{Binding StatusLabel}" />
                 <Label Grid.Row="1" Grid.Column="1" Text="{Binding StatusValue}" />
-                <Label Grid.Row="2" Grid.Column="0" FontAttributes="Bold" Text="{Binding ProgressLabel}" />
-                <Label Grid.Row="2" Grid.Column="1" Text="{Binding ProgressValue}" />
-                <Label Grid.Row="3" Grid.Column="0" FontAttributes="Bold" Text="{Binding RatingLabel}" />
-                <Label Grid.Row="3" Grid.Column="1" Text="{Binding RatingValue}" />
-                <Label Grid.Row="4" Grid.Column="0" FontAttributes="Bold" Text="{Binding OriginalTitleLabel}" />
-                <Label Grid.Row="4" Grid.Column="1" Text="{Binding OriginalTitleValue}" />
-                <Label Grid.Row="5" Grid.Column="0" FontAttributes="Bold" Text="{Binding DescriptionLabel}" />
-                <Label Grid.Row="5" Grid.Column="1" Text="{Binding DescriptionValue}" />
-                <Label Grid.Row="6" Grid.Column="0" FontAttributes="Bold" Text="{Binding NotesLabel}" />
-                <Label Grid.Row="6" Grid.Column="1" Text="{Binding NotesValue}" />
-                <Label Grid.Row="7" Grid.Column="0" FontAttributes="Bold" Text="{Binding StartDateLabel}" />
-                <Label Grid.Row="7" Grid.Column="1" Text="{Binding StartDateValue}" />
-                <Label Grid.Row="8" Grid.Column="0" FontAttributes="Bold" Text="{Binding FinishDateLabel}" />
-                <Label Grid.Row="8" Grid.Column="1" Text="{Binding FinishDateValue}" />
-                <Label Grid.Row="9" Grid.Column="0" FontAttributes="Bold" Text="{Binding ReleaseYearLabel}" />
-                <Label Grid.Row="9" Grid.Column="1" Text="{Binding ReleaseYearValue}" />
-                <Label Grid.Row="10" Grid.Column="0" FontAttributes="Bold" Text="{Binding FavoriteLabel}" />
-                <Label Grid.Row="10" Grid.Column="1" Text="{Binding FavoriteValue}" />
-                <Label Grid.Row="11" Grid.Column="0" FontAttributes="Bold" Text="{Binding CreatedAtLabel}" />
-                <Label Grid.Row="11" Grid.Column="1" Text="{Binding CreatedAtValue}" />
-                <Label Grid.Row="12" Grid.Column="0" FontAttributes="Bold" Text="{Binding UpdatedAtLabel}" />
-                <Label Grid.Row="12" Grid.Column="1" Text="{Binding UpdatedAtValue}" />
+                <Label Grid.Row="2" Grid.Column="0" FontAttributes="Bold" Text="{Binding CategoryLabel}" />
+                <Label Grid.Row="2" Grid.Column="1" Text="{Binding CategoryValue}" />
+                <Label Grid.Row="3" Grid.Column="0" FontAttributes="Bold" Text="{Binding TagsLabel}" />
+                <Label Grid.Row="3" Grid.Column="1" Text="{Binding TagsValue}" />
+                <Label Grid.Row="4" Grid.Column="0" FontAttributes="Bold" Text="{Binding ProgressLabel}" />
+                <Label Grid.Row="4" Grid.Column="1" Text="{Binding ProgressValue}" />
+                <Label Grid.Row="5" Grid.Column="0" FontAttributes="Bold" Text="{Binding RatingLabel}" />
+                <Label Grid.Row="5" Grid.Column="1" Text="{Binding RatingValue}" />
+                <Label Grid.Row="6" Grid.Column="0" FontAttributes="Bold" Text="{Binding OriginalTitleLabel}" />
+                <Label Grid.Row="6" Grid.Column="1" Text="{Binding OriginalTitleValue}" />
+                <Label Grid.Row="7" Grid.Column="0" FontAttributes="Bold" Text="{Binding DescriptionLabel}" />
+                <Label Grid.Row="7" Grid.Column="1" Text="{Binding DescriptionValue}" />
+                <Label Grid.Row="8" Grid.Column="0" FontAttributes="Bold" Text="{Binding NotesLabel}" />
+                <Label Grid.Row="8" Grid.Column="1" Text="{Binding NotesValue}" />
+                <Label Grid.Row="9" Grid.Column="0" FontAttributes="Bold" Text="{Binding StartDateLabel}" />
+                <Label Grid.Row="9" Grid.Column="1" Text="{Binding StartDateValue}" />
+                <Label Grid.Row="10" Grid.Column="0" FontAttributes="Bold" Text="{Binding FinishDateLabel}" />
+                <Label Grid.Row="10" Grid.Column="1" Text="{Binding FinishDateValue}" />
+                <Label Grid.Row="11" Grid.Column="0" FontAttributes="Bold" Text="{Binding ReleaseYearLabel}" />
+                <Label Grid.Row="11" Grid.Column="1" Text="{Binding ReleaseYearValue}" />
+                <Label Grid.Row="12" Grid.Column="0" FontAttributes="Bold" Text="{Binding FavoriteLabel}" />
+                <Label Grid.Row="12" Grid.Column="1" Text="{Binding FavoriteValue}" />
+                <Label Grid.Row="13" Grid.Column="0" FontAttributes="Bold" Text="{Binding CreatedAtLabel}" />
+                <Label Grid.Row="13" Grid.Column="1" Text="{Binding CreatedAtValue}" />
+                <Label Grid.Row="14" Grid.Column="0" FontAttributes="Bold" Text="{Binding UpdatedAtLabel}" />
+                <Label Grid.Row="14" Grid.Column="1" Text="{Binding UpdatedAtValue}" />
             </Grid>
 
             <HorizontalStackLayout Spacing="10">

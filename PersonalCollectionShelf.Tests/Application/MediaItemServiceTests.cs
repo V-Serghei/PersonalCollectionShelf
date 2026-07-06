@@ -81,6 +81,42 @@ public sealed class MediaItemServiceTests
     }
 
     [Fact]
+    public async Task SearchMediaItemsAsync_filters_by_category_and_tag()
+    {
+        var repository = new InMemoryMediaItemRepository();
+        var service = new MediaItemService(repository);
+
+        await service.CreateMediaItemAsync(new CreateMediaItemRequest
+        {
+            UserId = "user-1",
+            Title = "Dune",
+            MediaType = MediaType.Book,
+            Category = "Sci-Fi",
+            Tags = "classic, desert, classic"
+        });
+
+        await service.CreateMediaItemAsync(new CreateMediaItemRequest
+        {
+            UserId = "user-1",
+            Title = "Stardew Valley",
+            MediaType = MediaType.Game,
+            Category = "Games",
+            Tags = "cozy, backlog"
+        });
+
+        var result = await service.SearchMediaItemsAsync(new MediaItemSearchCriteria
+        {
+            UserId = "user-1",
+            Category = "sci-fi",
+            Tag = "desert"
+        });
+
+        Assert.Single(result);
+        Assert.Equal("Dune", result[0].Title);
+        Assert.Equal("classic, desert", result[0].Tags);
+    }
+
+    [Fact]
     public async Task UpdateMediaItemAsync_updates_existing_item()
     {
         var repository = new InMemoryMediaItemRepository();
@@ -170,13 +206,21 @@ public sealed class MediaItemServiceTests
             string? searchTerm,
             MediaType? mediaType,
             MediaStatus? status,
+            string? category,
+            string? tag,
             CancellationToken cancellationToken = default)
         {
             var query = _items.Where(item => item.UserId == userId && !item.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(item => item.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                query = query.Where(item =>
+                    Contains(item.Title, searchTerm) ||
+                    Contains(item.OriginalTitle, searchTerm) ||
+                    Contains(item.Description, searchTerm) ||
+                    Contains(item.Category, searchTerm) ||
+                    Contains(item.Tags, searchTerm) ||
+                    Contains(item.Notes, searchTerm));
             }
 
             if (mediaType.HasValue)
@@ -189,7 +233,34 @@ public sealed class MediaItemServiceTests
                 query = query.Where(item => item.Status == status.Value);
             }
 
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                query = query.Where(item => string.Equals(item.Category, category.Trim(), StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(tag))
+            {
+                query = query.Where(item => HasTag(item.Tags, tag));
+            }
+
             return Task.FromResult<IReadOnlyList<MediaItem>>(query.ToList());
+        }
+
+        private static bool Contains(string? source, string searchTerm)
+        {
+            return source?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true;
+        }
+
+        private static bool HasTag(string? tags, string tag)
+        {
+            if (string.IsNullOrWhiteSpace(tags))
+            {
+                return false;
+            }
+
+            return tags
+                .Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Any(candidate => string.Equals(candidate, tag.Trim(), StringComparison.OrdinalIgnoreCase));
         }
     }
 }

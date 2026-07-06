@@ -62,6 +62,8 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
         string? searchTerm,
         MediaType? mediaType,
         MediaStatus? status,
+        string? category,
+        string? tag,
         CancellationToken cancellationToken = default)
     {
         var items = await GetAllAsync(userId, cancellationToken);
@@ -73,6 +75,9 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             query = query.Where(item =>
                 Contains(item.Title, searchTerm) ||
                 Contains(item.OriginalTitle, searchTerm) ||
+                Contains(item.Description, searchTerm) ||
+                Contains(item.Category, searchTerm) ||
+                Contains(item.Tags, searchTerm) ||
                 Contains(item.Notes, searchTerm));
         }
 
@@ -86,6 +91,16 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             query = query.Where(item => item.Status == status.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            query = query.Where(item => string.Equals(item.Category, category.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(tag))
+        {
+            query = query.Where(item => HasTag(item.Tags, tag));
+        }
+
         return query
             .OrderByDescending(item => item.IsFavorite)
             .ThenBy(item => item.Title)
@@ -97,6 +112,18 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
         return source?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true;
     }
 
+    private static bool HasTag(string? tags, string tag)
+    {
+        if (string.IsNullOrWhiteSpace(tags))
+        {
+            return false;
+        }
+
+        return tags
+            .Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Any(candidate => string.Equals(candidate, tag.Trim(), StringComparison.OrdinalIgnoreCase));
+    }
+
     private static MediaItem ToDomain(MediaItemRecord record)
     {
         return new MediaItem
@@ -106,6 +133,8 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             Title = record.Title,
             OriginalTitle = record.OriginalTitle,
             Description = record.Description,
+            Category = record.Category,
+            Tags = record.Tags,
             MediaType = (MediaType)record.MediaType,
             Status = (MediaStatus)record.Status,
             Rating = record.Rating,
@@ -132,6 +161,8 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             Title = item.Title,
             OriginalTitle = item.OriginalTitle,
             Description = item.Description,
+            Category = item.Category,
+            Tags = item.Tags,
             MediaType = (int)item.MediaType,
             Status = (int)item.Status,
             Rating = item.Rating,

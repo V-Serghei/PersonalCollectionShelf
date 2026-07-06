@@ -48,6 +48,10 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string DescriptionLabel => T("Details.DescriptionLabel");
 
+    public string CategoryLabel => T("Details.CategoryLabel");
+
+    public string TagsLabel => T("Details.TagsLabel");
+
     public string StartDateLabel => T("Details.StartDateLabel");
 
     public string FinishDateLabel => T("Details.FinishDateLabel");
@@ -76,6 +80,10 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string DescriptionValue => Item?.Description ?? T("Common.NotSet");
 
+    public string CategoryValue => Item?.Category ?? T("Common.NotSet");
+
+    public string TagsValue => Item?.Tags ?? T("Common.NotSet");
+
     public string TypeValue => Item is null ? T("Common.NotSet") : T($"MediaType.{Item.MediaType}");
 
     public string StatusValue => Item is null ? T("Common.NotSet") : T($"MediaStatus.{Item.Status}");
@@ -103,6 +111,16 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string CreatedAtValue => FormatDate(Item?.CreatedAt);
 
     public string UpdatedAtValue => FormatDate(Item?.UpdatedAt);
+
+    public string CoverUrl => Item?.CoverUrl ?? string.Empty;
+
+    public bool HasCoverUrl => !string.IsNullOrWhiteSpace(Item?.CoverUrl);
+
+    public bool HasNoCoverUrl => !HasCoverUrl;
+
+    public string Initial => Item is null || string.IsNullOrWhiteSpace(Item.Title)
+        ? "?"
+        : Item.Title.Trim()[0].ToString().ToUpperInvariant();
 
     public async Task LoadAsync(Guid itemId)
     {
@@ -177,6 +195,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(PageTitle));
         OnPropertyChanged(nameof(OriginalTitleValue));
         OnPropertyChanged(nameof(DescriptionValue));
+        OnPropertyChanged(nameof(CategoryValue));
+        OnPropertyChanged(nameof(TagsValue));
         OnPropertyChanged(nameof(TypeValue));
         OnPropertyChanged(nameof(StatusValue));
         OnPropertyChanged(nameof(ProgressValue));
@@ -188,6 +208,10 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(FavoriteValue));
         OnPropertyChanged(nameof(CreatedAtValue));
         OnPropertyChanged(nameof(UpdatedAtValue));
+        OnPropertyChanged(nameof(CoverUrl));
+        OnPropertyChanged(nameof(HasCoverUrl));
+        OnPropertyChanged(nameof(HasNoCoverUrl));
+        OnPropertyChanged(nameof(Initial));
     }
 
     private string FormatDate(DateTime? value)

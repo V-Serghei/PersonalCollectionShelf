@@ -33,6 +33,10 @@ public partial class LibraryViewModel : BaseViewModel
 
     public ObservableCollection<LocalizedOption<MediaStatus?>> StatusFilters { get; } = [];
 
+    public ObservableCollection<LocalizedOption<string?>> CategoryFilters { get; } = [];
+
+    public ObservableCollection<LocalizedOption<string?>> TagFilters { get; } = [];
+
     [ObservableProperty]
     private string searchTerm = string.Empty;
 
@@ -42,6 +46,12 @@ public partial class LibraryViewModel : BaseViewModel
     [ObservableProperty]
     private LocalizedOption<MediaStatus?>? selectedStatusFilter;
 
+    [ObservableProperty]
+    private LocalizedOption<string?>? selectedCategoryFilter;
+
+    [ObservableProperty]
+    private LocalizedOption<string?>? selectedTagFilter;
+
     public string PageTitle => T("Library.Title");
 
     public string SearchPlaceholder => T("Library.SearchPlaceholder");
@@ -49,6 +59,10 @@ public partial class LibraryViewModel : BaseViewModel
     public string MediaTypeFilterPlaceholder => T("Library.MediaTypeFilterPlaceholder");
 
     public string StatusFilterPlaceholder => T("Library.StatusFilterPlaceholder");
+
+    public string CategoryFilterPlaceholder => T("Library.CategoryFilterPlaceholder");
+
+    public string TagFilterPlaceholder => T("Library.TagFilterPlaceholder");
 
     public string AddButtonText => T("Library.AddButton");
 
@@ -77,6 +91,22 @@ public partial class LibraryViewModel : BaseViewModel
         }
     }
 
+    partial void OnSelectedCategoryFilterChanged(LocalizedOption<string?>? value)
+    {
+        if (!_suppressFilterReload)
+        {
+            _ = LoadAsync();
+        }
+    }
+
+    partial void OnSelectedTagFilterChanged(LocalizedOption<string?>? value)
+    {
+        if (!_suppressFilterReload)
+        {
+            _ = LoadAsync();
+        }
+    }
+
     partial void OnSearchTermChanged(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -97,12 +127,17 @@ public partial class LibraryViewModel : BaseViewModel
         {
             IsBusy = true;
             var userId = await GetCurrentUserIdAsync();
+            var library = await _mediaItemService.GetLibraryAsync(userId);
+            ReloadDynamicFilterOptions(library);
+
             var items = await _mediaItemService.SearchMediaItemsAsync(new MediaItemSearchCriteria
             {
                 UserId = userId,
                 SearchTerm = SearchTerm,
                 MediaType = SelectedMediaTypeFilter?.Value,
-                Status = SelectedStatusFilter?.Value
+                Status = SelectedStatusFilter?.Value,
+                Category = SelectedCategoryFilter?.Value,
+                Tag = SelectedTagFilter?.Value
             });
 
             MediaItems.Clear();
@@ -165,6 +200,47 @@ public partial class LibraryViewModel : BaseViewModel
         }
     }
 
+    private void ReloadDynamicFilterOptions(IReadOnlyList<MediaItemDto> library)
+    {
+        var selectedCategory = SelectedCategoryFilter?.Value;
+        var selectedTag = SelectedTagFilter?.Value;
+
+        _suppressFilterReload = true;
+        try
+        {
+            CategoryFilters.Clear();
+            CategoryFilters.Add(new LocalizedOption<string?>(null, T("Common.All")));
+            foreach (var category in library
+                         .Select(item => item.Category)
+                         .Where(value => !string.IsNullOrWhiteSpace(value))
+                         .Select(value => value!)
+                         .Distinct(StringComparer.OrdinalIgnoreCase)
+                         .OrderBy(value => value))
+            {
+                CategoryFilters.Add(new LocalizedOption<string?>(category, category));
+            }
+
+            TagFilters.Clear();
+            TagFilters.Add(new LocalizedOption<string?>(null, T("Common.All")));
+            foreach (var tag in library
+                         .SelectMany(item => SplitTags(item.Tags))
+                         .Distinct(StringComparer.OrdinalIgnoreCase)
+                         .OrderBy(value => value))
+            {
+                TagFilters.Add(new LocalizedOption<string?>(tag, tag));
+            }
+
+            SelectedCategoryFilter = CategoryFilters.FirstOrDefault(option => string.Equals(option.Value, selectedCategory, StringComparison.OrdinalIgnoreCase))
+                ?? CategoryFilters.First();
+            SelectedTagFilter = TagFilters.FirstOrDefault(option => string.Equals(option.Value, selectedTag, StringComparison.OrdinalIgnoreCase))
+                ?? TagFilters.First();
+        }
+        finally
+        {
+            _suppressFilterReload = false;
+        }
+    }
+
     private MediaItemListItemViewModel ToListItem(MediaItemDto item)
     {
         var type = T($"MediaType.{item.MediaType}");
@@ -175,16 +251,45 @@ public partial class LibraryViewModel : BaseViewModel
         var rating = item.Rating.HasValue
             ? string.Format(T("Library.RatingFormat"), item.Rating.Value)
             : T("Library.NoRating");
+        var categoryLine = string.IsNullOrWhiteSpace(item.Category)
+            ? T("Library.NoCategory")
+            : string.Format(T("Library.CategoryFormat"), item.Category);
+        var tagsLine = string.IsNullOrWhiteSpace(item.Tags)
+            ? T("Library.NoTags")
+            : string.Format(T("Library.TagsFormat"), item.Tags);
 
         return new MediaItemListItemViewModel(
             item.Id,
             item.Title,
             $"{type} - {status}",
+            categoryLine,
+            tagsLine,
             progress,
             rating,
+            item.CoverUrl ?? string.Empty,
+            !string.IsNullOrWhiteSpace(item.CoverUrl),
+            string.IsNullOrWhiteSpace(item.CoverUrl),
+            GetInitial(item.Title),
             item.IsFavorite,
             item.IsFavorite ? T("Library.FavoriteMarker") : string.Empty,
             T("Library.OpenButton"));
+    }
+
+    private static IEnumerable<string> SplitTags(string? tags)
+    {
+        if (string.IsNullOrWhiteSpace(tags))
+        {
+            return [];
+        }
+
+        return tags.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+
+    private static string GetInitial(string title)
+    {
+        return string.IsNullOrWhiteSpace(title)
+            ? "?"
+            : title.Trim()[0].ToString().ToUpperInvariant();
     }
 
     private async Task<string> GetCurrentUserIdAsync()

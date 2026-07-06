@@ -6,7 +6,7 @@
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:LibraryViewModel"
     Title="{Binding PageTitle}">
-    <Grid Padding="16" RowDefinitions="Auto,Auto,*" RowSpacing="12">
+    <Grid Padding="16" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
         <SearchBar
             Grid.Row="0"
             Placeholder="{Binding SearchPlaceholder}"
@@ -32,8 +32,23 @@
                 Text="{Binding AddButtonText}" />
         </Grid>
 
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
+            <Picker
+                Grid.Column="0"
+                ItemDisplayBinding="{Binding DisplayName}"
+                ItemsSource="{Binding CategoryFilters}"
+                SelectedItem="{Binding SelectedCategoryFilter}"
+                Title="{Binding CategoryFilterPlaceholder}" />
+            <Picker
+                Grid.Column="1"
+                ItemDisplayBinding="{Binding DisplayName}"
+                ItemsSource="{Binding TagFilters}"
+                SelectedItem="{Binding SelectedTagFilter}"
+                Title="{Binding TagFilterPlaceholder}" />
+        </Grid>
+
         <RefreshView
-            Grid.Row="2"
+            Grid.Row="3"
             Command="{Binding LoadCommand}"
             IsRefreshing="{Binding IsBusy}">
             <CollectionView
@@ -51,7 +66,7 @@
                     <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
                         <Border
                             Margin="0,0,0,10"
-                            Padding="12"
+                            Padding="10"
                             BackgroundColor="{AppThemeBinding Light=White, Dark=#1F2937}"
                             Stroke="{AppThemeBinding Light=#D9DEE8, Dark=#374151}"
                             StrokeShape="RoundRectangle 8"
@@ -61,37 +76,78 @@
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}"
                                     CommandParameter="{Binding .}" />
                             </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12">
-                                <Label
-                                    Grid.Row="0"
+                            <Grid ColumnDefinitions="76,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12">
+                                <Border
+                                    Grid.RowSpan="4"
                                     Grid.Column="0"
-                                    FontAttributes="Bold"
-                                    FontSize="18"
-                                    Text="{Binding Title}" />
+                                    BackgroundColor="{AppThemeBinding Light=#E5E7EB, Dark=#111827}"
+                                    HeightRequest="104"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 6"
+                                    WidthRequest="72">
+                                    <Grid>
+                                        <Image
+                                            Aspect="AspectFill"
+                                            HeightRequest="104"
+                                            IsVisible="{Binding HasCoverUrl}"
+                                            Source="{Binding CoverUrl}"
+                                            WidthRequest="72" />
+                                        <Label
+                                            FontAttributes="Bold"
+                                            FontSize="28"
+                                            HorizontalOptions="Center"
+                                            IsVisible="{Binding HasNoCoverUrl}"
+                                            Text="{Binding Initial}"
+                                            TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}"
+                                            VerticalOptions="Center" />
+                                    </Grid>
+                                </Border>
                                 <Label
                                     Grid.Row="0"
                                     Grid.Column="1"
+                                    FontAttributes="Bold"
+                                    FontSize="18"
+                                    LineBreakMode="TailTruncation"
+                                    Text="{Binding Title}" />
+                                <Label
+                                    Grid.Row="0"
+                                    Grid.Column="2"
                                     FontAttributes="Bold"
                                     HorizontalOptions="End"
                                     Text="{Binding FavoriteMarker}"
                                     TextColor="{AppThemeBinding Light=#B45309, Dark=#FCD34D}" />
                                 <Label
                                     Grid.Row="1"
-                                    Grid.Column="0"
+                                    Grid.Column="1"
+                                    Grid.ColumnSpan="2"
                                     Text="{Binding Metadata}"
                                     TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}" />
-                                <HorizontalStackLayout
-                                    Grid.Row="2"
-                                    Grid.Column="0"
-                                    Spacing="12">
-                                    <Label Text="{Binding Progress}" />
-                                    <Label Text="{Binding Rating}" />
-                                </HorizontalStackLayout>
-                                <Button
+                                <Label
                                     Grid.Row="2"
                                     Grid.Column="1"
+                                    Text="{Binding CategoryLine}"
+                                    TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}" />
+                                <Label
+                                    Grid.Row="2"
+                                    Grid.Column="2"
+                                    HorizontalOptions="End"
+                                    Text="{Binding Rating}" />
+                                <HorizontalStackLayout
+                                    Grid.Row="3"
+                                    Grid.Column="1"
+                                    Grid.ColumnSpan="2"
+                                    Spacing="12">
+                                    <Label Text="{Binding Progress}" />
+                                    <Label
+                                        LineBreakMode="TailTruncation"
+                                        Text="{Binding TagsLine}" />
+                                </HorizontalStackLayout>
+                                <Button
+                                    Grid.Row="3"
+                                    Grid.Column="2"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}"
                                     CommandParameter="{Binding .}"
+                                    IsVisible="False"
                                     Text="{Binding OpenButtonText}" />
                             </Grid>
                         </Border>

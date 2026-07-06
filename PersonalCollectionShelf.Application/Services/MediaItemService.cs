@@ -33,6 +33,8 @@ public sealed class MediaItemService(IMediaItemRepository mediaItemRepository) :
             Title = request.Title.Trim(),
             OriginalTitle = Normalize(request.OriginalTitle),
             Description = Normalize(request.Description),
+            Category = Normalize(request.Category),
+            Tags = NormalizeTags(request.Tags),
             MediaType = request.MediaType,
             Status = request.Status,
             Rating = request.Rating,
@@ -63,6 +65,8 @@ public sealed class MediaItemService(IMediaItemRepository mediaItemRepository) :
         existing.Title = request.Title.Trim();
         existing.OriginalTitle = Normalize(request.OriginalTitle);
         existing.Description = Normalize(request.Description);
+        existing.Category = Normalize(request.Category);
+        existing.Tags = NormalizeTags(request.Tags);
         existing.MediaType = request.MediaType;
         existing.Status = request.Status;
         existing.Rating = request.Rating;
@@ -92,6 +96,8 @@ public sealed class MediaItemService(IMediaItemRepository mediaItemRepository) :
             criteria.SearchTerm,
             criteria.MediaType,
             criteria.Status,
+            criteria.Category,
+            criteria.Tag,
             cancellationToken);
 
         return items.Select(ToDto).ToList();
@@ -110,6 +116,22 @@ public sealed class MediaItemService(IMediaItemRepository mediaItemRepository) :
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
+    private static string? NormalizeTags(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var tags = value
+            .Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(tag => !string.IsNullOrWhiteSpace(tag))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return tags.Count == 0 ? null : string.Join(", ", tags);
+    }
+
     private static MediaItemDto ToDto(MediaItem item)
     {
         return new MediaItemDto
@@ -119,6 +141,8 @@ public sealed class MediaItemService(IMediaItemRepository mediaItemRepository) :
             Title = item.Title,
             OriginalTitle = item.OriginalTitle,
             Description = item.Description,
+            Category = item.Category,
+            Tags = item.Tags,
             MediaType = item.MediaType,
             Status = item.Status,
             Rating = item.Rating,
