@@ -80,6 +80,59 @@ public sealed class MediaItemServiceTests
         Assert.Equal("The Last of Us", result[0].Title);
     }
 
+    [Fact]
+    public async Task UpdateMediaItemAsync_updates_existing_item()
+    {
+        var repository = new InMemoryMediaItemRepository();
+        var service = new MediaItemService(repository);
+
+        var created = await service.CreateMediaItemAsync(new CreateMediaItemRequest
+        {
+            UserId = "user-1",
+            Title = "Old title",
+            MediaType = MediaType.Book,
+            Status = MediaStatus.Planned
+        });
+
+        var updated = await service.UpdateMediaItemAsync(new UpdateMediaItemRequest
+        {
+            Id = created.Id,
+            UserId = "user-1",
+            Title = "New title",
+            MediaType = MediaType.Game,
+            Status = MediaStatus.Completed,
+            ProgressCurrent = 12,
+            ProgressTotal = 12,
+            Rating = 8,
+            IsFavorite = true
+        });
+
+        Assert.Equal("New title", updated.Title);
+        Assert.Equal(MediaType.Game, updated.MediaType);
+        Assert.Equal(MediaStatus.Completed, updated.Status);
+        Assert.Equal(8, updated.Rating);
+        Assert.True(updated.IsFavorite);
+    }
+
+    [Fact]
+    public async Task DeleteMediaItemAsync_hides_item_from_library()
+    {
+        var repository = new InMemoryMediaItemRepository();
+        var service = new MediaItemService(repository);
+
+        var created = await service.CreateMediaItemAsync(new CreateMediaItemRequest
+        {
+            UserId = "user-1",
+            Title = "Temporary",
+            MediaType = MediaType.Other
+        });
+
+        await service.DeleteMediaItemAsync(created.Id, "user-1");
+
+        Assert.Empty(await service.GetLibraryAsync("user-1"));
+        Assert.Null(await service.GetMediaItemAsync(created.Id, "user-1"));
+    }
+
     private sealed class InMemoryMediaItemRepository : IMediaItemRepository
     {
         private readonly List<MediaItem> _items = [];

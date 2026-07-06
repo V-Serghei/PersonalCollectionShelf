@@ -62,6 +62,14 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string DeleteButtonText => T("Details.DeleteButton");
 
+    public string DeleteConfirmTitle => T("Details.DeleteConfirmTitle");
+
+    public string DeleteConfirmMessage => T("Details.DeleteConfirmMessage");
+
+    public string DeleteConfirmButtonText => T("Details.DeleteConfirmButton");
+
+    public string DeleteCancelButtonText => T("Common.Cancel");
+
     public string OriginalTitleValue => Item?.OriginalTitle ?? T("Common.NotSet");
 
     public string DescriptionValue => Item?.Description ?? T("Common.NotSet");
@@ -137,6 +145,17 @@ public partial class MediaDetailsViewModel : BaseViewModel
     private async Task DeleteAsync()
     {
         if (Item is null)
+        {
+            return;
+        }
+
+        var shouldDelete = await Shell.Current.DisplayAlertAsync(
+            DeleteConfirmTitle,
+            string.Format(DeleteConfirmMessage, Item.Title),
+            DeleteConfirmButtonText,
+            DeleteCancelButtonText);
+
+        if (!shouldDelete)
         {
             return;
         }

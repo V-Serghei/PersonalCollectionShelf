@@ -179,7 +179,7 @@ public partial class LibraryViewModel : BaseViewModel
         return new MediaItemListItemViewModel(
             item.Id,
             item.Title,
-            $"{type} · {status}",
+            $"{type} - {status}",
             progress,
             rating,
             item.IsFavorite,
