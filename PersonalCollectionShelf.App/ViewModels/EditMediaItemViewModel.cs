@@ -85,6 +85,8 @@ public partial class EditMediaItemViewModel : BaseViewModel
     [ObservableProperty]
     private string errorMessage = string.Empty;
 
+    public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
+
     public bool IsEditMode => MediaItemId.HasValue;
 
     public string PageTitle => IsEditMode ? T("Edit.Title.Edit") : T("Edit.Title.Create");
@@ -187,6 +189,11 @@ public partial class EditMediaItemViewModel : BaseViewModel
     {
         OnPropertyChanged(nameof(IsEditMode));
         OnPropertyChanged(nameof(PageTitle));
+    }
+
+    partial void OnErrorMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasErrorMessage));
     }
 
     [RelayCommand]

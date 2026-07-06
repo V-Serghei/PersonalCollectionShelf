@@ -37,9 +37,16 @@
             Command="{Binding LoadCommand}"
             IsRefreshing="{Binding IsBusy}">
             <CollectionView
-                EmptyView="{Binding EmptyLibraryText}"
                 ItemsSource="{Binding MediaItems}"
                 SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <Grid Padding="24">
+                        <Label
+                            HorizontalTextAlignment="Center"
+                            Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EmptyLibraryText}"
+                            TextColor="{AppThemeBinding Light=#6B7280, Dark=#D1D5DB}" />
+                    </Grid>
+                </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
                         <Border
@@ -49,6 +56,11 @@
                             Stroke="{AppThemeBinding Light=#D9DEE8, Dark=#374151}"
                             StrokeShape="RoundRectangle 8"
                             StrokeThickness="1">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12">
                                 <Label
                                     Grid.Row="0"
@@ -56,6 +68,13 @@
                                     FontAttributes="Bold"
                                     FontSize="18"
                                     Text="{Binding Title}" />
+                                <Label
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    FontAttributes="Bold"
+                                    HorizontalOptions="End"
+                                    Text="{Binding FavoriteMarker}"
+                                    TextColor="{AppThemeBinding Light=#B45309, Dark=#FCD34D}" />
                                 <Label
                                     Grid.Row="1"
                                     Grid.Column="0"
@@ -69,7 +88,7 @@
                                     <Label Text="{Binding Rating}" />
                                 </HorizontalStackLayout>
                                 <Button
-                                    Grid.RowSpan="3"
+                                    Grid.Row="2"
                                     Grid.Column="1"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}"
                                     CommandParameter="{Binding .}"

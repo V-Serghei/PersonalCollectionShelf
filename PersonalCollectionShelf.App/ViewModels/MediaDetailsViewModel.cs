@@ -30,6 +30,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
     [ObservableProperty]
     private string errorMessage = string.Empty;
 
+    public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
+
     public string PageTitle => Item?.Title ?? T("Details.Title");
 
     public string TypeLabel => T("Details.TypeLabel");
@@ -128,6 +130,11 @@ public partial class MediaDetailsViewModel : BaseViewModel
     partial void OnItemChanged(MediaItemDto? value)
     {
         RefreshItemProperties();
+    }
+
+    partial void OnErrorMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasErrorMessage));
     }
 
     [RelayCommand]

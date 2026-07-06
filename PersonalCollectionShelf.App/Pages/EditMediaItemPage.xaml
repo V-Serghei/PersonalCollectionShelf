@@ -9,6 +9,7 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="12">
             <Label
+                IsVisible="{Binding HasErrorMessage}"
                 Text="{Binding ErrorMessage}"
                 TextColor="#B91C1C" />
 

@@ -31,6 +31,7 @@
   "Library.AddButton": "Add",
   "Library.Empty": "No media items yet.",
   "Library.OpenButton": "Open",
+  "Library.FavoriteMarker": "Favorite",
   "Library.RatingFormat": "Rating: {0}/10",
   "Library.NoRating": "No rating",
   "Library.ProgressFormat": "Progress: {0}",

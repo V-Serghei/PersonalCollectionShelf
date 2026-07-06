@@ -183,6 +183,7 @@ public partial class LibraryViewModel : BaseViewModel
             progress,
             rating,
             item.IsFavorite,
+            item.IsFavorite ? T("Library.FavoriteMarker") : string.Empty,
             T("Library.OpenButton"));
     }
 

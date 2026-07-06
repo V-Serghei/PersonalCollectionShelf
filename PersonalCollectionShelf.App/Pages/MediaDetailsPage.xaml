@@ -13,6 +13,7 @@
                 FontSize="24"
                 Text="{Binding PageTitle}" />
             <Label
+                IsVisible="{Binding HasErrorMessage}"
                 Text="{Binding ErrorMessage}"
                 TextColor="#B91C1C" />
 

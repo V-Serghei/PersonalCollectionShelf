@@ -31,6 +31,7 @@
   "Library.AddButton": "Добавить",
   "Library.Empty": "Медиаобъектов пока нет.",
   "Library.OpenButton": "Открыть",
+  "Library.FavoriteMarker": "Избранное",
   "Library.RatingFormat": "Оценка: {0}/10",
   "Library.NoRating": "Без оценки",
   "Library.ProgressFormat": "Прогресс: {0}",

@@ -7,4 +7,5 @@ public sealed record MediaItemListItemViewModel(
     string Progress,
     string Rating,
     bool IsFavorite,
+    string FavoriteMarker,
     string OpenButtonText);
