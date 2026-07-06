@@ -17,7 +17,7 @@
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                    <Label FontSize="15" Text="⌕" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
                     <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." Text="{Binding SearchTerm}" />
                     <Border Grid.Column="2" Padding="6,2" BackgroundColor="{StaticResource MutedSoft}" Stroke="{StaticResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
                         <Label FontSize="10" Text="⌘K" TextColor="{StaticResource MutedForeground}" />
@@ -36,7 +36,7 @@
             RowSpacing="16"
             WidthRequest="920">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                <Label FontAttributes="Bold" FontFamily="serif" FontSize="30" Text="{Binding PageTitle}" />
+                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
                 <Border Grid.Column="1" Padding="6" BackgroundColor="{StaticResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 16">
                     <HorizontalStackLayout Spacing="6">
                         <Button Style="{StaticResource IconToggleButtonStyle}" Text="▦" />

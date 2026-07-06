@@ -62,6 +62,11 @@
         <Setter Property="Stroke" Value="{StaticResource Border}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+        <Setter Property="Shadow">
+            <Setter.Value>
+                <Shadow Brush="Black" Offset="0,6" Radius="18" Opacity="0.30" />
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="MutedBorderStyle" TargetType="Border">
@@ -116,12 +121,14 @@
     <Style x:Key="PageTitleLabelStyle" TargetType="Label">
         <Setter Property="FontSize" Value="32" />
         <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontFamily" Value="Cambria" />
         <Setter Property="TextColor" Value="{StaticResource Foreground}" />
     </Style>
 
     <Style x:Key="SectionTitleLabelStyle" TargetType="Label">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontFamily" Value="Cambria" />
         <Setter Property="TextColor" Value="{StaticResource Foreground}" />
     </Style>
 

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Graphics;
 using PersonalCollectionShelf.App.Pages;
@@ -14,7 +14,7 @@ public sealed class AppShell : Shell
     private readonly FlyoutItem _libraryItem;
     private readonly FlyoutItem _statisticsItem;
     private readonly FlyoutItem _settingsItem;
-    private readonly List<Button> _navigationButtons = [];
+    private readonly List<(Border Container, Label Icon, Label Text)> _navigationButtons = [];
 
     public AppShell(IServiceProvider services, ILocalizationService localizationService)
     {
@@ -110,7 +110,7 @@ public sealed class AppShell : Shell
                 {
                     Text = "Shelf",
                     FontAttributes = FontAttributes.Bold,
-                    FontFamily = "serif",
+                    FontFamily = "Cambria",
                     FontSize = 18,
                     TextColor = Color.FromArgb("#EDE9F8"),
                     VerticalTextAlignment = TextAlignment.Center
@@ -125,10 +125,10 @@ public sealed class AppShell : Shell
             Spacing = 6
         };
 
-        navigation.Children.Add(CreateNavButton("⌂  Home", "//Home", true));
-        navigation.Children.Add(CreateNavButton("▱  Library", "//Library", false));
-        navigation.Children.Add(CreateNavButton("▥  Statistics", "//Statistics", false));
-        navigation.Children.Add(CreateNavButton("⚙  Settings", "//Settings", false));
+        navigation.Children.Add(CreateNavButton("", "Home", "//Home", true, symbolFont: true));
+        navigation.Children.Add(CreateNavButton("▤", "Library", "//Library", false, symbolFont: false));
+        navigation.Children.Add(CreateNavButton("▥", "Statistics", "//Statistics", false, symbolFont: false));
+        navigation.Children.Add(CreateNavButton("", "Settings", "//Settings", false, symbolFont: true));
         navigation.Children.Add(new Label
         {
             Text = "CATEGORIES",
@@ -138,12 +138,12 @@ public sealed class AppShell : Shell
             Margin = new Thickness(4, 18, 0, 6)
         });
 
-        navigation.Children.Add(CreateCategoryLabel("▦", "Movies", "#E07C54"));
-        navigation.Children.Add(CreateCategoryLabel("▭", "TV Series", "#5BA4F0"));
-        navigation.Children.Add(CreateCategoryLabel("▯", "Books", "#7CCC8A"));
-        navigation.Children.Add(CreateCategoryLabel("▱", "Games", "#C47CF0"));
-        navigation.Children.Add(CreateCategoryLabel("✧", "Anime", "#F07CB8"));
-        navigation.Children.Add(CreateCategoryLabel("♪", "Music", "#F0C040"));
+        navigation.Children.Add(CreateCategoryLabel("Movies", "#E07C54"));
+        navigation.Children.Add(CreateCategoryLabel("TV Series", "#5BA4F0"));
+        navigation.Children.Add(CreateCategoryLabel("Books", "#7CCC8A"));
+        navigation.Children.Add(CreateCategoryLabel("Games", "#C47CF0"));
+        navigation.Children.Add(CreateCategoryLabel("Anime", "#F07CB8"));
+        navigation.Children.Add(CreateCategoryLabel("Music", "#F0C040"));
 
         root.Add(new ScrollView { Content = navigation }, 0, 1);
 
@@ -210,48 +210,94 @@ public sealed class AppShell : Shell
         return root;
     }
 
-    private Button CreateNavButton(string text, string route, bool active)
+    private Border CreateNavButton(string icon, string label, string route, bool active, bool symbolFont)
     {
-        var button = new Button
+        var activeColor = Color.FromArgb("#9D7FF4");
+        var inactiveColor = Color.FromArgb("#C6BEE0");
+
+        var iconLabel = new Label
         {
-            Text = text,
-            HorizontalOptions = LayoutOptions.Fill,
+            Text = icon,
+            FontFamily = symbolFont ? "Segoe MDL2 Assets" : null,
+            FontSize = symbolFont ? 15 : 13,
+            WidthRequest = 20,
+            HorizontalTextAlignment = TextAlignment.Center,
+            VerticalTextAlignment = TextAlignment.Center,
+            TextColor = active ? activeColor : inactiveColor
+        };
+
+        var textLabel = new Label
+        {
+            Text = label,
+            FontAttributes = FontAttributes.Bold,
+            FontSize = 14,
+            VerticalTextAlignment = TextAlignment.Center,
+            TextColor = active ? activeColor : inactiveColor
+        };
+
+        var container = new Border
+        {
             Padding = new Thickness(12, 9),
-            CornerRadius = 18,
-            FontSize = 14,
+            StrokeThickness = 0,
+            StrokeShape = new RoundRectangle { CornerRadius = 18 },
             BackgroundColor = active ? Color.FromArgb("#1F1A31") : Colors.Transparent,
-            TextColor = active ? Color.FromArgb("#9D7FF4") : Color.FromArgb("#C6BEE0"),
-            BorderWidth = 0
+            Content = new HorizontalStackLayout
+            {
+                Spacing = 10,
+                Children = { iconLabel, textLabel }
+            }
         };
 
-        button.Clicked += async (_, _) =>
+        container.GestureRecognizers.Add(new TapGestureRecognizer
         {
-            SetActiveButton(button);
-            await GoToAsync(route);
-        };
+            Command = new Command(async () =>
+            {
+                SetActiveButton(container, iconLabel, textLabel);
+                await GoToAsync(route);
+            })
+        });
 
-        _navigationButtons.Add(button);
-        return button;
+        _navigationButtons.Add((container, iconLabel, textLabel));
+        return container;
     }
 
-    private static Label CreateCategoryLabel(string icon, string text, string color)
+    private static View CreateCategoryLabel(string text, string color)
     {
-        return new Label
+        return new HorizontalStackLayout
         {
-            Text = $"{icon}  {text}",
-            FontSize = 14,
-            TextColor = Color.FromArgb(color),
-            Padding = new Thickness(6, 7)
+            Spacing = 10,
+            Padding = new Thickness(6, 7),
+            Children =
+            {
+                new Border
+                {
+                    WidthRequest = 10,
+                    HeightRequest = 10,
+                    BackgroundColor = Color.FromArgb(color),
+                    StrokeThickness = 0,
+                    StrokeShape = new RoundRectangle { CornerRadius = 3 },
+                    VerticalOptions = LayoutOptions.Center
+                },
+                new Label
+                {
+                    Text = text,
+                    FontSize = 14,
+                    TextColor = Color.FromArgb(color),
+                    VerticalTextAlignment = TextAlignment.Center
+                }
+            }
         };
     }
 
-    private void SetActiveButton(Button activeButton)
+    private void SetActiveButton(Border activeContainer, Label activeIcon, Label activeText)
     {
-        foreach (var button in _navigationButtons)
+        foreach (var (container, icon, text) in _navigationButtons)
         {
-            var isActive = ReferenceEquals(button, activeButton);
-            button.BackgroundColor = isActive ? Color.FromArgb("#1F1A31") : Colors.Transparent;
-            button.TextColor = isActive ? Color.FromArgb("#9D7FF4") : Color.FromArgb("#C6BEE0");
+            var isActive = ReferenceEquals(container, activeContainer);
+            var color = isActive ? Color.FromArgb("#9D7FF4") : Color.FromArgb("#C6BEE0");
+            container.BackgroundColor = isActive ? Color.FromArgb("#1F1A31") : Colors.Transparent;
+            icon.TextColor = color;
+            text.TextColor = color;
         }
     }
 
@@ -265,7 +311,8 @@ public sealed class AppShell : Shell
 
         if (index >= 0 && index < _navigationButtons.Count)
         {
-            SetActiveButton(_navigationButtons[index]);
+            var entry = _navigationButtons[index];
+            SetActiveButton(entry.Container, entry.Icon, entry.Text);
         }
     }
 

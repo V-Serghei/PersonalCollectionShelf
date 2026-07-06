@@ -17,8 +17,9 @@
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                     <Label
+                        FontFamily="Segoe MDL2 Assets"
                         FontSize="15"
-                        Text="⌕"
+                        Text="&#xE721;"
                         TextColor="{StaticResource MutedForeground}"
                         VerticalTextAlignment="Center" />
                     <Entry
@@ -54,7 +55,7 @@
                 <VerticalStackLayout Spacing="4">
                     <Label
                         FontAttributes="Bold"
-                        FontFamily="serif"
+                        FontFamily="Cambria"
                         FontSize="30"
                         Text="{Binding DashboardTitle}" />
                     <Label
@@ -69,7 +70,7 @@
                             <Border BackgroundColor="#269D7FF4" HeightRequest="30" StrokeThickness="0" StrokeShape="RoundRectangle 15" WidthRequest="30">
                                 <Label FontSize="14" HorizontalTextAlignment="Center" Text="◇" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
                             </Border>
-                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="26" Text="{Binding TotalItemCount}" />
+                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="26" Text="{Binding TotalItemCount}" />
                             <Label FontSize="12" Text="Total Items" TextColor="{StaticResource Primary}" />
                         </VerticalStackLayout>
                     </Border>
@@ -78,7 +79,7 @@
                             <Border BackgroundColor="#224ADE80" HeightRequest="30" StrokeThickness="0" StrokeShape="RoundRectangle 15" WidthRequest="30">
                                 <Label FontSize="14" HorizontalTextAlignment="Center" Text="✓" TextColor="{StaticResource Success}" VerticalTextAlignment="Center" />
                             </Border>
-                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="26" Text="{Binding CompletedItemCount}" />
+                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="26" Text="{Binding CompletedItemCount}" />
                             <Label FontSize="12" Text="{Binding CompletedItemsLabel}" TextColor="{StaticResource Primary}" />
                         </VerticalStackLayout>
                     </Border>
@@ -87,7 +88,7 @@
                             <Border BackgroundColor="#2260A5FA" HeightRequest="30" StrokeThickness="0" StrokeShape="RoundRectangle 15" WidthRequest="30">
                                 <Label FontSize="14" HorizontalTextAlignment="Center" Text="◷" TextColor="{StaticResource Info}" VerticalTextAlignment="Center" />
                             </Border>
-                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="26" Text="{Binding InProgressItemCount}" />
+                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="26" Text="{Binding InProgressItemCount}" />
                             <Label FontSize="12" Text="In Progress" TextColor="{StaticResource Primary}" />
                         </VerticalStackLayout>
                     </Border>
@@ -96,7 +97,7 @@
                             <Border BackgroundColor="#22FBBF24" HeightRequest="30" StrokeThickness="0" StrokeShape="RoundRectangle 15" WidthRequest="30">
                                 <Label FontSize="14" HorizontalTextAlignment="Center" Text="▱" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
                             </Border>
-                            <Label FontAttributes="Bold" FontFamily="serif" FontSize="26" Text="{Binding WishlistItemCount}" />
+                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="26" Text="{Binding WishlistItemCount}" />
                             <Label FontSize="12" Text="Wishlist" TextColor="{StaticResource Primary}" />
                         </VerticalStackLayout>
                     </Border>
@@ -104,7 +105,7 @@
 
                 <VerticalStackLayout Spacing="14">
                     <Grid ColumnDefinitions="*,Auto">
-                        <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="{Binding ContinueSectionTitle}" />
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding ContinueSectionTitle}" />
                         <Button
                             Grid.Column="1"
                             Command="{Binding OpenLibraryCommand}"
@@ -134,7 +135,7 @@
 
                 <VerticalStackLayout Spacing="14">
                     <Grid ColumnDefinitions="*,Auto">
-                        <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="{Binding RecentlyAddedSectionTitle}" />
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding RecentlyAddedSectionTitle}" />
                         <Button Grid.Column="1" Command="{Binding OpenLibraryCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding SeeAllText}" />
                     </Grid>
                     <CollectionView ItemsSource="{Binding RecentItems}" SelectionMode="None">
@@ -160,7 +161,7 @@
 
                 <VerticalStackLayout Spacing="12">
                     <Grid ColumnDefinitions="*,Auto">
-                        <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="{Binding FavoritesSectionTitle}" />
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding FavoritesSectionTitle}" />
                         <Label Grid.Column="1" FontSize="18" Text="♡" TextColor="#F07CB8" />
                     </Grid>
                     <CollectionView ItemsSource="{Binding FavoriteItems}" SelectionMode="None">
@@ -186,7 +187,7 @@
 
                 <VerticalStackLayout Spacing="14">
                     <Grid ColumnDefinitions="*,Auto">
-                        <Label FontAttributes="Bold" FontFamily="serif" FontSize="20" Text="{Binding CategoryOverviewTitle}" />
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding CategoryOverviewTitle}" />
                         <Button Grid.Column="1" Command="{Binding OpenStatisticsCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding FullStatsText}" />
                     </Grid>
                     <CollectionView ItemsSource="{Binding CategorySummaries}" SelectionMode="None">

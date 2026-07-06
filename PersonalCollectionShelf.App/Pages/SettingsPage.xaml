@@ -16,7 +16,7 @@
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                    <Label FontSize="15" Text="⌕" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
                     <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." />
                     <Border Grid.Column="2" Padding="6,2" BackgroundColor="{StaticResource MutedSoft}" Stroke="{StaticResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
                         <Label FontSize="10" Text="⌘K" TextColor="{StaticResource MutedForeground}" />
@@ -33,7 +33,7 @@
                 MaximumWidthRequest="584"
                 Spacing="24"
                 WidthRequest="584">
-                <Label FontAttributes="Bold" FontFamily="serif" FontSize="30" Text="{Binding PageTitle}" />
+                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
 
                 <VerticalStackLayout Spacing="8">
                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="APPEARANCE" />
@@ -92,7 +92,7 @@
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ExportButtonText}" />
                                     <Label FontSize="12" Text="Download as CSV or JSON" TextColor="{StaticResource Primary}" />
                                 </VerticalStackLayout>
-                                <Button Grid.Column="1" Command="{Binding ExportCommand}" Style="{StaticResource LinkButtonStyle}" Text="›" />
+                                <Button Grid.Column="1" Command="{Binding ExportCommand}" Style="{StaticResource LinkButtonStyle}" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
@@ -100,7 +100,7 @@
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ImportButtonText}" />
                                     <Label FontSize="12" Text="Import collection JSON" TextColor="{StaticResource Primary}" />
                                 </VerticalStackLayout>
-                                <Button Grid.Column="1" Command="{Binding ImportCommand}" Style="{StaticResource LinkButtonStyle}" Text="›" />
+                                <Button Grid.Column="1" Command="{Binding ImportCommand}" Style="{StaticResource LinkButtonStyle}" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto">
@@ -108,7 +108,7 @@
                                     <Label FontAttributes="Bold" FontSize="14" Text="Import from Letterboxd" />
                                     <Label FontSize="12" Text="Movies and TV series ratings" TextColor="{StaticResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" Text="›" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto">
@@ -116,7 +116,7 @@
                                     <Label FontAttributes="Bold" FontSize="14" Text="Import from Goodreads" />
                                     <Label FontSize="12" Text="Books, shelves, and reviews" TextColor="{StaticResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" Text="›" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto">
@@ -124,7 +124,7 @@
                                     <Label FontAttributes="Bold" FontSize="14" Text="Import from Steam" />
                                     <Label FontSize="12" Text="Games, playtime, and achievements" TextColor="{StaticResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" Text="›" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto">
@@ -132,7 +132,7 @@
                                     <Label FontAttributes="Bold" FontSize="14" Text="Import from MyAnimeList" />
                                     <Label FontSize="12" Text="Anime and manga lists" TextColor="{StaticResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" Text="›" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
                             </Grid>
                         </VerticalStackLayout>
                     </Border>

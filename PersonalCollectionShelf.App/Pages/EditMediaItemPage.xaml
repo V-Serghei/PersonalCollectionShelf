@@ -21,17 +21,18 @@
                     <Grid ColumnDefinitions="*,32">
                         <Label
                             FontAttributes="Bold"
-                            FontFamily="serif"
+                            FontFamily="Cambria"
                             FontSize="21"
                             Text="{Binding PageTitle}" />
                         <Button
                             Grid.Column="1"
                             Command="{Binding CancelCommand}"
                             CornerRadius="16"
+                            FontFamily="Segoe MDL2 Assets"
                             HeightRequest="32"
                             Padding="0"
                             Style="{StaticResource SecondaryButtonStyle}"
-                            Text="×"
+                            Text="&#xE711;"
                             WidthRequest="32" />
                     </Grid>
 

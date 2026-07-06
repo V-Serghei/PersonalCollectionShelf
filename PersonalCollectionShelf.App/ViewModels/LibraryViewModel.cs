@@ -41,6 +41,8 @@ public partial class LibraryViewModel : BaseViewModel
 
     public ObservableCollection<StatusSummaryViewModel> StatusSummaries { get; } = [];
 
+    public ObservableCollection<MonthlyActivityPoint> MonthlyActivity { get; } = [];
+
     public ObservableCollection<LocalizedOption<MediaType?>> MediaTypeFilters { get; } = [];
 
     public ObservableCollection<LocalizedOption<MediaStatus?>> StatusFilters { get; } = [];
@@ -597,6 +599,15 @@ public partial class LibraryViewModel : BaseViewModel
                 T($"MediaStatus.{status}"),
                 items.Count(item => item.Status == status),
                 MediaPresentation.GetStatusForegroundColor(status)));
+        }
+
+        MonthlyActivity.Clear();
+        var now = DateTime.Now;
+        for (var offset = 8; offset >= 0; offset--)
+        {
+            var month = new DateTime(now.Year, now.Month, 1).AddMonths(-offset);
+            var count = items.Count(item => item.CreatedAt.Year == month.Year && item.CreatedAt.Month == month.Month);
+            MonthlyActivity.Add(new MonthlyActivityPoint(month.ToString("MMM", CultureInfo.InvariantCulture), count));
         }
     }
 
