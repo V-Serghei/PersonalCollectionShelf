@@ -14,3 +14,13 @@
 - Targeted .NET 10 so MAUI Android and Windows builds use the current SDK/workload support line.
 - Verified local Windows and Android app builds and synchronized localization keys.
 - NuGet currently reports `SQLitePCLRaw.lib.e_sqlite3` and `SQLitePCLRaw.lib.e_sqlite3.android` vulnerability warnings even at latest available `2.1.11`; revisit SQLite package choices when patched packages are available.
+
+## 2026-07-06
+
+- Created and pushed `feature/windows-mvp` for product UI and Windows MVP work.
+- Added category, tags, cover URL presentation, dynamic category/tag filters, and richer library/detail UI.
+- Added JSON export/import for the local library from Settings.
+- Added smart library filters for favorites, missing category, missing cover, completed, and in-progress items.
+- Removed WinRT MVVM generator warnings by replacing `[ObservableProperty]` fields with manual `SetProperty` properties.
+- Added UX-first development rules requiring senior product/UX analysis before new screens and progressive disclosure over large forms.
+- Fixed language switching behavior so localization refresh does not reload library data or recreate the language picker options.

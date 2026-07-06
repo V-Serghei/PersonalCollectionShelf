@@ -39,7 +39,7 @@ public partial class SettingsViewModel : BaseViewModel
         _syncService = syncService;
         _mediaItemService = mediaItemService;
         _authService = authService;
-        ReloadLanguageOptions();
+        InitializeLanguageOptions();
         StatusMessage = T(_statusMessageKey);
     }
 
@@ -96,13 +96,14 @@ public partial class SettingsViewModel : BaseViewModel
     protected override void RefreshLocalizedProperties()
     {
         base.RefreshLocalizedProperties();
-        ReloadLanguageOptions();
         StatusMessage = T(_statusMessageKey);
     }
 
     private void OnSelectedLanguageOptionChanged(LocalizedOption<string>? value)
     {
-        if (!_suppressLanguageChange && value is not null)
+        if (!_suppressLanguageChange &&
+            value is not null &&
+            !string.Equals(LocalizationService.CurrentLanguage, value.Value, StringComparison.OrdinalIgnoreCase))
         {
             LocalizationService.SetLanguage(value.Value);
         }
@@ -208,7 +209,7 @@ public partial class SettingsViewModel : BaseViewModel
         StatusMessage = string.Format(T("Settings.Import.Completed"), imported, updated);
     }
 
-    private void ReloadLanguageOptions()
+    private void InitializeLanguageOptions()
     {
         _suppressLanguageChange = true;
         try

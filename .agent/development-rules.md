@@ -17,3 +17,9 @@
 - Use `develop` as the integration branch and create feature branches from it.
 - Use clear English commit messages.
 - Add or update tests for domain and application behavior changes.
+- Before implementing any new screen, first analyze it from the perspective of a Senior UX Designer.
+- Suggest improvements that reduce clicks, simplify user interactions, and improve accessibility.
+- Prefer progressive disclosure over large forms.
+- Reuse existing UI components whenever possible.
+- Continuously refactor the UI to maintain a consistent design language across the application.
+- Treat UI quality as a first-class product requirement, not as a final polish step.

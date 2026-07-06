@@ -14,6 +14,7 @@ public partial class LibraryViewModel : BaseViewModel
 {
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
+    private IReadOnlyList<MediaItemDto> _visibleItems = [];
     private bool _suppressFilterReload;
 
     public LibraryViewModel(
@@ -148,7 +149,7 @@ public partial class LibraryViewModel : BaseViewModel
     {
         base.RefreshLocalizedProperties();
         ReloadFilterOptions();
-        _ = LoadAsync();
+        PopulateMediaItems(_visibleItems);
     }
 
     private void OnSelectedMediaTypeFilterChanged(LocalizedOption<MediaType?>? value)
@@ -227,11 +228,8 @@ public partial class LibraryViewModel : BaseViewModel
                 Tag = SelectedTagFilter?.Value
             });
 
-            MediaItems.Clear();
-            foreach (var item in ApplyQuickFilter(items))
-            {
-                MediaItems.Add(ToListItem(item));
-            }
+            _visibleItems = ApplyQuickFilter(items).ToList();
+            PopulateMediaItems(_visibleItems);
         }
         finally
         {
@@ -396,6 +394,15 @@ public partial class LibraryViewModel : BaseViewModel
             item.IsFavorite,
             item.IsFavorite ? T("Library.FavoriteMarker") : string.Empty,
             T("Library.OpenButton"));
+    }
+
+    private void PopulateMediaItems(IEnumerable<MediaItemDto> items)
+    {
+        MediaItems.Clear();
+        foreach (var item in items)
+        {
+            MediaItems.Add(ToListItem(item));
+        }
     }
 
     private IEnumerable<MediaItemDto> ApplyQuickFilter(IEnumerable<MediaItemDto> items)
