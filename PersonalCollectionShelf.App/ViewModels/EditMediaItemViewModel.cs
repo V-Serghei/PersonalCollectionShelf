@@ -50,6 +50,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
     private string _coverUrl = string.Empty;
     private string _notes = string.Empty;
     private bool _isFavorite;
+    private bool _isAdvancedVisible;
     private string _errorMessage = string.Empty;
 
     public Guid? MediaItemId
@@ -173,6 +174,18 @@ public partial class EditMediaItemViewModel : BaseViewModel
         set => SetProperty(ref _isFavorite, value);
     }
 
+    public bool IsAdvancedVisible
+    {
+        get => _isAdvancedVisible;
+        set
+        {
+            if (SetProperty(ref _isAdvancedVisible, value))
+            {
+                OnPropertyChanged(nameof(AdvancedFieldsButtonText));
+            }
+        }
+    }
+
     public string ErrorMessage
     {
         get => _errorMessage;
@@ -245,6 +258,14 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public string FavoriteLabel => T("Edit.Label.Favorite");
 
+    public string EssentialsSectionTitle => T("Edit.Section.Essentials");
+
+    public string DetailsSectionTitle => T("Edit.Section.Details");
+
+    public string ProgressSectionTitle => T("Edit.Section.Progress");
+
+    public string AdvancedFieldsButtonText => IsAdvancedVisible ? T("Edit.HideAdvanced") : T("Edit.ShowAdvanced");
+
     public string SaveButtonText => T("Common.Save");
 
     public string CancelButtonText => T("Common.Cancel");
@@ -287,6 +308,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
         CoverUrl = item.CoverUrl ?? string.Empty;
         Notes = item.Notes ?? string.Empty;
         IsFavorite = item.IsFavorite;
+        IsAdvancedVisible = true;
     }
 
     protected override void RefreshLocalizedProperties()
@@ -379,6 +401,12 @@ public partial class EditMediaItemViewModel : BaseViewModel
         await Shell.Current.GoToAsync("..");
     }
 
+    [RelayCommand]
+    private void ToggleAdvanced()
+    {
+        IsAdvancedVisible = !IsAdvancedVisible;
+    }
+
     private void ReloadOptions()
     {
         var selectedMediaType = SelectedMediaType?.Value ?? MediaType.Other;
@@ -420,6 +448,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
         CoverUrl = string.Empty;
         Notes = string.Empty;
         IsFavorite = false;
+        IsAdvancedVisible = false;
         ErrorMessage = string.Empty;
     }
 

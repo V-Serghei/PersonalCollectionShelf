@@ -7,85 +7,157 @@
     x:DataType="viewModels:EditMediaItemViewModel"
     Title="{Binding PageTitle}">
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="12">
+        <VerticalStackLayout Padding="16" Spacing="14">
             <Label
                 IsVisible="{Binding HasErrorMessage}"
                 Text="{Binding ErrorMessage}"
                 TextColor="#B91C1C" />
 
-            <Label Text="{Binding TitleLabel}" />
-            <Entry Placeholder="{Binding TitlePlaceholder}" Text="{Binding ItemTitle}" />
+            <Border
+                Padding="16"
+                BackgroundColor="{AppThemeBinding Light=White, Dark=#1F2937}"
+                Stroke="{AppThemeBinding Light=#D9DEE8, Dark=#374151}"
+                StrokeShape="RoundRectangle 10"
+                StrokeThickness="1">
+                <VerticalStackLayout Spacing="12">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="18"
+                        Text="{Binding EssentialsSectionTitle}" />
 
-            <Label Text="{Binding OriginalTitleLabel}" />
-            <Entry Placeholder="{Binding OriginalTitlePlaceholder}" Text="{Binding OriginalTitle}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="6">
+                            <Label Text="{Binding TitleLabel}" />
+                            <Entry Placeholder="{Binding TitlePlaceholder}" Text="{Binding ItemTitle}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="6">
+                            <Label Text="{Binding CategoryLabel}" />
+                            <Entry Placeholder="{Binding CategoryPlaceholder}" Text="{Binding Category}" />
+                        </VerticalStackLayout>
+                    </Grid>
 
-            <Label Text="{Binding DescriptionLabel}" />
-            <Editor AutoSize="TextChanges" Placeholder="{Binding DescriptionPlaceholder}" Text="{Binding Description}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="6">
+                            <Label Text="{Binding MediaTypeLabel}" />
+                            <Picker
+                                ItemDisplayBinding="{Binding DisplayName}"
+                                ItemsSource="{Binding MediaTypes}"
+                                SelectedItem="{Binding SelectedMediaType}"
+                                Title="{Binding MediaTypeLabel}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="6">
+                            <Label Text="{Binding StatusLabel}" />
+                            <Picker
+                                ItemDisplayBinding="{Binding DisplayName}"
+                                ItemsSource="{Binding Statuses}"
+                                SelectedItem="{Binding SelectedStatus}"
+                                Title="{Binding StatusLabel}" />
+                        </VerticalStackLayout>
+                    </Grid>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                <VerticalStackLayout Grid.Column="0">
-                    <Label Text="{Binding CategoryLabel}" />
-                    <Entry Placeholder="{Binding CategoryPlaceholder}" Text="{Binding Category}" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="6">
+                            <Label Text="{Binding CoverUrlLabel}" />
+                            <Entry Placeholder="{Binding CoverUrlPlaceholder}" Text="{Binding CoverUrl}" />
+                        </VerticalStackLayout>
+                        <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="End">
+                            <Switch IsToggled="{Binding IsFavorite}" />
+                            <Label Text="{Binding FavoriteLabel}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Grid>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="{Binding TagsLabel}" />
+                        <Entry Placeholder="{Binding TagsPlaceholder}" Text="{Binding Tags}" />
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="1">
-                    <Label Text="{Binding TagsLabel}" />
-                    <Entry Placeholder="{Binding TagsPlaceholder}" Text="{Binding Tags}" />
-                </VerticalStackLayout>
-            </Grid>
+            </Border>
 
-            <Label Text="{Binding MediaTypeLabel}" />
-            <Picker
-                ItemDisplayBinding="{Binding DisplayName}"
-                ItemsSource="{Binding MediaTypes}"
-                SelectedItem="{Binding SelectedMediaType}"
-                Title="{Binding MediaTypeLabel}" />
+            <Button
+                Command="{Binding ToggleAdvancedCommand}"
+                Text="{Binding AdvancedFieldsButtonText}" />
 
-            <Label Text="{Binding StatusLabel}" />
-            <Picker
-                ItemDisplayBinding="{Binding DisplayName}"
-                ItemsSource="{Binding Statuses}"
-                SelectedItem="{Binding SelectedStatus}"
-                Title="{Binding StatusLabel}" />
+            <VerticalStackLayout IsVisible="{Binding IsAdvancedVisible}" Spacing="14">
+                <Border
+                    Padding="16"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1F2937}"
+                    Stroke="{AppThemeBinding Light=#D9DEE8, Dark=#374151}"
+                    StrokeShape="RoundRectangle 10"
+                    StrokeThickness="1">
+                    <VerticalStackLayout Spacing="12">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="18"
+                            Text="{Binding DetailsSectionTitle}" />
 
-            <Label Text="{Binding RatingLabel}" />
-            <Entry Keyboard="Numeric" Placeholder="{Binding RatingPlaceholder}" Text="{Binding Rating}" />
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding OriginalTitleLabel}" />
+                            <Entry Placeholder="{Binding OriginalTitlePlaceholder}" Text="{Binding OriginalTitle}" />
+                        </VerticalStackLayout>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                <VerticalStackLayout Grid.Column="0">
-                    <Label Text="{Binding ProgressCurrentLabel}" />
-                    <Entry Keyboard="Numeric" Placeholder="{Binding ProgressCurrentPlaceholder}" Text="{Binding ProgressCurrent}" />
-                </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="1">
-                    <Label Text="{Binding ProgressTotalLabel}" />
-                    <Entry Keyboard="Numeric" Placeholder="{Binding ProgressTotalPlaceholder}" Text="{Binding ProgressTotal}" />
-                </VerticalStackLayout>
-            </Grid>
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding DescriptionLabel}" />
+                            <Editor AutoSize="TextChanges" Placeholder="{Binding DescriptionPlaceholder}" Text="{Binding Description}" />
+                        </VerticalStackLayout>
 
-            <HorizontalStackLayout Spacing="10">
-                <Switch IsToggled="{Binding HasStartDate}" />
-                <Label Text="{Binding StartDateLabel}" VerticalOptions="Center" />
-            </HorizontalStackLayout>
-            <DatePicker Date="{Binding StartDate}" IsVisible="{Binding HasStartDate}" />
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding NotesLabel}" />
+                            <Editor AutoSize="TextChanges" Placeholder="{Binding NotesPlaceholder}" Text="{Binding Notes}" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
 
-            <HorizontalStackLayout Spacing="10">
-                <Switch IsToggled="{Binding HasFinishDate}" />
-                <Label Text="{Binding FinishDateLabel}" VerticalOptions="Center" />
-            </HorizontalStackLayout>
-            <DatePicker Date="{Binding FinishDate}" IsVisible="{Binding HasFinishDate}" />
+                <Border
+                    Padding="16"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1F2937}"
+                    Stroke="{AppThemeBinding Light=#D9DEE8, Dark=#374151}"
+                    StrokeShape="RoundRectangle 10"
+                    StrokeThickness="1">
+                    <VerticalStackLayout Spacing="12">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="18"
+                            Text="{Binding ProgressSectionTitle}" />
 
-            <Label Text="{Binding ReleaseYearLabel}" />
-            <Entry Keyboard="Numeric" Placeholder="{Binding ReleaseYearPlaceholder}" Text="{Binding ReleaseYear}" />
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="6">
+                                <Label Text="{Binding RatingLabel}" />
+                                <Entry Keyboard="Numeric" Placeholder="{Binding RatingPlaceholder}" Text="{Binding Rating}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                <Label Text="{Binding ProgressCurrentLabel}" />
+                                <Entry Keyboard="Numeric" Placeholder="{Binding ProgressCurrentPlaceholder}" Text="{Binding ProgressCurrent}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="2" Spacing="6">
+                                <Label Text="{Binding ProgressTotalLabel}" />
+                                <Entry Keyboard="Numeric" Placeholder="{Binding ProgressTotalPlaceholder}" Text="{Binding ProgressTotal}" />
+                            </VerticalStackLayout>
+                        </Grid>
 
-            <Label Text="{Binding CoverUrlLabel}" />
-            <Entry Placeholder="{Binding CoverUrlPlaceholder}" Text="{Binding CoverUrl}" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="8">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Switch IsToggled="{Binding HasStartDate}" />
+                                    <Label Text="{Binding StartDateLabel}" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                                <DatePicker Date="{Binding StartDate}" IsVisible="{Binding HasStartDate}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="8">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Switch IsToggled="{Binding HasFinishDate}" />
+                                    <Label Text="{Binding FinishDateLabel}" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                                <DatePicker Date="{Binding FinishDate}" IsVisible="{Binding HasFinishDate}" />
+                            </VerticalStackLayout>
+                        </Grid>
 
-            <Label Text="{Binding NotesLabel}" />
-            <Editor AutoSize="TextChanges" Placeholder="{Binding NotesPlaceholder}" Text="{Binding Notes}" />
-
-            <HorizontalStackLayout Spacing="10">
-                <Switch IsToggled="{Binding IsFavorite}" />
-                <Label Text="{Binding FavoriteLabel}" VerticalOptions="Center" />
-            </HorizontalStackLayout>
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding ReleaseYearLabel}" />
+                            <Entry Keyboard="Numeric" Placeholder="{Binding ReleaseYearPlaceholder}" Text="{Binding ReleaseYear}" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
 
             <HorizontalStackLayout Spacing="10">
                 <Button Command="{Binding SaveCommand}" Text="{Binding SaveButtonText}" />
