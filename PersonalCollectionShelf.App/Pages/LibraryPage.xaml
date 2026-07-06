@@ -6,7 +6,7 @@
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:LibraryViewModel"
     Title="{Binding PageTitle}">
-    <Grid Padding="16" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
+    <Grid Padding="16" RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12">
         <SearchBar
             Grid.Row="0"
             Placeholder="{Binding SearchPlaceholder}"
@@ -47,8 +47,19 @@
                 Title="{Binding TagFilterPlaceholder}" />
         </Grid>
 
+        <ScrollView Grid.Row="3" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+            <HorizontalStackLayout Spacing="8">
+                <Button Command="{Binding ShowAllCommand}" Text="{Binding QuickFilterAllText}" />
+                <Button Command="{Binding ShowFavoritesCommand}" Text="{Binding QuickFilterFavoritesText}" />
+                <Button Command="{Binding ShowMissingCategoryCommand}" Text="{Binding QuickFilterMissingCategoryText}" />
+                <Button Command="{Binding ShowMissingCoverCommand}" Text="{Binding QuickFilterMissingCoverText}" />
+                <Button Command="{Binding ShowCompletedCommand}" Text="{Binding QuickFilterCompletedText}" />
+                <Button Command="{Binding ShowInProgressCommand}" Text="{Binding QuickFilterInProgressText}" />
+            </HorizontalStackLayout>
+        </ScrollView>
+
         <RefreshView
-            Grid.Row="3"
+            Grid.Row="4"
             Command="{Binding LoadCommand}"
             IsRefreshing="{Binding IsBusy}">
             <CollectionView

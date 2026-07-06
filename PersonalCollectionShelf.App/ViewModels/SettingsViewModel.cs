@@ -1,6 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.ApplicationModel.DataTransfer;
+using Microsoft.Maui.Devices;
+using Microsoft.Maui.Storage;
+using PersonalCollectionShelf.Application.DTOs;
 using PersonalCollectionShelf.Application.Interfaces;
 using PersonalCollectionShelf.App.Models;
 using PersonalCollectionShelf.App.Services;
@@ -10,13 +15,30 @@ namespace PersonalCollectionShelf.App.ViewModels;
 public partial class SettingsViewModel : BaseViewModel
 {
     private readonly ISyncService _syncService;
+    private readonly IMediaItemService _mediaItemService;
+    private readonly IAuthService _authService;
     private bool _suppressLanguageChange;
     private string _statusMessageKey = "Sync.Status.NotConfigured";
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        WriteIndented = true
+    };
+    private static readonly FilePickerFileType JsonFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
+    {
+        { DevicePlatform.WinUI, [".json"] },
+        { DevicePlatform.Android, ["application/json"] }
+    });
 
-    public SettingsViewModel(ISyncService syncService, ILocalizationService localizationService)
+    public SettingsViewModel(
+        ISyncService syncService,
+        IMediaItemService mediaItemService,
+        IAuthService authService,
+        ILocalizationService localizationService)
         : base(localizationService)
     {
         _syncService = syncService;
+        _mediaItemService = mediaItemService;
+        _authService = authService;
         ReloadLanguageOptions();
         StatusMessage = T(_statusMessageKey);
     }
@@ -87,17 +109,87 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private void Export()
+    private async Task ExportAsync()
     {
-        _statusMessageKey = "Settings.Export.Placeholder";
-        StatusMessage = T(_statusMessageKey);
+        var userId = await GetCurrentUserIdAsync();
+        var items = await _mediaItemService.GetLibraryAsync(userId);
+        var document = new LibraryExportDocument
+        {
+            Items = items
+        };
+
+        var exportsDirectory = Path.Combine(FileSystem.AppDataDirectory, "exports");
+        Directory.CreateDirectory(exportsDirectory);
+
+        var fileName = $"personal-collection-shelf-{DateTime.Now:yyyyMMdd-HHmmss}.json";
+        var filePath = Path.Combine(exportsDirectory, fileName);
+        var json = JsonSerializer.Serialize(document, JsonOptions);
+        await File.WriteAllTextAsync(filePath, json);
+
+        StatusMessage = string.Format(T("Settings.Export.Completed"), items.Count, filePath);
+
+        await Share.RequestAsync(new ShareFileRequest
+        {
+            Title = T("Settings.Export.ShareTitle"),
+            File = new ShareFile(filePath)
+        });
     }
 
     [RelayCommand]
-    private void Import()
+    private async Task ImportAsync()
     {
-        _statusMessageKey = "Settings.Import.Placeholder";
-        StatusMessage = T(_statusMessageKey);
+        var result = await FilePicker.PickAsync(new PickOptions
+        {
+            PickerTitle = T("Settings.Import.PickerTitle"),
+            FileTypes = JsonFileType
+        });
+
+        if (result is null)
+        {
+            return;
+        }
+
+        LibraryExportDocument? document;
+        try
+        {
+            await using var stream = await result.OpenReadAsync();
+            document = await JsonSerializer.DeserializeAsync<LibraryExportDocument>(stream, JsonOptions);
+        }
+        catch (JsonException)
+        {
+            StatusMessage = T("Settings.Import.InvalidFile");
+            return;
+        }
+
+        if (document is null)
+        {
+            StatusMessage = T("Settings.Import.InvalidFile");
+            return;
+        }
+
+        var userId = await GetCurrentUserIdAsync();
+        var imported = 0;
+        var updated = 0;
+
+        foreach (var item in document.Items)
+        {
+            var existing = item.Id == Guid.Empty
+                ? null
+                : await _mediaItemService.GetMediaItemAsync(item.Id, userId);
+
+            if (existing is null)
+            {
+                await _mediaItemService.CreateMediaItemAsync(ToCreateRequest(item, userId));
+                imported++;
+            }
+            else
+            {
+                await _mediaItemService.UpdateMediaItemAsync(ToUpdateRequest(item, userId));
+                updated++;
+            }
+        }
+
+        StatusMessage = string.Format(T("Settings.Import.Completed"), imported, updated);
     }
 
     private void ReloadLanguageOptions()
@@ -114,5 +206,59 @@ public partial class SettingsViewModel : BaseViewModel
         {
             _suppressLanguageChange = false;
         }
+    }
+
+    private static CreateMediaItemRequest ToCreateRequest(MediaItemDto item, string userId)
+    {
+        return new CreateMediaItemRequest
+        {
+            UserId = userId,
+            Title = item.Title,
+            OriginalTitle = item.OriginalTitle,
+            Description = item.Description,
+            Category = item.Category,
+            Tags = item.Tags,
+            MediaType = item.MediaType,
+            Status = item.Status,
+            Rating = item.Rating,
+            ProgressCurrent = item.ProgressCurrent,
+            ProgressTotal = item.ProgressTotal,
+            StartDate = item.StartDate,
+            FinishDate = item.FinishDate,
+            ReleaseYear = item.ReleaseYear,
+            CoverUrl = item.CoverUrl,
+            Notes = item.Notes,
+            IsFavorite = item.IsFavorite
+        };
+    }
+
+    private static UpdateMediaItemRequest ToUpdateRequest(MediaItemDto item, string userId)
+    {
+        return new UpdateMediaItemRequest
+        {
+            Id = item.Id,
+            UserId = userId,
+            Title = item.Title,
+            OriginalTitle = item.OriginalTitle,
+            Description = item.Description,
+            Category = item.Category,
+            Tags = item.Tags,
+            MediaType = item.MediaType,
+            Status = item.Status,
+            Rating = item.Rating,
+            ProgressCurrent = item.ProgressCurrent,
+            ProgressTotal = item.ProgressTotal,
+            StartDate = item.StartDate,
+            FinishDate = item.FinishDate,
+            ReleaseYear = item.ReleaseYear,
+            CoverUrl = item.CoverUrl,
+            Notes = item.Notes,
+            IsFavorite = item.IsFavorite
+        };
+    }
+
+    private async Task<string> GetCurrentUserIdAsync()
+    {
+        return await _authService.GetCurrentUserIdAsync() ?? "local-user";
     }
 }

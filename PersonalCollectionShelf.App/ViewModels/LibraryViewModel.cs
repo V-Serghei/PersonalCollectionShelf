@@ -52,6 +52,9 @@ public partial class LibraryViewModel : BaseViewModel
     [ObservableProperty]
     private LocalizedOption<string?>? selectedTagFilter;
 
+    [ObservableProperty]
+    private LibraryQuickFilter activeQuickFilter;
+
     public string PageTitle => T("Library.Title");
 
     public string SearchPlaceholder => T("Library.SearchPlaceholder");
@@ -67,6 +70,18 @@ public partial class LibraryViewModel : BaseViewModel
     public string AddButtonText => T("Library.AddButton");
 
     public string EmptyLibraryText => T("Library.Empty");
+
+    public string QuickFilterAllText => GetQuickFilterText(LibraryQuickFilter.All, "Library.QuickFilter.All");
+
+    public string QuickFilterFavoritesText => GetQuickFilterText(LibraryQuickFilter.Favorites, "Library.QuickFilter.Favorites");
+
+    public string QuickFilterMissingCategoryText => GetQuickFilterText(LibraryQuickFilter.MissingCategory, "Library.QuickFilter.MissingCategory");
+
+    public string QuickFilterMissingCoverText => GetQuickFilterText(LibraryQuickFilter.MissingCover, "Library.QuickFilter.MissingCover");
+
+    public string QuickFilterCompletedText => GetQuickFilterText(LibraryQuickFilter.Completed, "Library.QuickFilter.Completed");
+
+    public string QuickFilterInProgressText => GetQuickFilterText(LibraryQuickFilter.InProgress, "Library.QuickFilter.InProgress");
 
     protected override void RefreshLocalizedProperties()
     {
@@ -115,6 +130,17 @@ public partial class LibraryViewModel : BaseViewModel
         }
     }
 
+    partial void OnActiveQuickFilterChanged(LibraryQuickFilter value)
+    {
+        _ = LoadAsync();
+        OnPropertyChanged(nameof(QuickFilterAllText));
+        OnPropertyChanged(nameof(QuickFilterFavoritesText));
+        OnPropertyChanged(nameof(QuickFilterMissingCategoryText));
+        OnPropertyChanged(nameof(QuickFilterMissingCoverText));
+        OnPropertyChanged(nameof(QuickFilterCompletedText));
+        OnPropertyChanged(nameof(QuickFilterInProgressText));
+    }
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -141,7 +167,7 @@ public partial class LibraryViewModel : BaseViewModel
             });
 
             MediaItems.Clear();
-            foreach (var item in items)
+            foreach (var item in ApplyQuickFilter(items))
             {
                 MediaItems.Add(ToListItem(item));
             }
@@ -167,6 +193,42 @@ public partial class LibraryViewModel : BaseViewModel
         }
 
         await Shell.Current.GoToAsync($"{nameof(MediaDetailsPage)}?id={item.Id}");
+    }
+
+    [RelayCommand]
+    private void ShowAll()
+    {
+        ActiveQuickFilter = LibraryQuickFilter.All;
+    }
+
+    [RelayCommand]
+    private void ShowFavorites()
+    {
+        ActiveQuickFilter = LibraryQuickFilter.Favorites;
+    }
+
+    [RelayCommand]
+    private void ShowMissingCategory()
+    {
+        ActiveQuickFilter = LibraryQuickFilter.MissingCategory;
+    }
+
+    [RelayCommand]
+    private void ShowMissingCover()
+    {
+        ActiveQuickFilter = LibraryQuickFilter.MissingCover;
+    }
+
+    [RelayCommand]
+    private void ShowCompleted()
+    {
+        ActiveQuickFilter = LibraryQuickFilter.Completed;
+    }
+
+    [RelayCommand]
+    private void ShowInProgress()
+    {
+        ActiveQuickFilter = LibraryQuickFilter.InProgress;
     }
 
     private void ReloadFilterOptions()
@@ -273,6 +335,25 @@ public partial class LibraryViewModel : BaseViewModel
             item.IsFavorite,
             item.IsFavorite ? T("Library.FavoriteMarker") : string.Empty,
             T("Library.OpenButton"));
+    }
+
+    private IEnumerable<MediaItemDto> ApplyQuickFilter(IEnumerable<MediaItemDto> items)
+    {
+        return ActiveQuickFilter switch
+        {
+            LibraryQuickFilter.Favorites => items.Where(item => item.IsFavorite),
+            LibraryQuickFilter.MissingCategory => items.Where(item => string.IsNullOrWhiteSpace(item.Category)),
+            LibraryQuickFilter.MissingCover => items.Where(item => string.IsNullOrWhiteSpace(item.CoverUrl)),
+            LibraryQuickFilter.Completed => items.Where(item => item.Status == MediaStatus.Completed),
+            LibraryQuickFilter.InProgress => items.Where(item => item.Status is MediaStatus.InProgress or MediaStatus.Rewatching or MediaStatus.Rereading),
+            _ => items
+        };
+    }
+
+    private string GetQuickFilterText(LibraryQuickFilter filter, string key)
+    {
+        var label = T(key);
+        return ActiveQuickFilter == filter ? $"[{label}]" : label;
     }
 
     private static IEnumerable<string> SplitTags(string? tags)
