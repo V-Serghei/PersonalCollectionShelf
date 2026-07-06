@@ -1,13 +1,25 @@
+using Microsoft.Maui.Graphics;
+
 namespace PersonalCollectionShelf.App.ViewModels;
 
 public sealed record MediaItemListItemViewModel(
     Guid Id,
     string Title,
+    string MediaTypeLabel,
+    Color MediaTypeColor,
+    string StatusLabel,
+    Color StatusForegroundColor,
+    Color StatusBackgroundColor,
     string Metadata,
     string CategoryLine,
     string TagsLine,
     string Progress,
+    double ProgressPercent,
+    bool HasProgressBar,
     string Rating,
+    string RatingShort,
+    bool HasRating,
+    string ReleaseYearText,
     string CoverUrl,
     bool HasCoverUrl,
     bool HasNoCoverUrl,

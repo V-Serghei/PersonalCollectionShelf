@@ -2,9 +2,28 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
-    <Color x:Key="Primary">#2D6A4F</Color>
-    <Color x:Key="PrimaryDark">#1B4332</Color>
-    <Color x:Key="Accent">#457B9D</Color>
-    <Color x:Key="PageBackgroundLight">#F6F8FB</Color>
-    <Color x:Key="PageBackgroundDark">#111827</Color>
+    <Color x:Key="Background">#0D0B14</Color>
+    <Color x:Key="Foreground">#EDE9F8</Color>
+    <Color x:Key="Card">#1A1726</Color>
+    <Color x:Key="CardElevated">#201C2D</Color>
+    <Color x:Key="Sidebar">#100E1A</Color>
+    <Color x:Key="Muted">#1E1A2E</Color>
+    <Color x:Key="MutedSoft">#231F30</Color>
+    <Color x:Key="MutedForeground">#8179A3</Color>
+    <Color x:Key="Border">#2B2440</Color>
+    <Color x:Key="BorderSoft">#252036</Color>
+    <Color x:Key="Primary">#9D7FF4</Color>
+    <Color x:Key="PrimaryPressed">#8B6FE0</Color>
+    <Color x:Key="PrimaryForeground">#0D0B14</Color>
+    <Color x:Key="Accent">#F0A340</Color>
+    <Color x:Key="Danger">#F87171</Color>
+    <Color x:Key="Success">#4ADE80</Color>
+    <Color x:Key="Info">#60A5FA</Color>
+    <Color x:Key="Warning">#FBBF24</Color>
+    <Color x:Key="MovieColor">#E07C54</Color>
+    <Color x:Key="SeriesColor">#5BA4F0</Color>
+    <Color x:Key="BookColor">#7CCC8A</Color>
+    <Color x:Key="GameColor">#C47CF0</Color>
+    <Color x:Key="AnimeColor">#F07CB8</Color>
+    <Color x:Key="MusicColor">#F0C040</Color>
 </ResourceDictionary>

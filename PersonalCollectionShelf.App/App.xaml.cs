@@ -10,6 +10,7 @@ public partial class App : Microsoft.Maui.Controls.Application
     {
         InitializeComponent();
 
+        UserAppTheme = AppTheme.Dark;
         _services = services;
         Services = services;
     }

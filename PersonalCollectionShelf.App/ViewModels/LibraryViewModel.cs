@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PersonalCollectionShelf.Application.DTOs;
@@ -144,6 +145,22 @@ public partial class LibraryViewModel : BaseViewModel
     public string QuickFilterCompletedText => GetQuickFilterText(LibraryQuickFilter.Completed, "Library.QuickFilter.Completed");
 
     public string QuickFilterInProgressText => GetQuickFilterText(LibraryQuickFilter.InProgress, "Library.QuickFilter.InProgress");
+
+    public int TotalItemCount => _visibleItems.Count;
+
+    public int CompletedItemCount => _visibleItems.Count(item => item.Status == MediaStatus.Completed);
+
+    public int InProgressItemCount => _visibleItems.Count(item => item.Status is MediaStatus.InProgress or MediaStatus.Rewatching or MediaStatus.Rereading);
+
+    public int FavoritesItemCount => _visibleItems.Count(item => item.IsFavorite);
+
+    public string TotalItemsLabel => T("Common.All");
+
+    public string CompletedItemsLabel => T("Library.QuickFilter.Completed");
+
+    public string InProgressItemsLabel => T("Library.QuickFilter.InProgress");
+
+    public string FavoritesItemsLabel => T("Library.QuickFilter.Favorites");
 
     protected override void RefreshLocalizedProperties()
     {
@@ -382,11 +399,21 @@ public partial class LibraryViewModel : BaseViewModel
         return new MediaItemListItemViewModel(
             item.Id,
             item.Title,
+            type,
+            MediaPresentation.GetMediaTypeColor(item.MediaType),
+            status,
+            MediaPresentation.GetStatusForegroundColor(item.Status),
+            MediaPresentation.GetStatusBackgroundColor(item.Status),
             $"{type} - {status}",
             categoryLine,
             tagsLine,
             progress,
+            MediaPresentation.GetProgressPercent(item.ProgressCurrent, item.ProgressTotal, item.Status),
+            MediaPresentation.HasProgressBar(item.Status),
             rating,
+            item.Rating?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            item.Rating.HasValue,
+            item.ReleaseYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             item.CoverUrl ?? string.Empty,
             !string.IsNullOrWhiteSpace(item.CoverUrl),
             string.IsNullOrWhiteSpace(item.CoverUrl),
@@ -403,6 +430,16 @@ public partial class LibraryViewModel : BaseViewModel
         {
             MediaItems.Add(ToListItem(item));
         }
+
+        RefreshCollectionSummary();
+    }
+
+    private void RefreshCollectionSummary()
+    {
+        OnPropertyChanged(nameof(TotalItemCount));
+        OnPropertyChanged(nameof(CompletedItemCount));
+        OnPropertyChanged(nameof(InProgressItemCount));
+        OnPropertyChanged(nameof(FavoritesItemCount));
     }
 
     private IEnumerable<MediaItemDto> ApplyQuickFilter(IEnumerable<MediaItemDto> items)

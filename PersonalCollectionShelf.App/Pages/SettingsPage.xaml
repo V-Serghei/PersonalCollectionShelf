@@ -5,42 +5,196 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:SettingsViewModel"
+    Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="16">
-            <VerticalStackLayout Spacing="4">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding AccountSectionTitle}" />
-                <Label Text="{Binding AccountDescription}" />
+        <VerticalStackLayout
+            Padding="{OnIdiom Phone=14, Tablet=20, Desktop=24}"
+            Spacing="20"
+            HorizontalOptions="Center"
+            MaximumWidthRequest="720">
+            <VerticalStackLayout Spacing="2">
+                <Label Style="{StaticResource PageTitleLabelStyle}" Text="{Binding PageTitle}" />
+                <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding ThemeDescription}" />
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="8">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding SyncSectionTitle}" />
-                <Label Text="{Binding SyncDescription}" />
-                <Label Text="{Binding StatusMessage}" />
-                <Button Command="{Binding SyncNowCommand}" Text="{Binding SyncNowButtonText}" />
+                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ThemeSectionTitle}" />
+                <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="0">
+                        <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                <Label FontAttributes="Bold" FontSize="14" Text="{Binding ThemeSectionTitle}" />
+                                <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding ThemeDescription}" />
+                            </VerticalStackLayout>
+                            <Border
+                                Grid.Column="1"
+                                Padding="4"
+                                BackgroundColor="{StaticResource Muted}"
+                                Stroke="{StaticResource Border}"
+                                StrokeShape="RoundRectangle 14"
+                                StrokeThickness="1"
+                                VerticalOptions="Center">
+                                <Grid
+                                    ColumnDefinitions="24,24"
+                                    HeightRequest="24"
+                                    WidthRequest="48">
+                                    <Border
+                                        Grid.Column="1"
+                                        BackgroundColor="{StaticResource Primary}"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 10" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+
+                        <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                <Label FontAttributes="Bold" FontSize="14" Text="Accent" />
+                                <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding ThemeDescription}" />
+                            </VerticalStackLayout>
+                            <HorizontalStackLayout Grid.Column="1" Spacing="7" VerticalOptions="Center">
+                                <BoxView Color="{StaticResource Primary}" HeightRequest="22" WidthRequest="22" />
+                                <BoxView Color="{StaticResource Info}" HeightRequest="22" WidthRequest="22" />
+                                <BoxView Color="{StaticResource Success}" HeightRequest="22" WidthRequest="22" />
+                                <BoxView Color="{StaticResource Warning}" HeightRequest="22" WidthRequest="22" />
+                                <BoxView Color="#F07CB8" HeightRequest="22" WidthRequest="22" />
+                                <BoxView Color="#E07C54" HeightRequest="22" WidthRequest="22" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="8">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding ExportImportSectionTitle}" />
-                <HorizontalStackLayout Spacing="10">
-                    <Button Command="{Binding ExportCommand}" Text="{Binding ExportButtonText}" />
-                    <Button Command="{Binding ImportCommand}" Text="{Binding ImportButtonText}" />
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
-
-            <VerticalStackLayout Spacing="4">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding ThemeSectionTitle}" />
-                <Label Text="{Binding ThemeDescription}" />
+                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AccountSectionTitle}" />
+                <Border Padding="16" Style="{StaticResource CardBorderStyle}">
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="12">
+                        <Border
+                            Grid.Column="0"
+                            BackgroundColor="#269D7FF4"
+                            HeightRequest="44"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 22"
+                            WidthRequest="44">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="18"
+                                HorizontalTextAlignment="Center"
+                                Text="A"
+                                TextColor="{StaticResource Primary}"
+                                VerticalTextAlignment="Center" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                            <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSectionTitle}" />
+                            <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding AccountDescription}" />
+                        </VerticalStackLayout>
+                        <Label
+                            Grid.Column="2"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            Text="Local"
+                            TextColor="{StaticResource Primary}"
+                            VerticalTextAlignment="Center" />
+                    </Grid>
+                </Border>
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="8">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding LanguageSectionTitle}" />
-                <Label Text="{Binding LanguageDescription}" />
-                <Picker
-                    ItemDisplayBinding="{Binding DisplayName}"
-                    ItemsSource="{Binding LanguageOptions}"
-                    SelectedItem="{Binding SelectedLanguageOption}"
-                    Title="{Binding LanguageSectionTitle}" />
+                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SyncSectionTitle}" />
+                <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="0">
+                        <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                <Label FontAttributes="Bold" FontSize="14" Text="{Binding SyncSectionTitle}" />
+                                <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding SyncDescription}" />
+                            </VerticalStackLayout>
+                            <Button
+                                Grid.Column="1"
+                                Command="{Binding SyncNowCommand}"
+                                Text="{Binding SyncNowButtonText}"
+                                VerticalOptions="Center" />
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+
+                        <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                            <Label
+                                Grid.Column="0"
+                                FontAttributes="Bold"
+                                FontSize="14"
+                                Text="{Binding StatusMessage}"
+                                TextColor="{StaticResource MutedForeground}"
+                                VerticalTextAlignment="Center" />
+                            <Border
+                                Grid.Column="1"
+                                Padding="9,4"
+                                BackgroundColor="#1AFBBF24"
+                                Stroke="#40FBBF24"
+                                StrokeShape="RoundRectangle 10"
+                                StrokeThickness="1"
+                                VerticalOptions="Center">
+                                <Label FontAttributes="Bold" FontSize="10" Text="Firebase" TextColor="{StaticResource Warning}" />
+                            </Border>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ExportImportSectionTitle}" />
+                <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="0">
+                        <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                <Label FontAttributes="Bold" FontSize="14" Text="{Binding ExportButtonText}" />
+                                <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding ExportImportSectionTitle}" />
+                            </VerticalStackLayout>
+                            <Button
+                                Grid.Column="1"
+                                Command="{Binding ExportCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Text="{Binding ExportButtonText}"
+                                VerticalOptions="Center" />
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+
+                        <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                <Label FontAttributes="Bold" FontSize="14" Text="{Binding ImportButtonText}" />
+                                <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding ExportImportSectionTitle}" />
+                            </VerticalStackLayout>
+                            <Button
+                                Grid.Column="1"
+                                Command="{Binding ImportCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Text="{Binding ImportButtonText}"
+                                VerticalOptions="Center" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding LanguageSectionTitle}" />
+                <Border Padding="16" Style="{StaticResource CardBorderStyle}">
+                    <Grid ColumnDefinitions="*,220" ColumnSpacing="14">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label FontAttributes="Bold" FontSize="14" Text="{Binding LanguageSectionTitle}" />
+                            <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding LanguageDescription}" />
+                        </VerticalStackLayout>
+                        <Picker
+                            Grid.Column="1"
+                            ItemDisplayBinding="{Binding DisplayName}"
+                            ItemsSource="{Binding LanguageOptions}"
+                            SelectedItem="{Binding SelectedLanguageOption}"
+                            Title="{Binding LanguageSectionTitle}"
+                            VerticalOptions="Center" />
+                    </Grid>
+                </Border>
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>

@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Graphics;
 using PersonalCollectionShelf.App.Pages;
 using PersonalCollectionShelf.App.Services;
 
@@ -15,6 +17,16 @@ public sealed class AppShell : Shell
     public AppShell(IServiceProvider services, ILocalizationService localizationService)
     {
         _localizationService = localizationService;
+        FlyoutBehavior = FlyoutBehavior.Locked;
+        FlyoutWidth = 224;
+        FlyoutBackgroundColor = Color.FromArgb("#100E1A");
+        BackgroundColor = Color.FromArgb("#0D0B14");
+
+        Shell.SetBackgroundColor(this, Color.FromArgb("#0D0B14"));
+        Shell.SetForegroundColor(this, Color.FromArgb("#EDE9F8"));
+        Shell.SetTitleColor(this, Color.FromArgb("#EDE9F8"));
+        Shell.SetUnselectedColor(this, Color.FromArgb("#8179A3"));
+        Shell.SetDisabledColor(this, Color.FromArgb("#4B4265"));
 
         _libraryContent = new ShellContent
         {
@@ -40,6 +52,7 @@ public sealed class AppShell : Shell
         Routing.RegisterRoute(nameof(EditMediaItemPage), typeof(EditMediaItemPage));
 
         _localizationService.LanguageChanged += HandleLanguageChanged;
+        BuildFlyoutHeader();
         ApplyLocalization();
     }
 
@@ -55,5 +68,49 @@ public sealed class AppShell : Shell
         _libraryContent.Title = _localizationService.GetString("Library.Title");
         _settingsItem.Title = _localizationService.GetString("Settings.Title");
         _settingsContent.Title = _localizationService.GetString("Settings.Title");
+    }
+
+    private void BuildFlyoutHeader()
+    {
+        var mark = new Border
+        {
+            HeightRequest = 34,
+            WidthRequest = 34,
+            BackgroundColor = Color.FromArgb("#9D7FF4"),
+            StrokeThickness = 0,
+            StrokeShape = new RoundRectangle
+            {
+                CornerRadius = 8
+            },
+            Content = new Label
+            {
+                Text = "S",
+                FontAttributes = FontAttributes.Bold,
+                FontSize = 16,
+                TextColor = Color.FromArgb("#0D0B14"),
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center
+            }
+        };
+
+        var title = new Label
+        {
+            Text = "Shelf",
+            FontAttributes = FontAttributes.Bold,
+            FontSize = 18,
+            TextColor = Color.FromArgb("#EDE9F8"),
+            VerticalOptions = LayoutOptions.Center
+        };
+
+        FlyoutHeader = new HorizontalStackLayout
+        {
+            Padding = new Thickness(20, 20, 16, 18),
+            Spacing = 10,
+            Children =
+            {
+                mark,
+                title
+            }
+        };
     }
 }

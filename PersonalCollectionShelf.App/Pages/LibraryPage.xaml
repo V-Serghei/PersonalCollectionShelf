@@ -5,56 +5,89 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:LibraryViewModel"
+    Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <Grid Padding="16" RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12">
-        <SearchBar
-            Grid.Row="0"
-            Placeholder="{Binding SearchPlaceholder}"
-            SearchCommand="{Binding LoadCommand}"
-            Text="{Binding SearchTerm}" />
+    <Grid Padding="{OnIdiom Phone=14, Tablet=20, Desktop=24}" RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="18">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Style="{StaticResource PageTitleLabelStyle}" Text="{Binding PageTitle}" />
+                <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding SearchPlaceholder}" />
+            </VerticalStackLayout>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto" ColumnSpacing="8">
-            <Picker
+            <Button
+                Grid.Column="1"
+                Command="{Binding CreateMediaItemCommand}"
+                Text="{Binding AddButtonText}"
+                VerticalOptions="Center" />
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+            <Border Grid.Column="0" Padding="14" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="5">
+                    <Label FontAttributes="Bold" FontSize="26" Text="{Binding TotalItemCount}" />
+                    <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding TotalItemsLabel}" />
+                </VerticalStackLayout>
+            </Border>
+            <Border Grid.Column="1" Padding="14" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="5">
+                    <Label FontAttributes="Bold" FontSize="26" Text="{Binding CompletedItemCount}" />
+                    <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding CompletedItemsLabel}" />
+                </VerticalStackLayout>
+            </Border>
+            <Border Grid.Column="2" Padding="14" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="5">
+                    <Label FontAttributes="Bold" FontSize="26" Text="{Binding InProgressItemCount}" />
+                    <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding InProgressItemsLabel}" />
+                </VerticalStackLayout>
+            </Border>
+            <Border Grid.Column="3" Padding="14" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="5">
+                    <Label FontAttributes="Bold" FontSize="26" Text="{Binding FavoritesItemCount}" />
+                    <Label Style="{StaticResource MutedLabelStyle}" Text="{Binding FavoritesItemsLabel}" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="2*,*,*,*,*" ColumnSpacing="10">
+            <SearchBar
                 Grid.Column="0"
+                Placeholder="{Binding SearchPlaceholder}"
+                SearchCommand="{Binding LoadCommand}"
+                Text="{Binding SearchTerm}" />
+            <Picker
+                Grid.Column="1"
                 ItemDisplayBinding="{Binding DisplayName}"
                 ItemsSource="{Binding MediaTypeFilters}"
                 SelectedItem="{Binding SelectedMediaTypeFilter}"
                 Title="{Binding MediaTypeFilterPlaceholder}" />
             <Picker
-                Grid.Column="1"
+                Grid.Column="2"
                 ItemDisplayBinding="{Binding DisplayName}"
                 ItemsSource="{Binding StatusFilters}"
                 SelectedItem="{Binding SelectedStatusFilter}"
                 Title="{Binding StatusFilterPlaceholder}" />
-            <Button
-                Grid.Column="2"
-                Command="{Binding CreateMediaItemCommand}"
-                Text="{Binding AddButtonText}" />
-        </Grid>
-
-        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
             <Picker
-                Grid.Column="0"
+                Grid.Column="3"
                 ItemDisplayBinding="{Binding DisplayName}"
                 ItemsSource="{Binding CategoryFilters}"
                 SelectedItem="{Binding SelectedCategoryFilter}"
                 Title="{Binding CategoryFilterPlaceholder}" />
             <Picker
-                Grid.Column="1"
+                Grid.Column="4"
                 ItemDisplayBinding="{Binding DisplayName}"
                 ItemsSource="{Binding TagFilters}"
                 SelectedItem="{Binding SelectedTagFilter}"
                 Title="{Binding TagFilterPlaceholder}" />
         </Grid>
 
-        <ScrollView Grid.Row="3" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+        <ScrollView Grid.Row="3" HorizontalScrollBarVisibility="Never" Orientation="Horizontal">
             <HorizontalStackLayout Spacing="8">
-                <Button Command="{Binding ShowAllCommand}" Text="{Binding QuickFilterAllText}" />
-                <Button Command="{Binding ShowFavoritesCommand}" Text="{Binding QuickFilterFavoritesText}" />
-                <Button Command="{Binding ShowMissingCategoryCommand}" Text="{Binding QuickFilterMissingCategoryText}" />
-                <Button Command="{Binding ShowMissingCoverCommand}" Text="{Binding QuickFilterMissingCoverText}" />
-                <Button Command="{Binding ShowCompletedCommand}" Text="{Binding QuickFilterCompletedText}" />
-                <Button Command="{Binding ShowInProgressCommand}" Text="{Binding QuickFilterInProgressText}" />
+                <Button Command="{Binding ShowAllCommand}" Style="{StaticResource PillButtonStyle}" Text="{Binding QuickFilterAllText}" />
+                <Button Command="{Binding ShowFavoritesCommand}" Style="{StaticResource PillButtonStyle}" Text="{Binding QuickFilterFavoritesText}" />
+                <Button Command="{Binding ShowCompletedCommand}" Style="{StaticResource PillButtonStyle}" Text="{Binding QuickFilterCompletedText}" />
+                <Button Command="{Binding ShowInProgressCommand}" Style="{StaticResource PillButtonStyle}" Text="{Binding QuickFilterInProgressText}" />
+                <Button Command="{Binding ShowMissingCategoryCommand}" Style="{StaticResource PillButtonStyle}" Text="{Binding QuickFilterMissingCategoryText}" />
+                <Button Command="{Binding ShowMissingCoverCommand}" Style="{StaticResource PillButtonStyle}" Text="{Binding QuickFilterMissingCoverText}" />
             </HorizontalStackLayout>
         </ScrollView>
 
@@ -63,103 +96,168 @@
             Command="{Binding LoadCommand}"
             IsRefreshing="{Binding IsBusy}">
             <CollectionView
+                ItemSizingStrategy="MeasureAllItems"
                 ItemsSource="{Binding MediaItems}"
                 SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout
+                        HorizontalItemSpacing="16"
+                        Orientation="Vertical"
+                        Span="{OnIdiom Phone=2, Tablet=4, Desktop=5}"
+                        VerticalItemSpacing="18" />
+                </CollectionView.ItemsLayout>
                 <CollectionView.EmptyView>
-                    <Grid Padding="24">
-                        <Label
-                            HorizontalTextAlignment="Center"
-                            Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EmptyLibraryText}"
-                            TextColor="{AppThemeBinding Light=#6B7280, Dark=#D1D5DB}" />
-                    </Grid>
+                    <Border
+                        Margin="0,42,0,0"
+                        Padding="28"
+                        HorizontalOptions="Center"
+                        Style="{StaticResource CardBorderStyle}"
+                        WidthRequest="340">
+                        <VerticalStackLayout Spacing="8">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="18"
+                                HorizontalTextAlignment="Center"
+                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EmptyLibraryText}" />
+                            <Label
+                                HorizontalTextAlignment="Center"
+                                Style="{StaticResource MutedLabelStyle}"
+                                Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SearchPlaceholder}" />
+                        </VerticalStackLayout>
+                    </Border>
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
-                        <Border
-                            Margin="0,0,0,10"
-                            Padding="10"
-                            BackgroundColor="{AppThemeBinding Light=White, Dark=#1F2937}"
-                            Stroke="{AppThemeBinding Light=#D9DEE8, Dark=#374151}"
-                            StrokeShape="RoundRectangle 8"
-                            StrokeThickness="1">
+                        <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}"
                                     CommandParameter="{Binding .}" />
                             </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="76,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12">
+                            <Grid RowDefinitions="Auto,Auto">
                                 <Border
-                                    Grid.RowSpan="4"
-                                    Grid.Column="0"
-                                    BackgroundColor="{AppThemeBinding Light=#E5E7EB, Dark=#111827}"
-                                    HeightRequest="104"
+                                    Grid.Row="0"
+                                    BackgroundColor="{StaticResource Muted}"
+                                    HeightRequest="{OnIdiom Phone=218, Tablet=240, Desktop=248}"
                                     StrokeThickness="0"
-                                    StrokeShape="RoundRectangle 6"
-                                    WidthRequest="72">
+                                    StrokeShape="RoundRectangle 8">
                                     <Grid>
                                         <Image
                                             Aspect="AspectFill"
-                                            HeightRequest="104"
                                             IsVisible="{Binding HasCoverUrl}"
-                                            Source="{Binding CoverUrl}"
-                                            WidthRequest="72" />
+                                            Source="{Binding CoverUrl}" />
                                         <Label
                                             FontAttributes="Bold"
-                                            FontSize="28"
+                                            FontSize="46"
                                             HorizontalOptions="Center"
                                             IsVisible="{Binding HasNoCoverUrl}"
                                             Text="{Binding Initial}"
-                                            TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}"
+                                            TextColor="{StaticResource MutedForeground}"
                                             VerticalOptions="Center" />
+
+                                        <Border
+                                            Margin="8"
+                                            Padding="7,3"
+                                            BackgroundColor="{Binding MediaTypeColor}"
+                                            HorizontalOptions="Start"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 5"
+                                            VerticalOptions="Start">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="10"
+                                                Text="{Binding MediaTypeLabel}"
+                                                TextColor="White" />
+                                        </Border>
+
+                                        <Border
+                                            Margin="8"
+                                            BackgroundColor="#A0000000"
+                                            HeightRequest="28"
+                                            HorizontalOptions="End"
+                                            IsVisible="{Binding IsFavorite}"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 14"
+                                            VerticalOptions="Start"
+                                            WidthRequest="28">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="13"
+                                                HorizontalTextAlignment="Center"
+                                                Text="♥"
+                                                TextColor="#F07CB8"
+                                                VerticalTextAlignment="Center" />
+                                        </Border>
+
+                                        <Border
+                                            Margin="8"
+                                            Padding="7,3"
+                                            BackgroundColor="#A0000000"
+                                            HorizontalOptions="Start"
+                                            IsVisible="{Binding HasRating}"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 5"
+                                            VerticalOptions="End">
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Label
+                                                    FontAttributes="Bold"
+                                                    FontSize="11"
+                                                    Text="★"
+                                                    TextColor="{StaticResource Warning}" />
+                                                <Label
+                                                    FontAttributes="Bold"
+                                                    FontSize="12"
+                                                    Text="{Binding RatingShort}"
+                                                    TextColor="White" />
+                                            </HorizontalStackLayout>
+                                        </Border>
+
+                                        <ProgressBar
+                                            BackgroundColor="#33FFFFFF"
+                                            HeightRequest="3"
+                                            IsVisible="{Binding HasProgressBar}"
+                                            Progress="{Binding ProgressPercent}"
+                                            ProgressColor="{StaticResource Info}"
+                                            VerticalOptions="End" />
                                     </Grid>
                                 </Border>
-                                <Label
-                                    Grid.Row="0"
-                                    Grid.Column="1"
-                                    FontAttributes="Bold"
-                                    FontSize="18"
-                                    LineBreakMode="TailTruncation"
-                                    Text="{Binding Title}" />
-                                <Label
-                                    Grid.Row="0"
-                                    Grid.Column="2"
-                                    FontAttributes="Bold"
-                                    HorizontalOptions="End"
-                                    Text="{Binding FavoriteMarker}"
-                                    TextColor="{AppThemeBinding Light=#B45309, Dark=#FCD34D}" />
-                                <Label
-                                    Grid.Row="1"
-                                    Grid.Column="1"
-                                    Grid.ColumnSpan="2"
-                                    Text="{Binding Metadata}"
-                                    TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}" />
-                                <Label
-                                    Grid.Row="2"
-                                    Grid.Column="1"
-                                    Text="{Binding CategoryLine}"
-                                    TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}" />
-                                <Label
-                                    Grid.Row="2"
-                                    Grid.Column="2"
-                                    HorizontalOptions="End"
-                                    Text="{Binding Rating}" />
-                                <HorizontalStackLayout
-                                    Grid.Row="3"
-                                    Grid.Column="1"
-                                    Grid.ColumnSpan="2"
-                                    Spacing="12">
-                                    <Label Text="{Binding Progress}" />
+
+                                <Grid Grid.Row="1" Padding="12" RowDefinitions="Auto,Auto,Auto" RowSpacing="6">
                                     <Label
+                                        FontAttributes="Bold"
+                                        FontSize="14"
                                         LineBreakMode="TailTruncation"
-                                        Text="{Binding TagsLine}" />
-                                </HorizontalStackLayout>
-                                <Button
-                                    Grid.Row="3"
-                                    Grid.Column="2"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}"
-                                    CommandParameter="{Binding .}"
-                                    IsVisible="False"
-                                    Text="{Binding OpenButtonText}" />
+                                        MaxLines="2"
+                                        Text="{Binding Title}" />
+                                    <Label
+                                        Grid.Row="1"
+                                        FontSize="11"
+                                        LineBreakMode="TailTruncation"
+                                        Text="{Binding CategoryLine}"
+                                        TextColor="{StaticResource MutedForeground}" />
+                                    <Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                        <Border
+                                            Grid.Column="0"
+                                            Padding="8,3"
+                                            BackgroundColor="{Binding StatusBackgroundColor}"
+                                            Stroke="{Binding StatusForegroundColor}"
+                                            StrokeShape="RoundRectangle 10"
+                                            StrokeThickness="1">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="10"
+                                                Text="{Binding StatusLabel}"
+                                                TextColor="{Binding StatusForegroundColor}" />
+                                        </Border>
+                                        <Label
+                                            Grid.Column="1"
+                                            FontSize="11"
+                                            HorizontalTextAlignment="End"
+                                            Text="{Binding ReleaseYearText}"
+                                            TextColor="{StaticResource MutedForeground}"
+                                            VerticalTextAlignment="Center" />
+                                    </Grid>
+                                </Grid>
                             </Grid>
                         </Border>
                     </DataTemplate>

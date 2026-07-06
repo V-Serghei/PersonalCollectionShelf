@@ -1,10 +1,12 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.Graphics;
 using PersonalCollectionShelf.Application.DTOs;
 using PersonalCollectionShelf.Application.Interfaces;
 using PersonalCollectionShelf.App.Pages;
 using PersonalCollectionShelf.App.Services;
+using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.App.ViewModels;
 
@@ -98,6 +100,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string DeleteCancelButtonText => T("Common.Cancel");
 
+    public string DetailsSectionTitle => T("Details.Title");
+
     public string OriginalTitleValue => Item?.OriginalTitle ?? T("Common.NotSet");
 
     public string DescriptionValue => Item?.Description ?? T("Common.NotSet");
@@ -110,6 +114,18 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string StatusValue => Item is null ? T("Common.NotSet") : T($"MediaStatus.{Item.Status}");
 
+    public Color MediaTypeColor => Item is null
+        ? Color.FromArgb("#9D7FF4")
+        : MediaPresentation.GetMediaTypeColor(Item.MediaType);
+
+    public Color StatusForegroundColor => Item is null
+        ? Color.FromArgb("#9D7FF4")
+        : MediaPresentation.GetStatusForegroundColor(Item.Status);
+
+    public Color StatusBackgroundColor => Item is null
+        ? Color.FromArgb("#1A9D7FF4")
+        : MediaPresentation.GetStatusBackgroundColor(Item.Status);
+
     public string ProgressValue => Item is null
         ? T("Common.NotSet")
         : Item.ProgressTotal.HasValue
@@ -119,6 +135,16 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string RatingValue => Item?.Rating is null
         ? T("Library.NoRating")
         : string.Format(T("Library.RatingFormat"), Item.Rating.Value);
+
+    public string RatingShort => Item?.Rating?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+
+    public bool HasRating => Item?.Rating.HasValue == true;
+
+    public double ProgressPercent => Item is null
+        ? 0d
+        : MediaPresentation.GetProgressPercent(Item.ProgressCurrent, Item.ProgressTotal, Item.Status);
+
+    public bool HasProgressBar => Item is not null && MediaPresentation.HasProgressBar(Item.Status);
 
     public string NotesValue => Item?.Notes ?? T("Common.NotSet");
 
@@ -211,8 +237,15 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(TagsValue));
         OnPropertyChanged(nameof(TypeValue));
         OnPropertyChanged(nameof(StatusValue));
+        OnPropertyChanged(nameof(MediaTypeColor));
+        OnPropertyChanged(nameof(StatusForegroundColor));
+        OnPropertyChanged(nameof(StatusBackgroundColor));
         OnPropertyChanged(nameof(ProgressValue));
         OnPropertyChanged(nameof(RatingValue));
+        OnPropertyChanged(nameof(RatingShort));
+        OnPropertyChanged(nameof(HasRating));
+        OnPropertyChanged(nameof(ProgressPercent));
+        OnPropertyChanged(nameof(HasProgressBar));
         OnPropertyChanged(nameof(NotesValue));
         OnPropertyChanged(nameof(StartDateValue));
         OnPropertyChanged(nameof(FinishDateValue));
