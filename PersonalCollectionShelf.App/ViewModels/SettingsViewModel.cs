@@ -45,11 +45,27 @@ public partial class SettingsViewModel : BaseViewModel
 
     public ObservableCollection<LocalizedOption<string>> LanguageOptions { get; } = [];
 
-    [ObservableProperty]
-    private LocalizedOption<string>? selectedLanguageOption;
+    private LocalizedOption<string>? _selectedLanguageOption;
 
-    [ObservableProperty]
-    private string statusMessage = string.Empty;
+    private string _statusMessage = string.Empty;
+
+    public LocalizedOption<string>? SelectedLanguageOption
+    {
+        get => _selectedLanguageOption;
+        set
+        {
+            if (SetProperty(ref _selectedLanguageOption, value))
+            {
+                OnSelectedLanguageOptionChanged(value);
+            }
+        }
+    }
+
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set => SetProperty(ref _statusMessage, value);
+    }
 
     public string PageTitle => T("Settings.Title");
 
@@ -84,7 +100,7 @@ public partial class SettingsViewModel : BaseViewModel
         StatusMessage = T(_statusMessageKey);
     }
 
-    partial void OnSelectedLanguageOptionChanged(LocalizedOption<string>? value)
+    private void OnSelectedLanguageOptionChanged(LocalizedOption<string>? value)
     {
         if (!_suppressLanguageChange && value is not null)
         {

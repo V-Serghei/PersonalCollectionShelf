@@ -31,65 +31,159 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public ObservableCollection<LocalizedOption<MediaStatus>> Statuses { get; } = [];
 
-    [ObservableProperty]
-    private Guid? mediaItemId;
+    private Guid? _mediaItemId;
+    private string _itemTitle = string.Empty;
+    private string _originalTitle = string.Empty;
+    private string _description = string.Empty;
+    private string _category = string.Empty;
+    private string _tags = string.Empty;
+    private LocalizedOption<MediaType>? _selectedMediaType;
+    private LocalizedOption<MediaStatus>? _selectedStatus;
+    private string _rating = string.Empty;
+    private string _progressCurrent = string.Empty;
+    private string _progressTotal = string.Empty;
+    private bool _hasStartDate;
+    private DateTime _startDate = DateTime.Today;
+    private bool _hasFinishDate;
+    private DateTime _finishDate = DateTime.Today;
+    private string _releaseYear = string.Empty;
+    private string _coverUrl = string.Empty;
+    private string _notes = string.Empty;
+    private bool _isFavorite;
+    private string _errorMessage = string.Empty;
 
-    [ObservableProperty]
-    private string itemTitle = string.Empty;
+    public Guid? MediaItemId
+    {
+        get => _mediaItemId;
+        set
+        {
+            if (SetProperty(ref _mediaItemId, value))
+            {
+                OnPropertyChanged(nameof(IsEditMode));
+                OnPropertyChanged(nameof(PageTitle));
+            }
+        }
+    }
 
-    [ObservableProperty]
-    private string originalTitle = string.Empty;
+    public string ItemTitle
+    {
+        get => _itemTitle;
+        set => SetProperty(ref _itemTitle, value);
+    }
 
-    [ObservableProperty]
-    private string description = string.Empty;
+    public string OriginalTitle
+    {
+        get => _originalTitle;
+        set => SetProperty(ref _originalTitle, value);
+    }
 
-    [ObservableProperty]
-    private string category = string.Empty;
+    public string Description
+    {
+        get => _description;
+        set => SetProperty(ref _description, value);
+    }
 
-    [ObservableProperty]
-    private string tags = string.Empty;
+    public string Category
+    {
+        get => _category;
+        set => SetProperty(ref _category, value);
+    }
 
-    [ObservableProperty]
-    private LocalizedOption<MediaType>? selectedMediaType;
+    public string Tags
+    {
+        get => _tags;
+        set => SetProperty(ref _tags, value);
+    }
 
-    [ObservableProperty]
-    private LocalizedOption<MediaStatus>? selectedStatus;
+    public LocalizedOption<MediaType>? SelectedMediaType
+    {
+        get => _selectedMediaType;
+        set => SetProperty(ref _selectedMediaType, value);
+    }
 
-    [ObservableProperty]
-    private string rating = string.Empty;
+    public LocalizedOption<MediaStatus>? SelectedStatus
+    {
+        get => _selectedStatus;
+        set => SetProperty(ref _selectedStatus, value);
+    }
 
-    [ObservableProperty]
-    private string progressCurrent = string.Empty;
+    public string Rating
+    {
+        get => _rating;
+        set => SetProperty(ref _rating, value);
+    }
 
-    [ObservableProperty]
-    private string progressTotal = string.Empty;
+    public string ProgressCurrent
+    {
+        get => _progressCurrent;
+        set => SetProperty(ref _progressCurrent, value);
+    }
 
-    [ObservableProperty]
-    private bool hasStartDate;
+    public string ProgressTotal
+    {
+        get => _progressTotal;
+        set => SetProperty(ref _progressTotal, value);
+    }
 
-    [ObservableProperty]
-    private DateTime startDate = DateTime.Today;
+    public bool HasStartDate
+    {
+        get => _hasStartDate;
+        set => SetProperty(ref _hasStartDate, value);
+    }
 
-    [ObservableProperty]
-    private bool hasFinishDate;
+    public DateTime StartDate
+    {
+        get => _startDate;
+        set => SetProperty(ref _startDate, value);
+    }
 
-    [ObservableProperty]
-    private DateTime finishDate = DateTime.Today;
+    public bool HasFinishDate
+    {
+        get => _hasFinishDate;
+        set => SetProperty(ref _hasFinishDate, value);
+    }
 
-    [ObservableProperty]
-    private string releaseYear = string.Empty;
+    public DateTime FinishDate
+    {
+        get => _finishDate;
+        set => SetProperty(ref _finishDate, value);
+    }
 
-    [ObservableProperty]
-    private string coverUrl = string.Empty;
+    public string ReleaseYear
+    {
+        get => _releaseYear;
+        set => SetProperty(ref _releaseYear, value);
+    }
 
-    [ObservableProperty]
-    private string notes = string.Empty;
+    public string CoverUrl
+    {
+        get => _coverUrl;
+        set => SetProperty(ref _coverUrl, value);
+    }
 
-    [ObservableProperty]
-    private bool isFavorite;
+    public string Notes
+    {
+        get => _notes;
+        set => SetProperty(ref _notes, value);
+    }
 
-    [ObservableProperty]
-    private string errorMessage = string.Empty;
+    public bool IsFavorite
+    {
+        get => _isFavorite;
+        set => SetProperty(ref _isFavorite, value);
+    }
+
+    public string ErrorMessage
+    {
+        get => _errorMessage;
+        set
+        {
+            if (SetProperty(ref _errorMessage, value))
+            {
+                OnPropertyChanged(nameof(HasErrorMessage));
+            }
+        }
+    }
 
     public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
 
@@ -199,17 +293,6 @@ public partial class EditMediaItemViewModel : BaseViewModel
     {
         base.RefreshLocalizedProperties();
         ReloadOptions();
-    }
-
-    partial void OnMediaItemIdChanged(Guid? value)
-    {
-        OnPropertyChanged(nameof(IsEditMode));
-        OnPropertyChanged(nameof(PageTitle));
-    }
-
-    partial void OnErrorMessageChanged(string value)
-    {
-        OnPropertyChanged(nameof(HasErrorMessage));
     }
 
     [RelayCommand]

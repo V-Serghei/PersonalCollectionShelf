@@ -37,23 +37,84 @@ public partial class LibraryViewModel : BaseViewModel
 
     public ObservableCollection<LocalizedOption<string?>> TagFilters { get; } = [];
 
-    [ObservableProperty]
-    private string searchTerm = string.Empty;
+    private string _searchTerm = string.Empty;
+    private LocalizedOption<MediaType?>? _selectedMediaTypeFilter;
+    private LocalizedOption<MediaStatus?>? _selectedStatusFilter;
+    private LocalizedOption<string?>? _selectedCategoryFilter;
+    private LocalizedOption<string?>? _selectedTagFilter;
+    private LibraryQuickFilter _activeQuickFilter;
 
-    [ObservableProperty]
-    private LocalizedOption<MediaType?>? selectedMediaTypeFilter;
+    public string SearchTerm
+    {
+        get => _searchTerm;
+        set
+        {
+            if (SetProperty(ref _searchTerm, value))
+            {
+                OnSearchTermChanged(value);
+            }
+        }
+    }
 
-    [ObservableProperty]
-    private LocalizedOption<MediaStatus?>? selectedStatusFilter;
+    public LocalizedOption<MediaType?>? SelectedMediaTypeFilter
+    {
+        get => _selectedMediaTypeFilter;
+        set
+        {
+            if (SetProperty(ref _selectedMediaTypeFilter, value))
+            {
+                OnSelectedMediaTypeFilterChanged(value);
+            }
+        }
+    }
 
-    [ObservableProperty]
-    private LocalizedOption<string?>? selectedCategoryFilter;
+    public LocalizedOption<MediaStatus?>? SelectedStatusFilter
+    {
+        get => _selectedStatusFilter;
+        set
+        {
+            if (SetProperty(ref _selectedStatusFilter, value))
+            {
+                OnSelectedStatusFilterChanged(value);
+            }
+        }
+    }
 
-    [ObservableProperty]
-    private LocalizedOption<string?>? selectedTagFilter;
+    public LocalizedOption<string?>? SelectedCategoryFilter
+    {
+        get => _selectedCategoryFilter;
+        set
+        {
+            if (SetProperty(ref _selectedCategoryFilter, value))
+            {
+                OnSelectedCategoryFilterChanged(value);
+            }
+        }
+    }
 
-    [ObservableProperty]
-    private LibraryQuickFilter activeQuickFilter;
+    public LocalizedOption<string?>? SelectedTagFilter
+    {
+        get => _selectedTagFilter;
+        set
+        {
+            if (SetProperty(ref _selectedTagFilter, value))
+            {
+                OnSelectedTagFilterChanged(value);
+            }
+        }
+    }
+
+    public LibraryQuickFilter ActiveQuickFilter
+    {
+        get => _activeQuickFilter;
+        set
+        {
+            if (SetProperty(ref _activeQuickFilter, value))
+            {
+                OnActiveQuickFilterChanged(value);
+            }
+        }
+    }
 
     public string PageTitle => T("Library.Title");
 
@@ -90,7 +151,7 @@ public partial class LibraryViewModel : BaseViewModel
         _ = LoadAsync();
     }
 
-    partial void OnSelectedMediaTypeFilterChanged(LocalizedOption<MediaType?>? value)
+    private void OnSelectedMediaTypeFilterChanged(LocalizedOption<MediaType?>? value)
     {
         if (!_suppressFilterReload)
         {
@@ -98,7 +159,7 @@ public partial class LibraryViewModel : BaseViewModel
         }
     }
 
-    partial void OnSelectedStatusFilterChanged(LocalizedOption<MediaStatus?>? value)
+    private void OnSelectedStatusFilterChanged(LocalizedOption<MediaStatus?>? value)
     {
         if (!_suppressFilterReload)
         {
@@ -106,7 +167,7 @@ public partial class LibraryViewModel : BaseViewModel
         }
     }
 
-    partial void OnSelectedCategoryFilterChanged(LocalizedOption<string?>? value)
+    private void OnSelectedCategoryFilterChanged(LocalizedOption<string?>? value)
     {
         if (!_suppressFilterReload)
         {
@@ -114,7 +175,7 @@ public partial class LibraryViewModel : BaseViewModel
         }
     }
 
-    partial void OnSelectedTagFilterChanged(LocalizedOption<string?>? value)
+    private void OnSelectedTagFilterChanged(LocalizedOption<string?>? value)
     {
         if (!_suppressFilterReload)
         {
@@ -122,7 +183,7 @@ public partial class LibraryViewModel : BaseViewModel
         }
     }
 
-    partial void OnSearchTermChanged(string value)
+    private void OnSearchTermChanged(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -130,7 +191,7 @@ public partial class LibraryViewModel : BaseViewModel
         }
     }
 
-    partial void OnActiveQuickFilterChanged(LibraryQuickFilter value)
+    private void OnActiveQuickFilterChanged(LibraryQuickFilter value)
     {
         _ = LoadAsync();
         OnPropertyChanged(nameof(QuickFilterAllText));

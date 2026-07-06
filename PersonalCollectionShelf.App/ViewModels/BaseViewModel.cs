@@ -11,8 +11,13 @@ public abstract partial class BaseViewModel : ObservableObject, IDisposable
         LocalizationService.LanguageChanged += HandleLanguageChanged;
     }
 
-    [ObservableProperty]
-    private bool isBusy;
+    private bool _isBusy;
+
+    public bool IsBusy
+    {
+        get => _isBusy;
+        set => SetProperty(ref _isBusy, value);
+    }
 
     protected ILocalizationService LocalizationService { get; }
 

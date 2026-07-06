@@ -24,11 +24,33 @@ public partial class MediaDetailsViewModel : BaseViewModel
         _authService = authService;
     }
 
-    [ObservableProperty]
-    private MediaItemDto? item;
+    private MediaItemDto? _item;
 
-    [ObservableProperty]
-    private string errorMessage = string.Empty;
+    private string _errorMessage = string.Empty;
+
+    public MediaItemDto? Item
+    {
+        get => _item;
+        set
+        {
+            if (SetProperty(ref _item, value))
+            {
+                RefreshItemProperties();
+            }
+        }
+    }
+
+    public string ErrorMessage
+    {
+        get => _errorMessage;
+        set
+        {
+            if (SetProperty(ref _errorMessage, value))
+            {
+                OnPropertyChanged(nameof(HasErrorMessage));
+            }
+        }
+    }
 
     public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
 
@@ -143,16 +165,6 @@ public partial class MediaDetailsViewModel : BaseViewModel
     {
         base.RefreshLocalizedProperties();
         RefreshItemProperties();
-    }
-
-    partial void OnItemChanged(MediaItemDto? value)
-    {
-        RefreshItemProperties();
-    }
-
-    partial void OnErrorMessageChanged(string value)
-    {
-        OnPropertyChanged(nameof(HasErrorMessage));
     }
 
     [RelayCommand]
