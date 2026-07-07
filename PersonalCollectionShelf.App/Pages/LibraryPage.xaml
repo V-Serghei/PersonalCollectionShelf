@@ -56,8 +56,7 @@
                     Grid.Column="1"
                     ItemDisplayBinding="{Binding DisplayName}"
                     ItemsSource="{Binding StatusFilters}"
-                    SelectedItem="{Binding SelectedStatusFilter}"
-                    Title="All Status" />
+                    SelectedItem="{Binding SelectedStatusFilter}" />
             </Grid>
 
             <CollectionView

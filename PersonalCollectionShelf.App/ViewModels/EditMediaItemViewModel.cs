@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 #if WINDOWS
 using System.Runtime.InteropServices;
-using System.Text;
 #else
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.Storage;
@@ -322,6 +321,8 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public string ReleaseYearPlaceholder => T("Edit.Placeholder.ReleaseYear");
 
+    public string AddCoverText => T("Edit.AddCover");
+
     public string CoverUrlLabel => T("Edit.Label.CoverUrl");
 
     public string CoverUrlPlaceholder => T("Edit.Placeholder.CoverUrl");
@@ -559,7 +560,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
         public string? CustomFilter;
         public int MaxCustFilter;
         public int FilterIndex;
-        public StringBuilder File;
+        public string File;
         public int MaxFile;
         public string? FileTitle;
         public int MaxFileTitle;
@@ -587,18 +588,17 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     private static string? PickImageFileWindows()
     {
-        var fileBuffer = new StringBuilder(260);
         var openFileName = new OpenFileName
         {
             StructSize = Marshal.SizeOf<OpenFileName>(),
             Filter = "Image files\0*.png;*.jpg;*.jpeg;*.webp;*.bmp\0All files\0*.*\0\0",
-            File = fileBuffer,
-            MaxFile = fileBuffer.Capacity,
+            File = new string('\0', 260),
+            MaxFile = 260,
             Title = "Choose a cover image",
             Flags = OfnFileMustExist | OfnPathMustExist | OfnNoChangeDir | OfnExplorer
         };
 
-        return GetOpenFileNameW(ref openFileName) ? fileBuffer.ToString() : null;
+        return GetOpenFileNameW(ref openFileName) ? openFileName.File.TrimEnd('\0') : null;
     }
 #endif
 

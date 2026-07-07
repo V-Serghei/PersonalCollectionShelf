@@ -146,7 +146,7 @@
                                 <Label FontAttributes="Bold" FontSize="14" Text="{Binding LanguageSectionTitle}" />
                                 <Label FontSize="12" Text="{Binding LanguageDescription}" TextColor="{StaticResource Primary}" />
                             </VerticalStackLayout>
-                            <Picker Grid.Column="1" ItemDisplayBinding="{Binding DisplayName}" ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguageOption}" Title="{Binding LanguageSectionTitle}" />
+                            <Picker Grid.Column="1" ItemDisplayBinding="{Binding DisplayName}" ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguageOption}" />
                         </Grid>
                     </Border>
                 </VerticalStackLayout>
