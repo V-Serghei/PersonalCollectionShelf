@@ -74,6 +74,10 @@
                                 <Entry Placeholder="{Binding TitlePlaceholder}" Text="{Binding ItemTitle}" />
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding OriginalTitleLabel}" />
+                                <Entry Placeholder="{Binding OriginalTitlePlaceholder}" Text="{Binding OriginalTitle}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Spacing="5">
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CategoryLabel}" />
                                 <Entry Placeholder="{Binding CategoryPlaceholder}" Text="{Binding Category}" />
                             </VerticalStackLayout>
@@ -99,6 +103,17 @@
                         </VerticalStackLayout>
                     </Grid>
 
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="5">
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CreatorLabel}" />
+                            <Entry Placeholder="{Binding CreatorPlaceholder}" Text="{Binding Creator}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="5">
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding PublisherLabel}" />
+                            <Entry Placeholder="{Binding PublisherPlaceholder}" Text="{Binding Publisher}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
                     <VerticalStackLayout Spacing="5">
                         <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CoverUrlLabel}" />
                         <Entry Placeholder="{Binding CoverUrlPlaceholder}" Text="{Binding CoverUrl}" />
@@ -107,9 +122,43 @@
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                         <VerticalStackLayout Grid.Column="0" Spacing="5">
                             <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TagsLabel}" />
-                            <Entry Placeholder="{Binding TagsPlaceholder}" Text="{Binding Tags}" />
+                            <FlexLayout
+                                BindableLayout.ItemsSource="{Binding TagChips}"
+                                Direction="Row"
+                                Wrap="Wrap">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Border
+                                            Margin="0,0,6,6"
+                                            Padding="10,5"
+                                            BackgroundColor="{StaticResource Muted}"
+                                            Stroke="{StaticResource Border}"
+                                            StrokeShape="RoundRectangle 14"
+                                            StrokeThickness="1">
+                                            <HorizontalStackLayout Spacing="6">
+                                                <Label FontSize="12" Text="{Binding .}" VerticalTextAlignment="Center" />
+                                                <Label
+                                                    FontFamily="Segoe MDL2 Assets"
+                                                    FontSize="9"
+                                                    Text="&#xE711;"
+                                                    TextColor="{StaticResource MutedForeground}"
+                                                    VerticalTextAlignment="Center">
+                                                    <Label.GestureRecognizers>
+                                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveTagCommand}" CommandParameter="{Binding .}" />
+                                                    </Label.GestureRecognizers>
+                                                </Label>
+                                            </HorizontalStackLayout>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                            <Entry
+                                Placeholder="{Binding TagsPlaceholder}"
+                                ReturnCommand="{Binding AddTagCommand}"
+                                ReturnType="Done"
+                                Text="{Binding NewTagText}" />
                         </VerticalStackLayout>
-                        <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="End">
+                        <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Start">
                             <Switch IsToggled="{Binding IsFavorite}" OnColor="{StaticResource Primary}" ThumbColor="White" />
                             <Label FontSize="12" Text="{Binding FavoriteLabel}" VerticalTextAlignment="Center" />
                         </HorizontalStackLayout>
@@ -144,6 +193,28 @@
                                 <Entry Keyboard="Numeric" Placeholder="{Binding ProgressTotalPlaceholder}" Text="{Binding ProgressTotal}" />
                             </VerticalStackLayout>
                         </Grid>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="5">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StartDateLabel}" VerticalTextAlignment="Center" />
+                                    <Switch IsToggled="{Binding HasStartDate}" OnColor="{StaticResource Primary}" Scale="0.75" ThumbColor="White" />
+                                </HorizontalStackLayout>
+                                <DatePicker Date="{Binding StartDate}" IsEnabled="{Binding HasStartDate}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="5">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FinishDateLabel}" VerticalTextAlignment="Center" />
+                                    <Switch IsToggled="{Binding HasFinishDate}" OnColor="{StaticResource Primary}" Scale="0.75" ThumbColor="White" />
+                                </HorizontalStackLayout>
+                                <DatePicker Date="{Binding FinishDate}" IsEnabled="{Binding HasFinishDate}" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SerialNumberLabel}" />
+                            <Entry Placeholder="{Binding SerialNumberPlaceholder}" Text="{Binding SerialNumber}" />
+                        </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="5">
                             <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding DescriptionLabel}" />

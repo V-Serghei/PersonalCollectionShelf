@@ -18,6 +18,12 @@ public sealed record MediaItemDto
 
     public string? Tags { get; init; }
 
+    public string? Creator { get; init; }
+
+    public string? Publisher { get; init; }
+
+    public string? SerialNumber { get; init; }
+
     public MediaType MediaType { get; init; }
 
     public MediaStatus Status { get; init; }

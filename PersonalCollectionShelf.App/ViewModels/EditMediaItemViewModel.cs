@@ -2,8 +2,13 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+#if WINDOWS
+using System.Runtime.InteropServices;
+using System.Text;
+#else
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.Storage;
+#endif
 using PersonalCollectionShelf.Application.DTOs;
 using PersonalCollectionShelf.Application.Interfaces;
 using PersonalCollectionShelf.Application.Validation;
@@ -15,11 +20,13 @@ namespace PersonalCollectionShelf.App.ViewModels;
 
 public partial class EditMediaItemViewModel : BaseViewModel
 {
+#if !WINDOWS
     private static readonly FilePickerFileType ImageFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
     {
         { DevicePlatform.WinUI, [".png", ".jpg", ".jpeg", ".webp", ".bmp"] },
         { DevicePlatform.Android, ["image/*"] }
     });
+#endif
 
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
@@ -39,12 +46,17 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public ObservableCollection<LocalizedOption<MediaStatus>> Statuses { get; } = [];
 
+    public ObservableCollection<string> TagChips { get; } = [];
+
     private Guid? _mediaItemId;
     private string _itemTitle = string.Empty;
     private string _originalTitle = string.Empty;
     private string _description = string.Empty;
     private string _category = string.Empty;
-    private string _tags = string.Empty;
+    private string _creator = string.Empty;
+    private string _publisher = string.Empty;
+    private string _serialNumber = string.Empty;
+    private string _newTagText = string.Empty;
     private LocalizedOption<MediaType>? _selectedMediaType;
     private LocalizedOption<MediaStatus>? _selectedStatus;
     private string _rating = string.Empty;
@@ -98,16 +110,40 @@ public partial class EditMediaItemViewModel : BaseViewModel
         set => SetProperty(ref _category, value);
     }
 
-    public string Tags
+    public string NewTagText
     {
-        get => _tags;
-        set => SetProperty(ref _tags, value);
+        get => _newTagText;
+        set => SetProperty(ref _newTagText, value);
+    }
+
+    public string Creator
+    {
+        get => _creator;
+        set => SetProperty(ref _creator, value);
+    }
+
+    public string Publisher
+    {
+        get => _publisher;
+        set => SetProperty(ref _publisher, value);
+    }
+
+    public string SerialNumber
+    {
+        get => _serialNumber;
+        set => SetProperty(ref _serialNumber, value);
     }
 
     public LocalizedOption<MediaType>? SelectedMediaType
     {
         get => _selectedMediaType;
-        set => SetProperty(ref _selectedMediaType, value);
+        set
+        {
+            if (SetProperty(ref _selectedMediaType, value))
+            {
+                OnPropertyChanged(nameof(CreatorLabel));
+            }
+        }
     }
 
     public LocalizedOption<MediaStatus>? SelectedStatus
@@ -243,6 +279,25 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public string TagsPlaceholder => T("Edit.Placeholder.Tags");
 
+    public string CreatorLabel => SelectedMediaType?.Value switch
+    {
+        MediaType.Movie or MediaType.Series => T("Edit.Label.Creator.Director"),
+        MediaType.Book or MediaType.Manga or MediaType.Comic => T("Edit.Label.Creator.Author"),
+        MediaType.Game => T("Edit.Label.Creator.Developer"),
+        MediaType.Anime => T("Edit.Label.Creator.Studio"),
+        _ => T("Edit.Label.Creator.Generic")
+    };
+
+    public string CreatorPlaceholder => T("Edit.Placeholder.Creator");
+
+    public string PublisherLabel => T("Edit.Label.Publisher");
+
+    public string PublisherPlaceholder => T("Edit.Placeholder.Publisher");
+
+    public string SerialNumberLabel => T("Edit.Label.SerialNumber");
+
+    public string SerialNumberPlaceholder => T("Edit.Placeholder.SerialNumber");
+
     public string MediaTypeLabel => T("Edit.Label.MediaType");
 
     public string StatusLabel => T("Edit.Label.Status");
@@ -313,7 +368,10 @@ public partial class EditMediaItemViewModel : BaseViewModel
         OriginalTitle = item.OriginalTitle ?? string.Empty;
         Description = item.Description ?? string.Empty;
         Category = item.Category ?? string.Empty;
-        Tags = item.Tags ?? string.Empty;
+        Creator = item.Creator ?? string.Empty;
+        Publisher = item.Publisher ?? string.Empty;
+        SerialNumber = item.SerialNumber ?? string.Empty;
+        SetTagChips(item.Tags);
         SelectedMediaType = MediaTypes.First(option => option.Value == item.MediaType);
         SelectedStatus = Statuses.First(option => option.Value == item.Status);
         Rating = item.Rating?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
@@ -364,7 +422,10 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     OriginalTitle = OriginalTitle,
                     Description = Description,
                     Category = Category,
-                    Tags = Tags,
+                    Tags = BuildTagsString(),
+                    Creator = Creator,
+                    Publisher = Publisher,
+                    SerialNumber = SerialNumber,
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -387,7 +448,10 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     OriginalTitle = OriginalTitle,
                     Description = Description,
                     Category = Category,
-                    Tags = Tags,
+                    Tags = BuildTagsString(),
+                    Creator = Creator,
+                    Publisher = Publisher,
+                    SerialNumber = SerialNumber,
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -427,10 +491,43 @@ public partial class EditMediaItemViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private void AddTag()
+    {
+        var tag = NewTagText.Trim();
+        NewTagText = string.Empty;
+
+        if (tag.Length == 0 || TagChips.Any(existing => string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        TagChips.Add(tag);
+    }
+
+    [RelayCommand]
+    private void RemoveTag(string? tag)
+    {
+        if (tag is not null)
+        {
+            TagChips.Remove(tag);
+        }
+    }
+
+    [RelayCommand]
     private async Task PickCoverAsync()
     {
         try
         {
+#if WINDOWS
+            var path = PickImageFileWindows();
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return;
+            }
+
+            CoverUrl = new Uri(path).AbsoluteUri;
+            await Task.CompletedTask;
+#else
             var result = await FilePicker.PickAsync(new PickOptions
             {
                 PickerTitle = T("Edit.CoverPicker.Title"),
@@ -443,12 +540,67 @@ public partial class EditMediaItemViewModel : BaseViewModel
             }
 
             CoverUrl = new Uri(result.FullPath).AbsoluteUri;
+#endif
         }
         catch (Exception exception)
         {
             await CrashReporter.ReportAsync(exception, "EditMediaItemViewModel.PickCoverAsync");
         }
     }
+
+#if WINDOWS
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct OpenFileName
+    {
+        public int StructSize;
+        public IntPtr Owner;
+        public IntPtr Instance;
+        public string? Filter;
+        public string? CustomFilter;
+        public int MaxCustFilter;
+        public int FilterIndex;
+        public StringBuilder File;
+        public int MaxFile;
+        public string? FileTitle;
+        public int MaxFileTitle;
+        public string? InitialDir;
+        public string? Title;
+        public int Flags;
+        public short FileOffset;
+        public short FileExtension;
+        public string? DefExt;
+        public IntPtr CustData;
+        public IntPtr Hook;
+        public string? TemplateName;
+        public IntPtr Reserved1;
+        public int Reserved2;
+        public int FlagsEx;
+    }
+
+    [DllImport("comdlg32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool GetOpenFileNameW(ref OpenFileName openFileName);
+
+    private const int OfnFileMustExist = 0x00001000;
+    private const int OfnPathMustExist = 0x00000800;
+    private const int OfnNoChangeDir = 0x00000008;
+    private const int OfnExplorer = 0x00080000;
+
+    private static string? PickImageFileWindows()
+    {
+        var fileBuffer = new StringBuilder(260);
+        var openFileName = new OpenFileName
+        {
+            StructSize = Marshal.SizeOf<OpenFileName>(),
+            Filter = "Image files\0*.png;*.jpg;*.jpeg;*.webp;*.bmp\0All files\0*.*\0\0",
+            File = fileBuffer,
+            MaxFile = fileBuffer.Capacity,
+            Title = "Choose a cover image",
+            Flags = OfnFileMustExist | OfnPathMustExist | OfnNoChangeDir | OfnExplorer
+        };
+
+        return GetOpenFileNameW(ref openFileName) ? fileBuffer.ToString() : null;
+    }
+#endif
 
     private void ReloadOptions()
     {
@@ -471,13 +623,40 @@ public partial class EditMediaItemViewModel : BaseViewModel
         SelectedStatus = Statuses.First(option => option.Value == selectedStatus);
     }
 
+    private void SetTagChips(string? tags)
+    {
+        TagChips.Clear();
+        NewTagText = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(tags))
+        {
+            return;
+        }
+
+        foreach (var tag in tags.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!TagChips.Any(existing => string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)))
+            {
+                TagChips.Add(tag);
+            }
+        }
+    }
+
+    private string BuildTagsString()
+    {
+        return TagChips.Count == 0 ? string.Empty : string.Join(", ", TagChips);
+    }
+
     private void ResetFields()
     {
         ItemTitle = string.Empty;
         OriginalTitle = string.Empty;
         Description = string.Empty;
         Category = string.Empty;
-        Tags = string.Empty;
+        Creator = string.Empty;
+        Publisher = string.Empty;
+        SerialNumber = string.Empty;
+        SetTagChips(null);
         SelectedMediaType = MediaTypes.First(option => option.Value == MediaType.Other);
         SelectedStatus = Statuses.First(option => option.Value == MediaStatus.Planned);
         Rating = string.Empty;

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="PersonalCollectionShelf.App.Pages.DashboardPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -119,6 +119,9 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
                                 <VerticalStackLayout Spacing="8" WidthRequest="124">
+                                    <VerticalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}" CommandParameter="{Binding .}" />
+                                    </VerticalStackLayout.GestureRecognizers>
                                     <Border BackgroundColor="{StaticResource Muted}" HeightRequest="178" StrokeThickness="0" StrokeShape="RoundRectangle 8" WidthRequest="124">
                                         <Grid>
                                             <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
@@ -145,6 +148,9 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
                                 <Border Padding="0" Style="{StaticResource CardBorderStyle}" WidthRequest="142">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}" CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
                                     <Grid RowDefinitions="212,Auto">
                                         <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
                                         <Label FontAttributes="Bold" FontSize="38" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />

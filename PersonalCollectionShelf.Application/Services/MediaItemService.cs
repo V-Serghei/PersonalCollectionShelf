@@ -35,6 +35,9 @@ public sealed class MediaItemService(IMediaItemRepository mediaItemRepository) :
             Description = Normalize(request.Description),
             Category = Normalize(request.Category),
             Tags = NormalizeTags(request.Tags),
+            Creator = Normalize(request.Creator),
+            Publisher = Normalize(request.Publisher),
+            SerialNumber = Normalize(request.SerialNumber),
             MediaType = request.MediaType,
             Status = request.Status,
             Rating = request.Rating,
@@ -67,6 +70,9 @@ public sealed class MediaItemService(IMediaItemRepository mediaItemRepository) :
         existing.Description = Normalize(request.Description);
         existing.Category = Normalize(request.Category);
         existing.Tags = NormalizeTags(request.Tags);
+        existing.Creator = Normalize(request.Creator);
+        existing.Publisher = Normalize(request.Publisher);
+        existing.SerialNumber = Normalize(request.SerialNumber);
         existing.MediaType = request.MediaType;
         existing.Status = request.Status;
         existing.Rating = request.Rating;
@@ -143,6 +149,9 @@ public sealed class MediaItemService(IMediaItemRepository mediaItemRepository) :
             Description = item.Description,
             Category = item.Category,
             Tags = item.Tags,
+            Creator = item.Creator,
+            Publisher = item.Publisher,
+            SerialNumber = item.SerialNumber,
             MediaType = item.MediaType,
             Status = item.Status,
             Rating = item.Rating,

@@ -76,6 +76,12 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string TagsLabel => T("Details.TagsLabel");
 
+    public string CreatorLabel => T("Details.CreatorLabel");
+
+    public string PublisherLabel => T("Details.PublisherLabel");
+
+    public string SerialNumberLabel => T("Details.SerialNumberLabel");
+
     public string StartDateLabel => T("Details.StartDateLabel");
 
     public string FinishDateLabel => T("Details.FinishDateLabel");
@@ -109,6 +115,12 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string CategoryValue => Item?.Category ?? T("Common.NotSet");
 
     public string TagsValue => Item?.Tags ?? T("Common.NotSet");
+
+    public string CreatorValue => Item?.Creator ?? T("Common.NotSet");
+
+    public string PublisherValue => Item?.Publisher ?? T("Common.NotSet");
+
+    public string SerialNumberValue => Item?.SerialNumber ?? T("Common.NotSet");
 
     public string TypeValue => Item is null ? T("Common.NotSet") : T($"MediaType.{Item.MediaType}");
 
@@ -249,6 +261,9 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(DescriptionValue));
         OnPropertyChanged(nameof(CategoryValue));
         OnPropertyChanged(nameof(TagsValue));
+        OnPropertyChanged(nameof(CreatorValue));
+        OnPropertyChanged(nameof(PublisherValue));
+        OnPropertyChanged(nameof(SerialNumberValue));
         OnPropertyChanged(nameof(TypeValue));
         OnPropertyChanged(nameof(StatusValue));
         OnPropertyChanged(nameof(MediaTypeColor));

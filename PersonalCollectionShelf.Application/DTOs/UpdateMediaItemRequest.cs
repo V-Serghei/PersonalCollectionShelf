@@ -18,6 +18,12 @@ public sealed record UpdateMediaItemRequest
 
     public string? Tags { get; init; }
 
+    public string? Creator { get; init; }
+
+    public string? Publisher { get; init; }
+
+    public string? SerialNumber { get; init; }
+
     public MediaType MediaType { get; init; } = MediaType.Other;
 
     public MediaStatus Status { get; init; } = MediaStatus.Planned;

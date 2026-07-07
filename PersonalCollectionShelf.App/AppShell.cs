@@ -257,13 +257,31 @@ public sealed class AppShell : Shell
             })
         });
 
+        var hoverColor = Color.FromArgb("#171325");
+        var pointer = new PointerGestureRecognizer();
+        pointer.PointerEntered += (_, _) =>
+        {
+            if (container.BackgroundColor == Colors.Transparent)
+            {
+                container.BackgroundColor = hoverColor;
+            }
+        };
+        pointer.PointerExited += (_, _) =>
+        {
+            if (container.BackgroundColor == hoverColor)
+            {
+                container.BackgroundColor = Colors.Transparent;
+            }
+        };
+        container.GestureRecognizers.Add(pointer);
+
         _navigationButtons.Add((container, iconLabel, textLabel));
         return container;
     }
 
     private static View CreateCategoryLabel(string text, string color)
     {
-        return new HorizontalStackLayout
+        var row = new HorizontalStackLayout
         {
             Spacing = 10,
             Padding = new Thickness(6, 7),
@@ -287,6 +305,13 @@ public sealed class AppShell : Shell
                 }
             }
         };
+
+        var pointer = new PointerGestureRecognizer();
+        pointer.PointerEntered += (_, _) => row.Scale = 1.05;
+        pointer.PointerExited += (_, _) => row.Scale = 1.0;
+        row.GestureRecognizers.Add(pointer);
+
+        return row;
     }
 
     private void SetActiveButton(Border activeContainer, Label activeIcon, Label activeText)
