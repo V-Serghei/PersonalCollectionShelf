@@ -56,10 +56,16 @@
                             StrokeShape="RoundRectangle 12"
                             StrokeThickness="1"
                             WidthRequest="78">
-                            <VerticalStackLayout HorizontalOptions="Center" Spacing="4" VerticalOptions="Center">
-                                <Label FontSize="22" HorizontalTextAlignment="Center" Text="+" TextColor="{StaticResource MutedForeground}" />
-                                <Label FontSize="9" HorizontalTextAlignment="Center" Text="Add Cover" TextColor="{StaticResource MutedForeground}" />
-                            </VerticalStackLayout>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding PickCoverCommand}" />
+                            </Border.GestureRecognizers>
+                            <Grid>
+                                <VerticalStackLayout HorizontalOptions="Center" IsVisible="{Binding HasNoCoverUrl}" Spacing="4" VerticalOptions="Center">
+                                    <Label FontSize="22" HorizontalTextAlignment="Center" Text="+" TextColor="{StaticResource MutedForeground}" />
+                                    <Label FontSize="9" HorizontalTextAlignment="Center" Text="Add Cover" TextColor="{StaticResource MutedForeground}" />
+                                </VerticalStackLayout>
+                                <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                            </Grid>
                         </Border>
 
                         <VerticalStackLayout Grid.Column="1" Spacing="12">

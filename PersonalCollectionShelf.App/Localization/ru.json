@@ -96,6 +96,7 @@
   "Edit.Placeholder.ReleaseYear": "Необязательно",
   "Edit.Label.CoverUrl": "URL обложки",
   "Edit.Placeholder.CoverUrl": "Необязательно",
+  "Edit.CoverPicker.Title": "Выберите обложку",
   "Edit.Label.Notes": "Заметки",
   "Edit.Placeholder.Notes": "Личные заметки",
   "Edit.Label.Favorite": "Избранное",

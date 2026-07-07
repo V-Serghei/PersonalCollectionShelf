@@ -21,6 +21,26 @@ public partial class App : Microsoft.Maui.Controls.Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(_services.GetRequiredService<AppShell>());
+        var window = new Window(_services.GetRequiredService<AppShell>())
+        {
+            TitleBar = new TitleBar
+            {
+                BackgroundColor = Color.FromArgb("#0D0B14"),
+                ForegroundColor = Color.FromArgb("#EDE9F8"),
+                Title = string.Empty
+            }
+        };
+
+#if WINDOWS
+        window.HandlerChanged += (_, _) =>
+        {
+            if (window.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
+            {
+                Platforms.Windows.WindowsWindowConfigurator.Configure(nativeWindow);
+            }
+        };
+#endif
+
+        return window;
     }
 }

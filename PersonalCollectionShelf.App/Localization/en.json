@@ -96,6 +96,7 @@
   "Edit.Placeholder.ReleaseYear": "Optional",
   "Edit.Label.CoverUrl": "Cover URL",
   "Edit.Placeholder.CoverUrl": "Optional",
+  "Edit.CoverPicker.Title": "Choose a cover image",
   "Edit.Label.Notes": "Notes",
   "Edit.Placeholder.Notes": "Personal notes",
   "Edit.Label.Favorite": "Favorite",

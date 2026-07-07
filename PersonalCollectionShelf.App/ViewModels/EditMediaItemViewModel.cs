@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.Devices;
+using Microsoft.Maui.Storage;
 using PersonalCollectionShelf.Application.DTOs;
 using PersonalCollectionShelf.Application.Interfaces;
 using PersonalCollectionShelf.Application.Validation;
@@ -13,6 +15,12 @@ namespace PersonalCollectionShelf.App.ViewModels;
 
 public partial class EditMediaItemViewModel : BaseViewModel
 {
+    private static readonly FilePickerFileType ImageFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
+    {
+        { DevicePlatform.WinUI, [".png", ".jpg", ".jpeg", ".webp", ".bmp"] },
+        { DevicePlatform.Android, ["image/*"] }
+    });
+
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
     public EditMediaItemViewModel(
@@ -159,8 +167,19 @@ public partial class EditMediaItemViewModel : BaseViewModel
     public string CoverUrl
     {
         get => _coverUrl;
-        set => SetProperty(ref _coverUrl, value);
+        set
+        {
+            if (SetProperty(ref _coverUrl, value))
+            {
+                OnPropertyChanged(nameof(HasCoverUrl));
+                OnPropertyChanged(nameof(HasNoCoverUrl));
+            }
+        }
     }
+
+    public bool HasCoverUrl => MediaPresentation.HasValidCoverUrl(CoverUrl);
+
+    public bool HasNoCoverUrl => !HasCoverUrl;
 
     public string Notes
     {
@@ -405,6 +424,30 @@ public partial class EditMediaItemViewModel : BaseViewModel
     private void ToggleAdvanced()
     {
         IsAdvancedVisible = !IsAdvancedVisible;
+    }
+
+    [RelayCommand]
+    private async Task PickCoverAsync()
+    {
+        try
+        {
+            var result = await FilePicker.PickAsync(new PickOptions
+            {
+                PickerTitle = T("Edit.CoverPicker.Title"),
+                FileTypes = ImageFileType
+            });
+
+            if (result is null)
+            {
+                return;
+            }
+
+            CoverUrl = new Uri(result.FullPath).AbsoluteUri;
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, "EditMediaItemViewModel.PickCoverAsync");
+        }
     }
 
     private void ReloadOptions()
