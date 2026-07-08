@@ -46,7 +46,7 @@
                 </Border>
             </Grid>
 
-            <Grid Grid.Row="1" ColumnDefinitions="*,130" ColumnSpacing="10">
+            <Grid Grid.Row="1" ColumnDefinitions="*,130,170" ColumnSpacing="10">
                 <SearchBar
                     Grid.Column="0"
                     Placeholder="Search your library..."
@@ -57,6 +57,11 @@
                     ItemDisplayBinding="{Binding DisplayName}"
                     ItemsSource="{Binding StatusFilters}"
                     SelectedItem="{Binding SelectedStatusFilter}" />
+                <Picker
+                    Grid.Column="2"
+                    ItemDisplayBinding="{Binding DisplayName}"
+                    ItemsSource="{Binding SortOptions}"
+                    SelectedItem="{Binding SelectedSortOption}" />
             </Grid>
 
             <CollectionView

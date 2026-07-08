@@ -51,11 +51,14 @@ public partial class LibraryViewModel : BaseViewModel
 
     public ObservableCollection<LocalizedOption<string?>> TagFilters { get; } = [];
 
+    public ObservableCollection<LocalizedOption<LibrarySortOption>> SortOptions { get; } = [];
+
     private string _searchTerm = string.Empty;
     private LocalizedOption<MediaType?>? _selectedMediaTypeFilter;
     private LocalizedOption<MediaStatus?>? _selectedStatusFilter;
     private LocalizedOption<string?>? _selectedCategoryFilter;
     private LocalizedOption<string?>? _selectedTagFilter;
+    private LocalizedOption<LibrarySortOption>? _selectedSortOption;
     private LibraryQuickFilter _activeQuickFilter;
 
     public string SearchTerm
@@ -118,6 +121,18 @@ public partial class LibraryViewModel : BaseViewModel
         }
     }
 
+    public LocalizedOption<LibrarySortOption>? SelectedSortOption
+    {
+        get => _selectedSortOption;
+        set
+        {
+            if (SetProperty(ref _selectedSortOption, value) && !_suppressFilterReload)
+            {
+                PopulateMediaItems(_visibleItems);
+            }
+        }
+    }
+
     public LibraryQuickFilter ActiveQuickFilter
     {
         get => _activeQuickFilter;
@@ -141,6 +156,8 @@ public partial class LibraryViewModel : BaseViewModel
     public string CategoryFilterPlaceholder => T("Library.CategoryFilterPlaceholder");
 
     public string TagFilterPlaceholder => T("Library.TagFilterPlaceholder");
+
+    public string SortByPlaceholder => T("Library.SortByPlaceholder");
 
     public string AddButtonText => T("Library.AddButton");
 
@@ -426,6 +443,7 @@ public partial class LibraryViewModel : BaseViewModel
     {
         var selectedMediaType = SelectedMediaTypeFilter?.Value;
         var selectedStatus = SelectedStatusFilter?.Value;
+        var selectedSort = SelectedSortOption?.Value ?? LibrarySortOption.DateAddedNewest;
 
         _suppressFilterReload = true;
         try
@@ -444,8 +462,15 @@ public partial class LibraryViewModel : BaseViewModel
                 StatusFilters.Add(new LocalizedOption<MediaStatus?>(status, T($"MediaStatus.{status}")));
             }
 
+            SortOptions.Clear();
+            foreach (var sortOption in Enum.GetValues<LibrarySortOption>())
+            {
+                SortOptions.Add(new LocalizedOption<LibrarySortOption>(sortOption, T($"Library.SortOption.{sortOption}")));
+            }
+
             SelectedMediaTypeFilter = MediaTypeFilters.First(option => EqualityComparer<MediaType?>.Default.Equals(option.Value, selectedMediaType));
             SelectedStatusFilter = StatusFilters.First(option => EqualityComparer<MediaStatus?>.Default.Equals(option.Value, selectedStatus));
+            SelectedSortOption = SortOptions.First(option => option.Value == selectedSort);
         }
         finally
         {
@@ -544,13 +569,28 @@ public partial class LibraryViewModel : BaseViewModel
         var itemList = items.ToList();
 
         MediaItems.Clear();
-        foreach (var item in itemList)
+        foreach (var item in SortItems(itemList))
         {
             MediaItems.Add(ToListItem(item));
         }
 
         PopulateDashboardCollections(itemList);
         RefreshCollectionSummary();
+    }
+
+    private IEnumerable<MediaItemDto> SortItems(IEnumerable<MediaItemDto> items)
+    {
+        return SelectedSortOption?.Value switch
+        {
+            LibrarySortOption.TitleAsc => items.OrderBy(item => item.Title, StringComparer.OrdinalIgnoreCase),
+            LibrarySortOption.TitleDesc => items.OrderByDescending(item => item.Title, StringComparer.OrdinalIgnoreCase),
+            LibrarySortOption.DateAddedOldest => items.OrderBy(item => item.CreatedAt),
+            LibrarySortOption.RatingHighest => items.OrderByDescending(item => item.Rating ?? -1),
+            LibrarySortOption.RatingLowest => items.OrderBy(item => item.Rating ?? int.MaxValue),
+            LibrarySortOption.ReleaseYearNewest => items.OrderByDescending(item => item.ReleaseYear ?? int.MinValue),
+            LibrarySortOption.ReleaseYearOldest => items.OrderBy(item => item.ReleaseYear ?? int.MaxValue),
+            _ => items.OrderByDescending(item => item.CreatedAt)
+        };
     }
 
     private void PopulateDashboardCollections(IReadOnlyList<MediaItemDto> items)
