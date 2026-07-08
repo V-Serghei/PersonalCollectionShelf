@@ -23,13 +23,13 @@ public sealed class MediaItemRecord
 
     public string? Tags { get; set; }
 
-    public string? Creator { get; set; }
+    [Indexed]
+    public string? CreatorId { get; set; }
 
-    public string? Publisher { get; set; }
+    [Indexed]
+    public string? StudioId { get; set; }
 
     public string? SerialNumber { get; set; }
-
-    public string? Cast { get; set; }
 
     [Indexed]
     public int MediaType { get; set; }

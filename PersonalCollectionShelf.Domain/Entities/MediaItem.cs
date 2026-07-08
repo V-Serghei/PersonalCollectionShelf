@@ -18,13 +18,11 @@ public sealed class MediaItem
 
     public string? Tags { get; set; }
 
-    public string? Creator { get; set; }
+    public Guid? CreatorId { get; set; }
 
-    public string? Publisher { get; set; }
+    public Guid? StudioId { get; set; }
 
     public string? SerialNumber { get; set; }
-
-    public string? Cast { get; set; }
 
     public MediaType MediaType { get; set; } = MediaType.Other;
 

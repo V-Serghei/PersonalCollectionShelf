@@ -13,6 +13,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton(new LocalDatabaseService(databasePath));
         services.AddSingleton<IMediaItemRepository, MediaItemRepository>();
+        services.AddSingleton<IPersonRepository, PersonRepository>();
+        services.AddSingleton<IStudioRepository, StudioRepository>();
         services.AddSingleton<IAuthService, FirebaseAuthService>();
         services.AddSingleton<FirestoreSyncService>();
         services.AddSingleton<ISyncService, SyncService>();

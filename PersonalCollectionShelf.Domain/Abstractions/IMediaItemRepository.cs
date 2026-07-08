@@ -23,4 +23,8 @@ public interface IMediaItemRepository
         string? category,
         string? tag,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Guid>> GetCastPersonIdsAsync(Guid mediaItemId, CancellationToken cancellationToken = default);
+
+    Task ReplaceCastAsync(Guid mediaItemId, IReadOnlyList<Guid> personIds, CancellationToken cancellationToken = default);
 }

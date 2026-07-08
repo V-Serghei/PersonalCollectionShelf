@@ -126,7 +126,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string SerialNumberValue => Item?.SerialNumber ?? T("Common.NotSet");
 
-    public string CastValue => Item?.Cast ?? T("Common.NotSet");
+    public string CastValue => Item is null || Item.Cast.Count == 0 ? T("Common.NotSet") : string.Join(", ", Item.Cast);
 
     public string TypeValue => Item is null ? T("Common.NotSet") : T($"MediaType.{Item.MediaType}");
 

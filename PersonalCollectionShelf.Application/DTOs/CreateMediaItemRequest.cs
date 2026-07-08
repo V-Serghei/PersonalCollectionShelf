@@ -22,7 +22,7 @@ public sealed record CreateMediaItemRequest
 
     public string? SerialNumber { get; init; }
 
-    public string? Cast { get; init; }
+    public IReadOnlyList<string>? Cast { get; init; }
 
     public MediaType MediaType { get; init; } = MediaType.Other;
 

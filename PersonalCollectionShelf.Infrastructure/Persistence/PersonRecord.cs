@@ -1,0 +1,17 @@
+using SQLite;
+
+namespace PersonalCollectionShelf.Infrastructure.Persistence;
+
+[Table("People")]
+public sealed class PersonRecord
+{
+    [PrimaryKey]
+    public string Id { get; set; } = string.Empty;
+
+    [Indexed]
+    public string UserId { get; set; } = string.Empty;
+
+    public string Name { get; set; } = string.Empty;
+
+    public DateTime CreatedAt { get; set; }
+}

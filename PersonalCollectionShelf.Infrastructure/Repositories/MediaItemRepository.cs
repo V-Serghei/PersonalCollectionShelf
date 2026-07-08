@@ -78,9 +78,6 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
                 Contains(item.Description, searchTerm) ||
                 Contains(item.Category, searchTerm) ||
                 Contains(item.Tags, searchTerm) ||
-                Contains(item.Creator, searchTerm) ||
-                Contains(item.Cast, searchTerm) ||
-                Contains(item.Publisher, searchTerm) ||
                 Contains(item.SerialNumber, searchTerm) ||
                 Contains(item.Notes, searchTerm));
         }
@@ -111,6 +108,49 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             .ToList();
     }
 
+    public async Task<IReadOnlyList<Guid>> GetCastPersonIdsAsync(Guid mediaItemId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+
+        var mediaItemIdText = mediaItemId.ToString();
+        var records = await databaseService.Connection
+            .Table<MediaItemCastMemberRecord>()
+            .Where(record => record.MediaItemId == mediaItemIdText)
+            .ToListAsync();
+
+        return records.Select(record => Guid.Parse(record.PersonId)).ToList();
+    }
+
+    public async Task ReplaceCastAsync(Guid mediaItemId, IReadOnlyList<Guid> personIds, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+
+        var mediaItemIdText = mediaItemId.ToString();
+        var existing = await databaseService.Connection
+            .Table<MediaItemCastMemberRecord>()
+            .Where(record => record.MediaItemId == mediaItemIdText)
+            .ToListAsync();
+
+        foreach (var record in existing)
+        {
+            await databaseService.Connection.DeleteAsync(record);
+        }
+
+        foreach (var personId in personIds)
+        {
+            await databaseService.Connection.InsertAsync(new MediaItemCastMemberRecord
+            {
+                MediaItemId = mediaItemIdText,
+                PersonId = personId.ToString()
+            });
+        }
+    }
+
+    private static Guid? ParseGuid(string? value)
+    {
+        return Guid.TryParse(value, out var parsed) ? parsed : null;
+    }
+
     private static bool Contains(string? source, string searchTerm)
     {
         return source?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true;
@@ -139,10 +179,9 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             Description = record.Description,
             Category = record.Category,
             Tags = record.Tags,
-            Creator = record.Creator,
-            Publisher = record.Publisher,
+            CreatorId = ParseGuid(record.CreatorId),
+            StudioId = ParseGuid(record.StudioId),
             SerialNumber = record.SerialNumber,
-            Cast = record.Cast,
             MediaType = (MediaType)record.MediaType,
             Status = (MediaStatus)record.Status,
             Rating = record.Rating,
@@ -171,10 +210,9 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             Description = item.Description,
             Category = item.Category,
             Tags = item.Tags,
-            Creator = item.Creator,
-            Publisher = item.Publisher,
+            CreatorId = item.CreatorId?.ToString(),
+            StudioId = item.StudioId?.ToString(),
             SerialNumber = item.SerialNumber,
-            Cast = item.Cast,
             MediaType = (int)item.MediaType,
             Status = (int)item.Status,
             Rating = item.Rating,

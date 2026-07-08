@@ -34,6 +34,9 @@ public sealed class LocalDatabaseService
             }
 
             await Connection.CreateTableAsync<MediaItemRecord>();
+            await Connection.CreateTableAsync<PersonRecord>();
+            await Connection.CreateTableAsync<StudioRecord>();
+            await Connection.CreateTableAsync<MediaItemCastMemberRecord>();
             _isInitialized = true;
         }
         finally

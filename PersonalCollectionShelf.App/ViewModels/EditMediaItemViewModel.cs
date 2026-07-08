@@ -452,7 +452,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Creator = Creator,
                     Publisher = Publisher,
                     SerialNumber = SerialNumber,
-                    Cast = BuildCastString(),
+                    Cast = BuildCastList(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -479,7 +479,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Creator = Creator,
                     Publisher = Publisher,
                     SerialNumber = SerialNumber,
-                    Cast = BuildCastString(),
+                    Cast = BuildCastList(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -738,28 +738,28 @@ public partial class EditMediaItemViewModel : BaseViewModel
         return TagChips.Count == 0 ? string.Empty : string.Join(", ", TagChips);
     }
 
-    private void SetCastChips(string? cast)
+    private void SetCastChips(IReadOnlyList<string>? cast)
     {
         CastChips.Clear();
         NewCastText = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(cast))
+        if (cast is null)
         {
             return;
         }
 
-        foreach (var name in cast.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        foreach (var name in cast)
         {
-            if (!CastChips.Any(existing => string.Equals(existing, name, StringComparison.OrdinalIgnoreCase)))
+            if (!string.IsNullOrWhiteSpace(name) && !CastChips.Any(existing => string.Equals(existing, name, StringComparison.OrdinalIgnoreCase)))
             {
                 CastChips.Add(name);
             }
         }
     }
 
-    private string BuildCastString()
+    private List<string> BuildCastList()
     {
-        return CastChips.Count == 0 ? string.Empty : string.Join(", ", CastChips);
+        return CastChips.ToList();
     }
 
     private void ResetFields()

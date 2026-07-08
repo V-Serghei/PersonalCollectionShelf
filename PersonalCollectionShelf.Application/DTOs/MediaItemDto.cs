@@ -18,13 +18,17 @@ public sealed record MediaItemDto
 
     public string? Tags { get; init; }
 
+    public Guid? CreatorId { get; init; }
+
     public string? Creator { get; init; }
+
+    public Guid? StudioId { get; init; }
 
     public string? Publisher { get; init; }
 
     public string? SerialNumber { get; init; }
 
-    public string? Cast { get; init; }
+    public IReadOnlyList<string> Cast { get; init; } = [];
 
     public MediaType MediaType { get; init; }
 

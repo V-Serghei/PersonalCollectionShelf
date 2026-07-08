@@ -20,6 +20,8 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<ILocalizationService, JsonLocalizationService>();
         builder.Services.AddInfrastructure(GetDatabasePath());
+        builder.Services.AddSingleton<IPersonService, PersonService>();
+        builder.Services.AddSingleton<IStudioService, StudioService>();
         builder.Services.AddSingleton<IMediaItemService, MediaItemService>();
 
         builder.Services.AddSingleton<AppShell>();

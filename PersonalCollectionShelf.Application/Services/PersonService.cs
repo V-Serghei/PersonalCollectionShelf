@@ -1,0 +1,47 @@
+using PersonalCollectionShelf.Application.DTOs;
+using PersonalCollectionShelf.Application.Interfaces;
+using PersonalCollectionShelf.Domain.Abstractions;
+using PersonalCollectionShelf.Domain.Entities;
+
+namespace PersonalCollectionShelf.Application.Services;
+
+public sealed class PersonService(IPersonRepository personRepository) : IPersonService
+{
+    public async Task<PersonDto?> GetByIdAsync(string userId, Guid id, CancellationToken cancellationToken = default)
+    {
+        var person = await personRepository.GetByIdAsync(id, userId, cancellationToken);
+        return person is null ? null : ToDto(person);
+    }
+
+    public async Task<IReadOnlyList<PersonDto>> GetByIdsAsync(string userId, IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var people = await personRepository.GetByIdsAsync(ids, userId, cancellationToken);
+        return people.Select(ToDto).ToList();
+    }
+
+    public async Task<PersonDto> GetOrCreateAsync(string userId, string name, CancellationToken cancellationToken = default)
+    {
+        var trimmedName = name.Trim();
+        var existing = await personRepository.GetByNameAsync(userId, trimmedName, cancellationToken);
+        if (existing is not null)
+        {
+            return ToDto(existing);
+        }
+
+        var person = new Person
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Name = trimmedName,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var created = await personRepository.AddAsync(person, cancellationToken);
+        return ToDto(created);
+    }
+
+    private static PersonDto ToDto(Person person)
+    {
+        return new PersonDto(person.Id, person.Name);
+    }
+}
