@@ -118,8 +118,6 @@
   "Edit.Section.Essentials": "Essentials",
   "Edit.Section.Details": "Details",
   "Edit.Section.Progress": "Progress",
-  "Edit.ShowAdvanced": "Show more",
-  "Edit.HideAdvanced": "Show less",
   "Settings.Title": "Settings",
   "Settings.Account.Title": "Account",
   "Settings.Account.Description": "Local account placeholder. Firebase Auth will be added later.",

@@ -118,8 +118,6 @@
   "Edit.Section.Essentials": "Основное",
   "Edit.Section.Details": "Детали",
   "Edit.Section.Progress": "Прогресс",
-  "Edit.ShowAdvanced": "Показать больше",
-  "Edit.HideAdvanced": "Скрыть",
   "Settings.Title": "Настройки",
   "Settings.Account.Title": "Аккаунт",
   "Settings.Account.Description": "Заглушка локального аккаунта. Firebase Auth будет добавлен позже.",

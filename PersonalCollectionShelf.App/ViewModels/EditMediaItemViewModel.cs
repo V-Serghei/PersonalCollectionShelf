@@ -6,8 +6,8 @@ using CommunityToolkit.Mvvm.Input;
 using System.Runtime.InteropServices;
 #else
 using Microsoft.Maui.Devices;
-using Microsoft.Maui.Storage;
 #endif
+using Microsoft.Maui.Storage;
 using PersonalCollectionShelf.Application.DTOs;
 using PersonalCollectionShelf.Application.Interfaces;
 using PersonalCollectionShelf.Application.Validation;
@@ -69,7 +69,6 @@ public partial class EditMediaItemViewModel : BaseViewModel
     private string _coverUrl = string.Empty;
     private string _notes = string.Empty;
     private bool _isFavorite;
-    private bool _isAdvancedVisible;
     private string _errorMessage = string.Empty;
 
     public Guid? MediaItemId
@@ -228,18 +227,6 @@ public partial class EditMediaItemViewModel : BaseViewModel
         set => SetProperty(ref _isFavorite, value);
     }
 
-    public bool IsAdvancedVisible
-    {
-        get => _isAdvancedVisible;
-        set
-        {
-            if (SetProperty(ref _isAdvancedVisible, value))
-            {
-                OnPropertyChanged(nameof(AdvancedFieldsButtonText));
-            }
-        }
-    }
-
     public string ErrorMessage
     {
         get => _errorMessage;
@@ -339,8 +326,6 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public string ProgressSectionTitle => T("Edit.Section.Progress");
 
-    public string AdvancedFieldsButtonText => IsAdvancedVisible ? T("Edit.HideAdvanced") : T("Edit.ShowAdvanced");
-
     public string SaveButtonText => T("Common.Save");
 
     public string CancelButtonText => T("Common.Cancel");
@@ -386,7 +371,6 @@ public partial class EditMediaItemViewModel : BaseViewModel
         CoverUrl = item.CoverUrl ?? string.Empty;
         Notes = item.Notes ?? string.Empty;
         IsFavorite = item.IsFavorite;
-        IsAdvancedVisible = true;
     }
 
     protected override void RefreshLocalizedProperties()
@@ -486,12 +470,6 @@ public partial class EditMediaItemViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private void ToggleAdvanced()
-    {
-        IsAdvancedVisible = !IsAdvancedVisible;
-    }
-
-    [RelayCommand]
     private void AddTag()
     {
         var tag = NewTagText.Trim();
@@ -525,9 +503,6 @@ public partial class EditMediaItemViewModel : BaseViewModel
             {
                 return;
             }
-
-            CoverUrl = new Uri(path).AbsoluteUri;
-            await Task.CompletedTask;
 #else
             var result = await FilePicker.PickAsync(new PickOptions
             {
@@ -540,12 +515,50 @@ public partial class EditMediaItemViewModel : BaseViewModel
                 return;
             }
 
-            CoverUrl = new Uri(result.FullPath).AbsoluteUri;
+            var path = result.FullPath;
 #endif
+
+            var storedPath = CopyCoverIntoAppStorage(path);
+            CoverUrl = new Uri(storedPath).AbsoluteUri;
         }
         catch (Exception exception)
         {
             await CrashReporter.ReportAsync(exception, "EditMediaItemViewModel.PickCoverAsync");
+        }
+    }
+
+    private static string CoversDirectory => Path.Combine(FileSystem.AppDataDirectory, "covers");
+
+    private string CopyCoverIntoAppStorage(string sourcePath)
+    {
+        Directory.CreateDirectory(CoversDirectory);
+
+        DeletePreviousStoredCover();
+
+        var extension = Path.GetExtension(sourcePath);
+        var destinationPath = Path.Combine(CoversDirectory, $"{Guid.NewGuid():N}{extension}");
+        File.Copy(sourcePath, destinationPath, overwrite: true);
+        return destinationPath;
+    }
+
+    private void DeletePreviousStoredCover()
+    {
+        if (!HasCoverUrl)
+        {
+            return;
+        }
+
+        try
+        {
+            var previousPath = new Uri(CoverUrl).LocalPath;
+            if (previousPath.StartsWith(CoversDirectory, StringComparison.OrdinalIgnoreCase) && File.Exists(previousPath))
+            {
+                File.Delete(previousPath);
+            }
+        }
+        catch
+        {
+            // Best-effort cleanup; a stray file in the covers cache is harmless.
         }
     }
 
@@ -670,7 +683,6 @@ public partial class EditMediaItemViewModel : BaseViewModel
         CoverUrl = string.Empty;
         Notes = string.Empty;
         IsFavorite = false;
-        IsAdvancedVisible = false;
         ErrorMessage = string.Empty;
     }
 
