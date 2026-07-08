@@ -97,25 +97,17 @@
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
                                 <VerticalStackLayout Grid.Column="0" Spacing="6">
                                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding MediaTypeLabel}" />
-                                    <Border Style="{StaticResource FieldBorderStyle}">
-                                        <Picker
-                                            BackgroundColor="Transparent"
-                                            ItemDisplayBinding="{Binding DisplayName}"
-                                            ItemsSource="{Binding MediaTypes}"
-                                            SelectedItem="{Binding SelectedMediaType}"
-                                            VerticalOptions="Center" />
-                                    </Border>
+                                    <Picker
+                                        ItemDisplayBinding="{Binding DisplayName}"
+                                        ItemsSource="{Binding MediaTypes}"
+                                        SelectedItem="{Binding SelectedMediaType}" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="1" Spacing="6">
                                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StatusLabel}" />
-                                    <Border Style="{StaticResource FieldBorderStyle}">
-                                        <Picker
-                                            BackgroundColor="Transparent"
-                                            ItemDisplayBinding="{Binding DisplayName}"
-                                            ItemsSource="{Binding Statuses}"
-                                            SelectedItem="{Binding SelectedStatus}"
-                                            VerticalOptions="Center" />
-                                    </Border>
+                                    <Picker
+                                        ItemDisplayBinding="{Binding DisplayName}"
+                                        ItemsSource="{Binding Statuses}"
+                                        SelectedItem="{Binding SelectedStatus}" />
                                 </VerticalStackLayout>
                             </Grid>
 
@@ -129,6 +121,45 @@
                                     <Entry Placeholder="{Binding PublisherPlaceholder}" Text="{Binding Publisher}" />
                                 </VerticalStackLayout>
                             </Grid>
+
+                            <VerticalStackLayout IsVisible="{Binding ShowCastField}" Spacing="6">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CastLabel}" />
+                                <FlexLayout
+                                    BindableLayout.ItemsSource="{Binding CastChips}"
+                                    Direction="Row"
+                                    Wrap="Wrap">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <Border
+                                                Margin="0,0,8,8"
+                                                Padding="12,6"
+                                                BackgroundColor="{StaticResource Muted}"
+                                                Stroke="{StaticResource Border}"
+                                                StrokeShape="RoundRectangle 14"
+                                                StrokeThickness="1">
+                                                <HorizontalStackLayout Spacing="8">
+                                                    <Label FontSize="13" Text="{Binding .}" VerticalTextAlignment="Center" />
+                                                    <Label
+                                                        FontFamily="Segoe MDL2 Assets"
+                                                        FontSize="10"
+                                                        Text="&#xE711;"
+                                                        TextColor="{StaticResource MutedForeground}"
+                                                        VerticalTextAlignment="Center">
+                                                        <Label.GestureRecognizers>
+                                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveCastCommand}" CommandParameter="{Binding .}" />
+                                                        </Label.GestureRecognizers>
+                                                    </Label>
+                                                </HorizontalStackLayout>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+                                <Entry
+                                    Placeholder="{Binding CastPlaceholder}"
+                                    ReturnCommand="{Binding AddCastCommand}"
+                                    ReturnType="Done"
+                                    Text="{Binding NewCastText}" />
+                            </VerticalStackLayout>
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
                                 <VerticalStackLayout Grid.Column="0" Spacing="6">
@@ -149,10 +180,14 @@
                                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RatingLabel}" />
                                     <Entry Keyboard="Numeric" Placeholder="{Binding RatingPlaceholder}" Text="{Binding Rating}" WidthRequest="120" />
                                 </VerticalStackLayout>
-                                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="End">
-                                    <Label FontAttributes="Bold" FontSize="13" Text="{Binding FavoriteLabel}" VerticalTextAlignment="Center" />
-                                    <Switch HeightRequest="30" IsToggled="{Binding IsFavorite}" OnColor="{StaticResource Primary}" Scale="0.85" ThumbColor="White" VerticalOptions="Center" />
-                                </HorizontalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center" VerticalOptions="End">
+                                    <Label FontSize="28" HorizontalTextAlignment="Center" Text="{Binding FavoriteIcon}" TextColor="{Binding FavoriteIconColor}">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding ToggleFavoriteCommand}" />
+                                        </Label.GestureRecognizers>
+                                    </Label>
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="{Binding FavoriteLabel}" TextColor="{StaticResource MutedForeground}" />
+                                </VerticalStackLayout>
                             </Grid>
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
@@ -167,23 +202,45 @@
                             </Grid>
 
                             <VerticalStackLayout Spacing="6">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Label Grid.Column="0" FontAttributes="Bold" FontSize="13" Text="{Binding StartDateLabel}" VerticalTextAlignment="Center" />
-                                    <Switch Grid.Column="1" IsToggled="{Binding HasStartDate}" OnColor="{StaticResource Primary}" ThumbColor="White" />
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StartDateLabel}" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                    <DatePicker Grid.Column="0" Date="{Binding StartDate}">
+                                        <DatePicker.Triggers>
+                                            <DataTrigger Binding="{Binding HasStartDate}" TargetType="DatePicker" Value="False">
+                                                <Setter Property="TextColor" Value="{StaticResource MutedForeground}" />
+                                            </DataTrigger>
+                                        </DatePicker.Triggers>
+                                    </DatePicker>
+                                    <Button
+                                        Grid.Column="1"
+                                        Command="{Binding ClearStartDateCommand}"
+                                        FontFamily="Segoe MDL2 Assets"
+                                        IsVisible="{Binding HasStartDate}"
+                                        Style="{StaticResource IconToggleButtonStyle}"
+                                        Text="&#xE711;"
+                                        WidthRequest="36" />
                                 </Grid>
-                                <Border Style="{StaticResource FieldBorderStyle}">
-                                    <DatePicker BackgroundColor="Transparent" Date="{Binding StartDate}" IsEnabled="{Binding HasStartDate}" VerticalOptions="Center" />
-                                </Border>
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Spacing="6">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Label Grid.Column="0" FontAttributes="Bold" FontSize="13" Text="{Binding FinishDateLabel}" VerticalTextAlignment="Center" />
-                                    <Switch Grid.Column="1" IsToggled="{Binding HasFinishDate}" OnColor="{StaticResource Primary}" ThumbColor="White" />
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FinishDateLabel}" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                    <DatePicker Grid.Column="0" Date="{Binding FinishDate}">
+                                        <DatePicker.Triggers>
+                                            <DataTrigger Binding="{Binding HasFinishDate}" TargetType="DatePicker" Value="False">
+                                                <Setter Property="TextColor" Value="{StaticResource MutedForeground}" />
+                                            </DataTrigger>
+                                        </DatePicker.Triggers>
+                                    </DatePicker>
+                                    <Button
+                                        Grid.Column="1"
+                                        Command="{Binding ClearFinishDateCommand}"
+                                        FontFamily="Segoe MDL2 Assets"
+                                        IsVisible="{Binding HasFinishDate}"
+                                        Style="{StaticResource IconToggleButtonStyle}"
+                                        Text="&#xE711;"
+                                        WidthRequest="36" />
                                 </Grid>
-                                <Border Style="{StaticResource FieldBorderStyle}">
-                                    <DatePicker BackgroundColor="Transparent" Date="{Binding FinishDate}" IsEnabled="{Binding HasFinishDate}" VerticalOptions="Center" />
-                                </Border>
                             </VerticalStackLayout>
 
                             <BoxView HeightRequest="1" Color="{StaticResource Border}" />

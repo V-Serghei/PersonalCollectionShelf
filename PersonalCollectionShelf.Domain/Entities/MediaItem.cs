@@ -24,6 +24,8 @@ public sealed class MediaItem
 
     public string? SerialNumber { get; set; }
 
+    public string? Cast { get; set; }
+
     public MediaType MediaType { get; set; } = MediaType.Other;
 
     public MediaStatus Status { get; set; } = MediaStatus.Planned;

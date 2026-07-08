@@ -82,6 +82,10 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string SerialNumberLabel => T("Details.SerialNumberLabel");
 
+    public string CastLabel => T("Details.CastLabel");
+
+    public bool ShowCast => Item is not null && Item.MediaType is MediaType.Movie or MediaType.Series;
+
     public string StartDateLabel => T("Details.StartDateLabel");
 
     public string FinishDateLabel => T("Details.FinishDateLabel");
@@ -121,6 +125,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string PublisherValue => Item?.Publisher ?? T("Common.NotSet");
 
     public string SerialNumberValue => Item?.SerialNumber ?? T("Common.NotSet");
+
+    public string CastValue => Item?.Cast ?? T("Common.NotSet");
 
     public string TypeValue => Item is null ? T("Common.NotSet") : T($"MediaType.{Item.MediaType}");
 
@@ -264,6 +270,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(CreatorValue));
         OnPropertyChanged(nameof(PublisherValue));
         OnPropertyChanged(nameof(SerialNumberValue));
+        OnPropertyChanged(nameof(CastValue));
+        OnPropertyChanged(nameof(ShowCast));
         OnPropertyChanged(nameof(TypeValue));
         OnPropertyChanged(nameof(StatusValue));
         OnPropertyChanged(nameof(MediaTypeColor));

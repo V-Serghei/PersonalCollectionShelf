@@ -29,6 +29,8 @@ public sealed class MediaItemRecord
 
     public string? SerialNumber { get; set; }
 
+    public string? Cast { get; set; }
+
     [Indexed]
     public int MediaType { get; set; }
 

@@ -79,6 +79,7 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
                 Contains(item.Category, searchTerm) ||
                 Contains(item.Tags, searchTerm) ||
                 Contains(item.Creator, searchTerm) ||
+                Contains(item.Cast, searchTerm) ||
                 Contains(item.Publisher, searchTerm) ||
                 Contains(item.SerialNumber, searchTerm) ||
                 Contains(item.Notes, searchTerm));
@@ -141,6 +142,7 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             Creator = record.Creator,
             Publisher = record.Publisher,
             SerialNumber = record.SerialNumber,
+            Cast = record.Cast,
             MediaType = (MediaType)record.MediaType,
             Status = (MediaStatus)record.Status,
             Rating = record.Rating,
@@ -172,6 +174,7 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             Creator = item.Creator,
             Publisher = item.Publisher,
             SerialNumber = item.SerialNumber,
+            Cast = item.Cast,
             MediaType = (int)item.MediaType,
             Status = (int)item.Status,
             Rating = item.Rating,

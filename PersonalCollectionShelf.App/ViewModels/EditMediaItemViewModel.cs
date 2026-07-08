@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.Graphics;
 #if WINDOWS
 using System.Runtime.InteropServices;
 #else
@@ -47,6 +48,8 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public ObservableCollection<string> TagChips { get; } = [];
 
+    public ObservableCollection<string> CastChips { get; } = [];
+
     private Guid? _mediaItemId;
     private string _itemTitle = string.Empty;
     private string _originalTitle = string.Empty;
@@ -56,6 +59,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
     private string _publisher = string.Empty;
     private string _serialNumber = string.Empty;
     private string _newTagText = string.Empty;
+    private string _newCastText = string.Empty;
     private LocalizedOption<MediaType>? _selectedMediaType;
     private LocalizedOption<MediaStatus>? _selectedStatus;
     private string _rating = string.Empty;
@@ -114,6 +118,12 @@ public partial class EditMediaItemViewModel : BaseViewModel
         set => SetProperty(ref _newTagText, value);
     }
 
+    public string NewCastText
+    {
+        get => _newCastText;
+        set => SetProperty(ref _newCastText, value);
+    }
+
     public string Creator
     {
         get => _creator;
@@ -140,9 +150,12 @@ public partial class EditMediaItemViewModel : BaseViewModel
             if (SetProperty(ref _selectedMediaType, value))
             {
                 OnPropertyChanged(nameof(CreatorLabel));
+                OnPropertyChanged(nameof(ShowCastField));
             }
         }
     }
+
+    public bool ShowCastField => SelectedMediaType?.Value is MediaType.Movie or MediaType.Series;
 
     public LocalizedOption<MediaStatus>? SelectedStatus
     {
@@ -177,7 +190,13 @@ public partial class EditMediaItemViewModel : BaseViewModel
     public DateTime StartDate
     {
         get => _startDate;
-        set => SetProperty(ref _startDate, value);
+        set
+        {
+            if (SetProperty(ref _startDate, value))
+            {
+                HasStartDate = true;
+            }
+        }
     }
 
     public bool HasFinishDate
@@ -189,7 +208,13 @@ public partial class EditMediaItemViewModel : BaseViewModel
     public DateTime FinishDate
     {
         get => _finishDate;
-        set => SetProperty(ref _finishDate, value);
+        set
+        {
+            if (SetProperty(ref _finishDate, value))
+            {
+                HasFinishDate = true;
+            }
+        }
     }
 
     public string ReleaseYear
@@ -224,8 +249,19 @@ public partial class EditMediaItemViewModel : BaseViewModel
     public bool IsFavorite
     {
         get => _isFavorite;
-        set => SetProperty(ref _isFavorite, value);
+        set
+        {
+            if (SetProperty(ref _isFavorite, value))
+            {
+                OnPropertyChanged(nameof(FavoriteIcon));
+                OnPropertyChanged(nameof(FavoriteIconColor));
+            }
+        }
     }
+
+    public string FavoriteIcon => IsFavorite ? "♥" : "♡";
+
+    public Color FavoriteIconColor => IsFavorite ? Color.FromArgb("#F07CB8") : Color.FromArgb("#8179A3");
 
     public string ErrorMessage
     {
@@ -283,6 +319,10 @@ public partial class EditMediaItemViewModel : BaseViewModel
     public string SerialNumberLabel => T("Edit.Label.SerialNumber");
 
     public string SerialNumberPlaceholder => T("Edit.Placeholder.SerialNumber");
+
+    public string CastLabel => T("Edit.Label.Cast");
+
+    public string CastPlaceholder => T("Edit.Placeholder.Cast");
 
     public string MediaTypeLabel => T("Edit.Label.MediaType");
 
@@ -358,15 +398,16 @@ public partial class EditMediaItemViewModel : BaseViewModel
         Publisher = item.Publisher ?? string.Empty;
         SerialNumber = item.SerialNumber ?? string.Empty;
         SetTagChips(item.Tags);
+        SetCastChips(item.Cast);
         SelectedMediaType = MediaTypes.First(option => option.Value == item.MediaType);
         SelectedStatus = Statuses.First(option => option.Value == item.Status);
         Rating = item.Rating?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
         ProgressCurrent = item.ProgressCurrent.ToString(CultureInfo.InvariantCulture);
         ProgressTotal = item.ProgressTotal?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
-        HasStartDate = item.StartDate.HasValue;
         StartDate = item.StartDate ?? DateTime.Today;
-        HasFinishDate = item.FinishDate.HasValue;
+        HasStartDate = item.StartDate.HasValue;
         FinishDate = item.FinishDate ?? DateTime.Today;
+        HasFinishDate = item.FinishDate.HasValue;
         ReleaseYear = item.ReleaseYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
         CoverUrl = item.CoverUrl ?? string.Empty;
         Notes = item.Notes ?? string.Empty;
@@ -411,6 +452,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Creator = Creator,
                     Publisher = Publisher,
                     SerialNumber = SerialNumber,
+                    Cast = BuildCastString(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -437,6 +479,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Creator = Creator,
                     Publisher = Publisher,
                     SerialNumber = SerialNumber,
+                    Cast = BuildCastString(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -490,6 +533,41 @@ public partial class EditMediaItemViewModel : BaseViewModel
         {
             TagChips.Remove(tag);
         }
+    }
+
+    [RelayCommand]
+    private void AddCast()
+    {
+        var name = NewCastText.Trim();
+        NewCastText = string.Empty;
+
+        if (name.Length == 0 || CastChips.Any(existing => string.Equals(existing, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        CastChips.Add(name);
+    }
+
+    [RelayCommand]
+    private void RemoveCast(string? name)
+    {
+        if (name is not null)
+        {
+            CastChips.Remove(name);
+        }
+    }
+
+    [RelayCommand]
+    private void ClearStartDate()
+    {
+        HasStartDate = false;
+    }
+
+    [RelayCommand]
+    private void ClearFinishDate()
+    {
+        HasFinishDate = false;
     }
 
     [RelayCommand]
@@ -660,6 +738,30 @@ public partial class EditMediaItemViewModel : BaseViewModel
         return TagChips.Count == 0 ? string.Empty : string.Join(", ", TagChips);
     }
 
+    private void SetCastChips(string? cast)
+    {
+        CastChips.Clear();
+        NewCastText = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(cast))
+        {
+            return;
+        }
+
+        foreach (var name in cast.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!CastChips.Any(existing => string.Equals(existing, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                CastChips.Add(name);
+            }
+        }
+    }
+
+    private string BuildCastString()
+    {
+        return CastChips.Count == 0 ? string.Empty : string.Join(", ", CastChips);
+    }
+
     private void ResetFields()
     {
         ItemTitle = string.Empty;
@@ -670,15 +772,16 @@ public partial class EditMediaItemViewModel : BaseViewModel
         Publisher = string.Empty;
         SerialNumber = string.Empty;
         SetTagChips(null);
+        SetCastChips(null);
         SelectedMediaType = MediaTypes.First(option => option.Value == MediaType.Other);
         SelectedStatus = Statuses.First(option => option.Value == MediaStatus.Planned);
         Rating = string.Empty;
         ProgressCurrent = string.Empty;
         ProgressTotal = string.Empty;
-        HasStartDate = false;
         StartDate = DateTime.Today;
-        HasFinishDate = false;
+        HasStartDate = false;
         FinishDate = DateTime.Today;
+        HasFinishDate = false;
         ReleaseYear = string.Empty;
         CoverUrl = string.Empty;
         Notes = string.Empty;

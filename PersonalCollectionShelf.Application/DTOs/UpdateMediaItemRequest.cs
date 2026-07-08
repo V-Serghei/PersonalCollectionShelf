@@ -24,6 +24,8 @@ public sealed record UpdateMediaItemRequest
 
     public string? SerialNumber { get; init; }
 
+    public string? Cast { get; init; }
+
     public MediaType MediaType { get; init; } = MediaType.Other;
 
     public MediaStatus Status { get; init; } = MediaStatus.Planned;

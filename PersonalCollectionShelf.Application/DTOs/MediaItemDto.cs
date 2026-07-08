@@ -24,6 +24,8 @@ public sealed record MediaItemDto
 
     public string? SerialNumber { get; init; }
 
+    public string? Cast { get; init; }
+
     public MediaType MediaType { get; init; }
 
     public MediaStatus Status { get; init; }
