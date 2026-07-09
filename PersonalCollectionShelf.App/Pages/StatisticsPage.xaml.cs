@@ -107,7 +107,7 @@ public partial class StatisticsPage : ContentPage
             for (var i = 0; i < points.Count; i++)
             {
                 var point = Project(i);
-                canvas.FillColor = Color.FromArgb("#100E1A");
+                canvas.FillColor = Color.FromArgb("#272238");
                 canvas.FillCircle(point.X, point.Y, 4);
                 canvas.StrokeColor = Color.FromArgb("#9D7FF4");
                 canvas.StrokeSize = 2;

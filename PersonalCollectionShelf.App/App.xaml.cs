@@ -57,7 +57,7 @@ public partial class App : Microsoft.Maui.Controls.Application
         }
 
         window.TitleBar.BackgroundColor = _appearanceService.IsDarkTheme
-            ? Color.FromArgb("#0D0B14")
+            ? Color.FromArgb("#201C2D")
             : Color.FromArgb("#F7F4FF");
         window.TitleBar.ForegroundColor = _appearanceService.IsDarkTheme
             ? Color.FromArgb("#EDE9F8")

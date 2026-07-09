@@ -325,9 +325,9 @@ public sealed class AppShell : Shell
         }
     }
 
-    private Color AppBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#0D0B14" : "#F7F4FF");
+    private Color AppBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#201C2D" : "#F7F4FF");
 
-    private Color SidebarColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#100E1A" : "#EFEAFB");
+    private Color SidebarColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#1A1726" : "#EFEAFB");
 
     private Color ForegroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#EDE9F8" : "#1A1728");
 
@@ -335,15 +335,15 @@ public sealed class AppShell : Shell
 
     private Color MutedForegroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#6F6098" : "#776A94");
 
-    private Color BorderColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#2B2440" : "#D8CEEE");
+    private Color BorderColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#3A3350" : "#D8CEEE");
 
     private Color PrimaryColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#9D7FF4" : "#7C5CE6");
 
-    private Color PrimaryForegroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#0D0B14" : "#FFFFFF");
+    private Color PrimaryForegroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#171421" : "#FFFFFF");
 
-    private Color ActiveNavigationBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#1F1A31" : "#E4DCF8");
+    private Color ActiveNavigationBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#2D2740" : "#E4DCF8");
 
-    private Color HoverNavigationBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#171325" : "#EAE4F7");
+    private Color HoverNavigationBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#272238" : "#EAE4F7");
 
     private void ApplyShellColors()
     {

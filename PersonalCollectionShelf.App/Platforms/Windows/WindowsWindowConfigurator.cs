@@ -17,14 +17,14 @@ public static class WindowsWindowConfigurator
             if (appWindow?.TitleBar is { } titleBar)
             {
                 titleBar.ExtendsContentIntoTitleBar = true;
-                titleBar.BackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14);
-                titleBar.InactiveBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14);
-                titleBar.ButtonBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14);
-                titleBar.ButtonInactiveBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14);
+                titleBar.BackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x20, 0x1C, 0x2D);
+                titleBar.InactiveBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x20, 0x1C, 0x2D);
+                titleBar.ButtonBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x20, 0x1C, 0x2D);
+                titleBar.ButtonInactiveBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x20, 0x1C, 0x2D);
                 titleBar.ButtonForegroundColor = global::Windows.UI.Color.FromArgb(255, 0xED, 0xE9, 0xF8);
-                titleBar.ButtonHoverBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x2B, 0x24, 0x40);
+                titleBar.ButtonHoverBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x32, 0x2C, 0x44);
                 titleBar.ButtonHoverForegroundColor = global::Windows.UI.Color.FromArgb(255, 0xED, 0xE9, 0xF8);
-                titleBar.ButtonPressedBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x1F, 0x1A, 0x31);
+                titleBar.ButtonPressedBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x2A, 0x25, 0x3A);
                 titleBar.ButtonPressedForegroundColor = global::Windows.UI.Color.FromArgb(255, 0x9D, 0x7F, 0xF4);
             }
         }
@@ -39,7 +39,7 @@ public static class WindowsWindowConfigurator
 
             if (nativeWindow.Content is global::Microsoft.UI.Xaml.FrameworkElement root)
             {
-                root.Background = new SolidColorBrush(global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14));
+                root.Background = new SolidColorBrush(global::Windows.UI.Color.FromArgb(255, 0x20, 0x1C, 0x2D));
             }
         }
         catch

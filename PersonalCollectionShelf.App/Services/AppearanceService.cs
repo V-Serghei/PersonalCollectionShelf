@@ -44,19 +44,19 @@ public sealed class AppearanceService : IAppearanceService
 
     private static readonly IReadOnlyDictionary<string, string> DarkPalette = new Dictionary<string, string>
     {
-        ["Background"] = "#0D0B14",
+        ["Background"] = "#201C2D",
         ["Foreground"] = "#EDE9F8",
-        ["Card"] = "#1A1726",
-        ["CardElevated"] = "#201C2D",
-        ["Sidebar"] = "#100E1A",
-        ["Muted"] = "#1E1A2E",
-        ["MutedSoft"] = "#231F30",
+        ["Card"] = "#272238",
+        ["CardElevated"] = "#2D2740",
+        ["Sidebar"] = "#1A1726",
+        ["Muted"] = "#2A253A",
+        ["MutedSoft"] = "#322C44",
         ["MutedForeground"] = "#8179A3",
-        ["Border"] = "#2B2440",
-        ["BorderSoft"] = "#252036",
+        ["Border"] = "#3A3350",
+        ["BorderSoft"] = "#332D47",
         ["Primary"] = "#9D7FF4",
         ["PrimaryPressed"] = "#8B6FE0",
-        ["PrimaryForeground"] = "#0D0B14"
+        ["PrimaryForeground"] = "#171421"
     };
 
     private static readonly IReadOnlyDictionary<string, string> LightPalette = new Dictionary<string, string>
