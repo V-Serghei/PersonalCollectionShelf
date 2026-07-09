@@ -64,42 +64,50 @@
                         TextColor="{StaticResource Primary}" />
                 </VerticalStackLayout>
 
-                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
-                    <Border Grid.Column="0" Padding="12" HeightRequest="112" Style="{StaticResource CardBorderStyle}">
-                        <VerticalStackLayout Spacing="6">
-                            <Border BackgroundColor="#269D7FF4" HeightRequest="26" StrokeThickness="0" StrokeShape="RoundRectangle 13" WidthRequest="26">
-                                <Label FontSize="12" HorizontalTextAlignment="Center" Text="◇" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
-                            </Border>
-                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="23" Text="{Binding TotalItemCount}" />
-                            <Label FontSize="12" Text="Total Items" TextColor="{StaticResource Primary}" />
-                        </VerticalStackLayout>
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+                    <Border Grid.Column="0" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="7">
+                            <Label FontAttributes="Bold" FontSize="10" Text="Total Items" TextColor="{StaticResource Primary}" />
+                            <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
+                                <Border BackgroundColor="#269D7FF4" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="◇" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding TotalItemCount}" VerticalTextAlignment="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
                     </Border>
-                    <Border Grid.Column="1" Padding="12" HeightRequest="112" Style="{StaticResource CardBorderStyle}">
-                        <VerticalStackLayout Spacing="6">
-                            <Border BackgroundColor="#224ADE80" HeightRequest="26" StrokeThickness="0" StrokeShape="RoundRectangle 13" WidthRequest="26">
-                                <Label FontSize="12" HorizontalTextAlignment="Center" Text="✓" TextColor="{StaticResource Success}" VerticalTextAlignment="Center" />
-                            </Border>
-                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="23" Text="{Binding CompletedItemCount}" />
-                            <Label FontSize="12" Text="{Binding CompletedItemsLabel}" TextColor="{StaticResource Primary}" />
-                        </VerticalStackLayout>
+                    <Border Grid.Column="1" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="7">
+                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding CompletedItemsLabel}" TextColor="{StaticResource Primary}" />
+                            <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
+                                <Border BackgroundColor="#224ADE80" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="✓" TextColor="{StaticResource Success}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding CompletedItemCount}" VerticalTextAlignment="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
                     </Border>
-                    <Border Grid.Column="2" Padding="12" HeightRequest="112" Style="{StaticResource CardBorderStyle}">
-                        <VerticalStackLayout Spacing="6">
-                            <Border BackgroundColor="#2260A5FA" HeightRequest="26" StrokeThickness="0" StrokeShape="RoundRectangle 13" WidthRequest="26">
-                                <Label FontSize="12" HorizontalTextAlignment="Center" Text="◷" TextColor="{StaticResource Info}" VerticalTextAlignment="Center" />
-                            </Border>
-                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="23" Text="{Binding InProgressItemCount}" />
-                            <Label FontSize="12" Text="In Progress" TextColor="{StaticResource Primary}" />
-                        </VerticalStackLayout>
+                    <Border Grid.Column="2" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="7">
+                            <Label FontAttributes="Bold" FontSize="10" Text="In Progress" TextColor="{StaticResource Primary}" />
+                            <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
+                                <Border BackgroundColor="#2260A5FA" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="◷" TextColor="{StaticResource Info}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding InProgressItemCount}" VerticalTextAlignment="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
                     </Border>
-                    <Border Grid.Column="3" Padding="12" HeightRequest="112" Style="{StaticResource CardBorderStyle}">
-                        <VerticalStackLayout Spacing="6">
-                            <Border BackgroundColor="#22FBBF24" HeightRequest="26" StrokeThickness="0" StrokeShape="RoundRectangle 13" WidthRequest="26">
-                                <Label FontSize="12" HorizontalTextAlignment="Center" Text="▱" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
-                            </Border>
-                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="23" Text="{Binding WishlistItemCount}" />
-                            <Label FontSize="12" Text="Wishlist" TextColor="{StaticResource Primary}" />
-                        </VerticalStackLayout>
+                    <Border Grid.Column="3" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="7">
+                            <Label FontAttributes="Bold" FontSize="10" Text="Wishlist" TextColor="{StaticResource Primary}" />
+                            <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
+                                <Border BackgroundColor="#22FBBF24" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="▱" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding WishlistItemCount}" VerticalTextAlignment="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
                     </Border>
                 </Grid>
 

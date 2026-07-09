@@ -11,10 +11,11 @@ public sealed class MediaItemRepositoryTests
     public async Task GetByIdAsync_loads_item_without_sqlite_tostring_function()
     {
         var databasePath = Path.Combine(Path.GetTempPath(), $"pcs-{Guid.NewGuid():N}.db3");
+        LocalDatabaseService? database = null;
 
         try
         {
-            var database = new LocalDatabaseService(databasePath);
+            database = new LocalDatabaseService(databasePath);
             var repository = new MediaItemRepository(database);
             var item = new MediaItem
             {
@@ -34,10 +35,27 @@ public sealed class MediaItemRepositoryTests
         }
         finally
         {
+            if (database is not null)
+            {
+                await database.Connection.CloseAsync();
+            }
+
             if (File.Exists(databasePath))
             {
-                File.Delete(databasePath);
+                TryDelete(databasePath);
             }
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (IOException)
+        {
+            // SQLite can keep the file handle alive briefly on Windows after CloseAsync.
         }
     }
 }
