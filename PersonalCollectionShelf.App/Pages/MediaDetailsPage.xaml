@@ -7,7 +7,17 @@
     x:DataType="viewModels:MediaDetailsViewModel"
     Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <ScrollView>
+    <Grid BackgroundColor="{DynamicResource Background}">
+        <Image
+            Aspect="AspectFill"
+            InputTransparent="True"
+            Opacity="{DynamicResource CustomBackgroundImageOpacity}"
+            Source="{DynamicResource CustomBackgroundImageSource}" />
+        <BoxView
+            BackgroundColor="{DynamicResource Background}"
+            InputTransparent="True"
+            Opacity="{DynamicResource CustomBackgroundOverlayOpacity}" />
+        <ScrollView>
         <VerticalStackLayout
             Padding="{OnIdiom Phone=14, Tablet=20, Desktop=24}"
             Spacing="18"
@@ -196,5 +206,6 @@
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
-    </ScrollView>
+        </ScrollView>
+    </Grid>
 </ContentPage>

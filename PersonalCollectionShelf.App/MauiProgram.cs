@@ -23,6 +23,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPersonService, PersonService>();
         builder.Services.AddSingleton<IStudioService, StudioService>();
         builder.Services.AddSingleton<IMediaItemService, MediaItemService>();
+        builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
 
         builder.Services.AddSingleton<AppShell>();
         builder.Services.AddTransient<LibraryViewModel>();

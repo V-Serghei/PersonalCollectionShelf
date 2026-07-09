@@ -7,11 +7,22 @@
     x:DataType="viewModels:LibraryViewModel"
     Shell.NavBarIsVisible="False"
     Title="Statistics">
-    <Grid RowDefinitions="52,*">
+    <Grid BackgroundColor="{DynamicResource Background}" RowDefinitions="52,*">
+        <Image
+            Grid.RowSpan="2"
+            Aspect="AspectFill"
+            InputTransparent="True"
+            Opacity="{DynamicResource CustomBackgroundImageOpacity}"
+            Source="{DynamicResource CustomBackgroundImageSource}" />
+        <BoxView
+            Grid.RowSpan="2"
+            BackgroundColor="{DynamicResource Background}"
+            InputTransparent="True"
+            Opacity="{DynamicResource CustomBackgroundOverlayOpacity}" />
         <Grid
             Grid.Row="0"
             Padding="18,7"
-            BackgroundColor="#CC0D0B14"
+            BackgroundColor="{DynamicResource Background}"
             ColumnDefinitions="310,Auto,*"
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">

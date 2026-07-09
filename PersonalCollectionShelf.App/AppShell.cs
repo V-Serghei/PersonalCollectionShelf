@@ -9,6 +9,7 @@ namespace PersonalCollectionShelf.App;
 public sealed class AppShell : Shell
 {
     private readonly ILocalizationService _localizationService;
+    private readonly IAppearanceService _appearanceService;
     private readonly IServiceProvider _services;
     private readonly FlyoutItem _homeItem;
     private readonly FlyoutItem _libraryItem;
@@ -16,21 +17,18 @@ public sealed class AppShell : Shell
     private readonly FlyoutItem _settingsItem;
     private readonly List<(Border Container, Label Icon, Label Text)> _navigationButtons = [];
 
-    public AppShell(IServiceProvider services, ILocalizationService localizationService)
+    public AppShell(
+        IServiceProvider services,
+        ILocalizationService localizationService,
+        IAppearanceService appearanceService)
     {
         _services = services;
         _localizationService = localizationService;
+        _appearanceService = appearanceService;
 
         FlyoutBehavior = FlyoutBehavior.Locked;
         FlyoutWidth = 210;
-        FlyoutBackgroundColor = Color.FromArgb("#100E1A");
-        BackgroundColor = Color.FromArgb("#0D0B14");
-
-        Shell.SetBackgroundColor(this, Color.FromArgb("#0D0B14"));
-        Shell.SetForegroundColor(this, Color.FromArgb("#EDE9F8"));
-        Shell.SetTitleColor(this, Color.FromArgb("#EDE9F8"));
-        Shell.SetUnselectedColor(this, Color.FromArgb("#8179A3"));
-        Shell.SetDisabledColor(this, Color.FromArgb("#4B4265"));
+        ApplyShellColors();
 
         _homeItem = CreateItem("Home", nameof(DashboardPage), () => _services.GetRequiredService<DashboardPage>());
         _libraryItem = CreateItem("Library", nameof(LibraryPage), () => _services.GetRequiredService<LibraryPage>());
@@ -48,6 +46,7 @@ public sealed class AppShell : Shell
         FlyoutContentTemplate = new DataTemplate(BuildFlyoutContent);
         Navigated += HandleNavigated;
         _localizationService.LanguageChanged += HandleLanguageChanged;
+        _appearanceService.AppearanceChanged += HandleAppearanceChanged;
         ApplyLocalization();
     }
 
@@ -74,7 +73,7 @@ public sealed class AppShell : Shell
 
         var root = new Grid
         {
-            BackgroundColor = Color.FromArgb("#100E1A"),
+            BackgroundColor = SidebarColor,
             RowDefinitions =
             {
                 new RowDefinition(GridLength.Auto),
@@ -93,7 +92,7 @@ public sealed class AppShell : Shell
                 {
                     HeightRequest = 32,
                     WidthRequest = 32,
-                    BackgroundColor = Color.FromArgb("#9D7FF4"),
+                    BackgroundColor = PrimaryColor,
                     StrokeThickness = 0,
                     StrokeShape = new RoundRectangle { CornerRadius = 16 },
                     Content = new Label
@@ -101,7 +100,7 @@ public sealed class AppShell : Shell
                         Text = "S",
                         FontAttributes = FontAttributes.Bold,
                         FontSize = 14,
-                        TextColor = Color.FromArgb("#0D0B14"),
+                        TextColor = PrimaryForegroundColor,
                         HorizontalTextAlignment = TextAlignment.Center,
                         VerticalTextAlignment = TextAlignment.Center
                     }
@@ -112,7 +111,7 @@ public sealed class AppShell : Shell
                     FontAttributes = FontAttributes.Bold,
                     FontFamily = "Cambria",
                     FontSize = 18,
-                    TextColor = Color.FromArgb("#EDE9F8"),
+                    TextColor = ForegroundColor,
                     VerticalTextAlignment = TextAlignment.Center
                 }
             }
@@ -134,7 +133,7 @@ public sealed class AppShell : Shell
             Text = "CATEGORIES",
             FontAttributes = FontAttributes.Bold,
             FontSize = 10,
-            TextColor = Color.FromArgb("#6F6098"),
+            TextColor = MutedForegroundColor,
             Margin = new Thickness(4, 18, 0, 6)
         });
 
@@ -155,9 +154,9 @@ public sealed class AppShell : Shell
             {
                 new Label
                 {
-                    Text = "☼  Light Mode",
+                    Text = _appearanceService.IsDarkTheme ? "☼  Light Mode" : "☾  Dark Mode",
                     FontSize = 14,
-                    TextColor = Color.FromArgb("#C6BEE0")
+                    TextColor = SecondaryForegroundColor
                 },
                 new HorizontalStackLayout
                 {
@@ -166,7 +165,7 @@ public sealed class AppShell : Shell
                     {
                         new Border
                         {
-                            BackgroundColor = Color.FromArgb("#2B2440"),
+                            BackgroundColor = BorderColor,
                             HeightRequest = 28,
                             StrokeThickness = 0,
                             StrokeShape = new RoundRectangle { CornerRadius = 14 },
@@ -176,7 +175,7 @@ public sealed class AppShell : Shell
                                 Text = "A",
                                 FontAttributes = FontAttributes.Bold,
                                 FontSize = 12,
-                                TextColor = Color.FromArgb("#9D7FF4"),
+                                TextColor = PrimaryColor,
                                 HorizontalTextAlignment = TextAlignment.Center,
                                 VerticalTextAlignment = TextAlignment.Center
                             }
@@ -191,13 +190,13 @@ public sealed class AppShell : Shell
                                     Text = "Alex Morgan",
                                     FontAttributes = FontAttributes.Bold,
                                     FontSize = 12,
-                                    TextColor = Color.FromArgb("#EDE9F8")
+                                    TextColor = ForegroundColor
                                 },
                                 new Label
                                 {
                                     Text = "14 items collected",
                                     FontSize = 10,
-                                    TextColor = Color.FromArgb("#9D7FF4")
+                                    TextColor = PrimaryColor
                                 }
                             }
                         }
@@ -212,8 +211,8 @@ public sealed class AppShell : Shell
 
     private Border CreateNavButton(string icon, string label, string route, bool active, bool symbolFont)
     {
-        var activeColor = Color.FromArgb("#9D7FF4");
-        var inactiveColor = Color.FromArgb("#C6BEE0");
+        var activeColor = PrimaryColor;
+        var inactiveColor = SecondaryForegroundColor;
 
         var iconLabel = new Label
         {
@@ -240,7 +239,7 @@ public sealed class AppShell : Shell
             Padding = new Thickness(12, 9),
             StrokeThickness = 0,
             StrokeShape = new RoundRectangle { CornerRadius = 18 },
-            BackgroundColor = active ? Color.FromArgb("#1F1A31") : Colors.Transparent,
+            BackgroundColor = active ? ActiveNavigationBackgroundColor : Colors.Transparent,
             Content = new HorizontalStackLayout
             {
                 Spacing = 10,
@@ -257,7 +256,7 @@ public sealed class AppShell : Shell
             })
         });
 
-        var hoverColor = Color.FromArgb("#171325");
+        var hoverColor = HoverNavigationBackgroundColor;
         var pointer = new PointerGestureRecognizer();
         pointer.PointerEntered += (_, _) =>
         {
@@ -319,11 +318,43 @@ public sealed class AppShell : Shell
         foreach (var (container, icon, text) in _navigationButtons)
         {
             var isActive = ReferenceEquals(container, activeContainer);
-            var color = isActive ? Color.FromArgb("#9D7FF4") : Color.FromArgb("#C6BEE0");
-            container.BackgroundColor = isActive ? Color.FromArgb("#1F1A31") : Colors.Transparent;
+            var color = isActive ? PrimaryColor : SecondaryForegroundColor;
+            container.BackgroundColor = isActive ? ActiveNavigationBackgroundColor : Colors.Transparent;
             icon.TextColor = color;
             text.TextColor = color;
         }
+    }
+
+    private Color AppBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#0D0B14" : "#F7F4FF");
+
+    private Color SidebarColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#100E1A" : "#EFEAFB");
+
+    private Color ForegroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#EDE9F8" : "#1A1728");
+
+    private Color SecondaryForegroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#C6BEE0" : "#4C4263");
+
+    private Color MutedForegroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#6F6098" : "#776A94");
+
+    private Color BorderColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#2B2440" : "#D8CEEE");
+
+    private Color PrimaryColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#9D7FF4" : "#7C5CE6");
+
+    private Color PrimaryForegroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#0D0B14" : "#FFFFFF");
+
+    private Color ActiveNavigationBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#1F1A31" : "#E4DCF8");
+
+    private Color HoverNavigationBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#171325" : "#EAE4F7");
+
+    private void ApplyShellColors()
+    {
+        FlyoutBackgroundColor = SidebarColor;
+        BackgroundColor = AppBackgroundColor;
+
+        Shell.SetBackgroundColor(this, AppBackgroundColor);
+        Shell.SetForegroundColor(this, ForegroundColor);
+        Shell.SetTitleColor(this, ForegroundColor);
+        Shell.SetUnselectedColor(this, SecondaryForegroundColor);
+        Shell.SetDisabledColor(this, MutedForegroundColor);
     }
 
     private void HandleNavigated(object? sender, ShellNavigatedEventArgs e)
@@ -344,6 +375,12 @@ public sealed class AppShell : Shell
     private void HandleLanguageChanged(object? sender, EventArgs e)
     {
         ApplyLocalization();
+    }
+
+    private void HandleAppearanceChanged(object? sender, EventArgs e)
+    {
+        ApplyShellColors();
+        FlyoutContentTemplate = new DataTemplate(BuildFlyoutContent);
     }
 
     private void ApplyLocalization()

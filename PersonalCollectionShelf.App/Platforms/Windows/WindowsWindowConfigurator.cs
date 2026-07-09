@@ -17,10 +17,10 @@ public static class WindowsWindowConfigurator
             if (appWindow?.TitleBar is { } titleBar)
             {
                 titleBar.ExtendsContentIntoTitleBar = true;
-                titleBar.BackgroundColor = global::Windows.UI.Color.FromArgb(0, 0, 0, 0);
-                titleBar.InactiveBackgroundColor = global::Windows.UI.Color.FromArgb(0, 0, 0, 0);
-                titleBar.ButtonBackgroundColor = global::Windows.UI.Color.FromArgb(0, 0, 0, 0);
-                titleBar.ButtonInactiveBackgroundColor = global::Windows.UI.Color.FromArgb(0, 0, 0, 0);
+                titleBar.BackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14);
+                titleBar.InactiveBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14);
+                titleBar.ButtonBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14);
+                titleBar.ButtonInactiveBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14);
                 titleBar.ButtonForegroundColor = global::Windows.UI.Color.FromArgb(255, 0xED, 0xE9, 0xF8);
                 titleBar.ButtonHoverBackgroundColor = global::Windows.UI.Color.FromArgb(255, 0x2B, 0x24, 0x40);
                 titleBar.ButtonHoverForegroundColor = global::Windows.UI.Color.FromArgb(255, 0xED, 0xE9, 0xF8);
@@ -35,11 +35,16 @@ public static class WindowsWindowConfigurator
 
         try
         {
-            nativeWindow.SystemBackdrop = new DesktopAcrylicBackdrop();
+            nativeWindow.SystemBackdrop = null;
+
+            if (nativeWindow.Content is global::Microsoft.UI.Xaml.FrameworkElement root)
+            {
+                root.Background = new SolidColorBrush(global::Windows.UI.Color.FromArgb(255, 0x0D, 0x0B, 0x14));
+            }
         }
         catch
         {
-            // Acrylic requires Windows 11; older hosts keep the solid window background.
+            // Keep the default solid host background if the OS rejects direct window styling.
         }
     }
 }

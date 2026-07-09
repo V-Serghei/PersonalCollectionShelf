@@ -18,7 +18,10 @@ public partial class SettingsViewModel : BaseViewModel
     private readonly ISyncService _syncService;
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
+    private readonly IAppearanceService _appearanceService;
     private bool _suppressLanguageChange;
+    private bool _isDarkTheme;
+    private double _backgroundBlur;
     private string _statusMessageKey = "Sync.Status.NotConfigured";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -34,13 +37,18 @@ public partial class SettingsViewModel : BaseViewModel
         ISyncService syncService,
         IMediaItemService mediaItemService,
         IAuthService authService,
-        ILocalizationService localizationService)
+        ILocalizationService localizationService,
+        IAppearanceService appearanceService)
         : base(localizationService)
     {
         _syncService = syncService;
         _mediaItemService = mediaItemService;
         _authService = authService;
+        _appearanceService = appearanceService;
+        _isDarkTheme = _appearanceService.IsDarkTheme;
+        _backgroundBlur = _appearanceService.BackgroundBlur;
         InitializeLanguageOptions();
+        UpdateBackgroundImageDescription();
         StatusMessage = T(_statusMessageKey);
     }
 
@@ -49,6 +57,8 @@ public partial class SettingsViewModel : BaseViewModel
     private LocalizedOption<string>? _selectedLanguageOption;
 
     private string _statusMessage = string.Empty;
+    private string _appearanceStatusMessage = string.Empty;
+    private string _backgroundImageDescription = string.Empty;
 
     public LocalizedOption<string>? SelectedLanguageOption
     {
@@ -66,6 +76,49 @@ public partial class SettingsViewModel : BaseViewModel
     {
         get => _statusMessage;
         set => SetProperty(ref _statusMessage, value);
+    }
+
+    public bool IsDarkTheme
+    {
+        get => _isDarkTheme;
+        set
+        {
+            if (SetProperty(ref _isDarkTheme, value))
+            {
+                _appearanceService.SetTheme(value);
+                AppearanceStatusMessage = value ? "Dark theme enabled" : "Light theme enabled";
+                OnPropertyChanged(nameof(ThemeModeDescription));
+            }
+        }
+    }
+
+    public string ThemeModeDescription => IsDarkTheme ? "Stable dark theme" : "Stable light theme";
+
+    public double BackgroundBlur
+    {
+        get => _backgroundBlur;
+        set
+        {
+            if (SetProperty(ref _backgroundBlur, value))
+            {
+                _appearanceService.SetBackgroundBlur(value);
+                OnPropertyChanged(nameof(BackgroundBlurText));
+            }
+        }
+    }
+
+    public string BackgroundBlurText => $"{BackgroundBlur:0}";
+
+    public string BackgroundImageDescription
+    {
+        get => _backgroundImageDescription;
+        set => SetProperty(ref _backgroundImageDescription, value);
+    }
+
+    public string AppearanceStatusMessage
+    {
+        get => _appearanceStatusMessage;
+        set => SetProperty(ref _appearanceStatusMessage, value);
     }
 
     public string PageTitle => T("Settings.Title");
@@ -221,6 +274,43 @@ public partial class SettingsViewModel : BaseViewModel
         {
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.CreateMediaItemAsync");
         }
+    }
+
+    [RelayCommand]
+    private async Task PickBackgroundImageAsync()
+    {
+        try
+        {
+            var picked = await _appearanceService.PickBackgroundImageAsync();
+            if (!picked)
+            {
+                return;
+            }
+
+            UpdateBackgroundImageDescription();
+            AppearanceStatusMessage = "Background image updated";
+        }
+        catch (Exception exception)
+        {
+            AppearanceStatusMessage = "Could not load background image";
+            await CrashReporter.ReportAsync(exception, "SettingsViewModel.PickBackgroundImageAsync");
+        }
+    }
+
+    [RelayCommand]
+    private void ClearBackgroundImage()
+    {
+        _appearanceService.ClearBackgroundImage();
+        UpdateBackgroundImageDescription();
+        AppearanceStatusMessage = "Background image cleared";
+    }
+
+    private void UpdateBackgroundImageDescription()
+    {
+        var path = _appearanceService.BackgroundImagePath;
+        BackgroundImageDescription = string.IsNullOrWhiteSpace(path)
+            ? "No background selected"
+            : Path.GetFileName(path);
     }
 
     private void InitializeLanguageOptions()
