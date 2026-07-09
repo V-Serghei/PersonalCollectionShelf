@@ -41,12 +41,13 @@
                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="APPEARANCE" />
                     <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="0">
-                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ThemeSectionTitle}" />
                                     <Label FontSize="12" Text="{Binding ThemeModeDescription}" TextColor="{StaticResource Primary}" />
                                 </VerticalStackLayout>
-                                <Switch Grid.Column="1" IsToggled="{Binding IsDarkTheme}" OnColor="{StaticResource Primary}" ThumbColor="White" VerticalOptions="Center" />
+                                <Label Grid.Column="1" FontAttributes="Bold" FontSize="13" Text="{Binding ThemeSwitchLabel}" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
+                                <Switch Grid.Column="2" IsToggled="{Binding IsDarkTheme}" OnColor="{StaticResource Primary}" ThumbColor="White" VerticalOptions="Center" />
                             </Grid>
 
                             <BoxView HeightRequest="1" Color="{StaticResource Border}" />

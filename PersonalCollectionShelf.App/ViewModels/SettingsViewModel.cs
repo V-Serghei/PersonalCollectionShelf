@@ -90,11 +90,14 @@ public partial class SettingsViewModel : BaseViewModel
                 _appearanceService.SetTheme(value);
                 AppearanceStatusMessage = value ? "Dark theme enabled" : "Light theme enabled";
                 OnPropertyChanged(nameof(ThemeModeDescription));
+                OnPropertyChanged(nameof(ThemeSwitchLabel));
             }
         }
     }
 
-    public string ThemeModeDescription => IsDarkTheme ? "Stable dark theme" : "Stable light theme";
+    public string ThemeModeDescription => "Switch between light and dark mode";
+
+    public string ThemeSwitchLabel => IsDarkTheme ? "Dark" : "Light";
 
     public double BackgroundBlur
     {
