@@ -6,24 +6,14 @@
     xmlns:models="clr-namespace:PersonalCollectionShelf.App.Models"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:LibraryViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <Grid BackgroundColor="{DynamicResource Background}" RowDefinitions="52,*">
-        <Image
-            Grid.RowSpan="2"
-            Aspect="AspectFill"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundImageOpacity}"
-            Source="{DynamicResource CustomBackgroundImageSource}" />
-        <BoxView
-            Grid.RowSpan="2"
-            BackgroundColor="{DynamicResource Background}"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundOverlayOpacity}" />
+    <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
         <Grid
             Grid.Row="0"
             Padding="18,7"
-            BackgroundColor="{DynamicResource Background}"
+            BackgroundColor="{DynamicResource PageBackground}"
             ColumnDefinitions="310,Auto,*"
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
@@ -76,6 +66,7 @@
             </Grid>
 
             <CollectionView
+                BackgroundColor="{DynamicResource PageBackground}"
                 Grid.Row="2"
                 HeightRequest="34"
                 ItemsSource="{Binding MediaTypeFilters}"
@@ -102,9 +93,11 @@
 
             <RefreshView
                 Grid.Row="4"
+                BackgroundColor="{DynamicResource PageBackground}"
                 Command="{Binding LoadCommand}"
                 IsRefreshing="{Binding IsBusy}">
                 <CollectionView
+                    BackgroundColor="{DynamicResource PageBackground}"
                     ItemSizingStrategy="MeasureAllItems"
                     ItemsSource="{Binding MediaItems}"
                     SelectionMode="None">

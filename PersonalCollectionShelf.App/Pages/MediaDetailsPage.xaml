@@ -5,20 +5,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:MediaDetailsViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <Grid BackgroundColor="{DynamicResource Background}">
-        <Image
-            Aspect="AspectFill"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundImageOpacity}"
-            Source="{DynamicResource CustomBackgroundImageSource}" />
-        <BoxView
-            BackgroundColor="{DynamicResource Background}"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundOverlayOpacity}" />
-        <ScrollView>
+    <Grid BackgroundColor="{DynamicResource PageBackground}">
+        <ScrollView BackgroundColor="{DynamicResource PageBackground}">
         <VerticalStackLayout
+            BackgroundColor="{DynamicResource PageBackground}"
             Padding="{OnIdiom Phone=14, Tablet=20, Desktop=24}"
             Spacing="18"
             HorizontalOptions="Center"

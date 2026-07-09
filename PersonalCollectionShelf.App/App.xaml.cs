@@ -41,7 +41,10 @@ public partial class App : Microsoft.Maui.Controls.Application
         {
             if (window.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
             {
-                Platforms.Windows.WindowsWindowConfigurator.Configure(nativeWindow);
+                Platforms.Windows.WindowsWindowConfigurator.Configure(nativeWindow, _appearanceService);
+                _appearanceService.AppearanceChanged += (_, _) =>
+                    MainThread.BeginInvokeOnMainThread(() =>
+                        Platforms.Windows.WindowsWindowConfigurator.Refresh(nativeWindow, _appearanceService));
             }
         };
 #endif
@@ -51,15 +54,15 @@ public partial class App : Microsoft.Maui.Controls.Application
 
     private void ApplyTitleBarTheme(Window window)
     {
-        if (window.TitleBar is null)
+        if (window.TitleBar is not TitleBar titleBar)
         {
             return;
         }
 
-        window.TitleBar.BackgroundColor = _appearanceService.IsDarkTheme
+        titleBar.BackgroundColor = _appearanceService.IsDarkTheme
             ? Color.FromArgb("#201C2D")
             : Color.FromArgb("#F7F4FF");
-        window.TitleBar.ForegroundColor = _appearanceService.IsDarkTheme
+        titleBar.ForegroundColor = _appearanceService.IsDarkTheme
             ? Color.FromArgb("#EDE9F8")
             : Color.FromArgb("#1A1728");
     }

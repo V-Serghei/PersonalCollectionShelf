@@ -59,6 +59,8 @@ public partial class SettingsViewModel : BaseViewModel
     private string _statusMessage = string.Empty;
     private string _appearanceStatusMessage = string.Empty;
     private string _backgroundImageDescription = string.Empty;
+    private bool _hasBackgroundImage;
+    private CancellationTokenSource? _blurDebounceCts;
 
     public LocalizedOption<string>? SelectedLanguageOption
     {
@@ -101,8 +103,8 @@ public partial class SettingsViewModel : BaseViewModel
         {
             if (SetProperty(ref _backgroundBlur, value))
             {
-                _appearanceService.SetBackgroundBlur(value);
                 OnPropertyChanged(nameof(BackgroundBlurText));
+                DebounceApplyBlur(value);
             }
         }
     }
@@ -113,6 +115,12 @@ public partial class SettingsViewModel : BaseViewModel
     {
         get => _backgroundImageDescription;
         set => SetProperty(ref _backgroundImageDescription, value);
+    }
+
+    public bool HasBackgroundImage
+    {
+        get => _hasBackgroundImage;
+        set => SetProperty(ref _hasBackgroundImage, value);
     }
 
     public string AppearanceStatusMessage
@@ -305,9 +313,35 @@ public partial class SettingsViewModel : BaseViewModel
         AppearanceStatusMessage = "Background image cleared";
     }
 
+    private void DebounceApplyBlur(double value)
+    {
+        _blurDebounceCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _blurDebounceCts = cts;
+        _ = ApplyBlurAfterDelayAsync(value, cts.Token);
+    }
+
+    private async Task ApplyBlurAfterDelayAsync(double value, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(220, token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (!token.IsCancellationRequested)
+        {
+            _appearanceService.SetBackgroundBlur(value);
+        }
+    }
+
     private void UpdateBackgroundImageDescription()
     {
         var path = _appearanceService.BackgroundImagePath;
+        HasBackgroundImage = !string.IsNullOrWhiteSpace(path);
         BackgroundImageDescription = string.IsNullOrWhiteSpace(path)
             ? "No background selected"
             : Path.GetFileName(path);

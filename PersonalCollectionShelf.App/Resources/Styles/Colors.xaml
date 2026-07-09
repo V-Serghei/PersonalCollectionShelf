@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
     <Color x:Key="Background">#201C2D</Color>
+    <Color x:Key="PageBackground">#201C2D</Color>
     <Color x:Key="Foreground">#EDE9F8</Color>
     <Color x:Key="Card">#272238</Color>
     <Color x:Key="CardElevated">#2D2740</Color>

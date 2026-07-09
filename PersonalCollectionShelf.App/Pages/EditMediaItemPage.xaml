@@ -5,22 +5,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:EditMediaItemViewModel"
-    BackgroundColor="{DynamicResource Background}"
+    BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <Grid BackgroundColor="{DynamicResource Background}" ColumnDefinitions="*,860,*" Padding="24">
-        <Image
-            Grid.ColumnSpan="3"
-            Aspect="AspectFill"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundImageOpacity}"
-            Source="{DynamicResource CustomBackgroundImageSource}" />
-        <BoxView
-            Grid.ColumnSpan="3"
-            BackgroundColor="{DynamicResource Background}"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundOverlayOpacity}" />
-        <ScrollView Grid.Column="1" VerticalOptions="Center">
+    <Grid BackgroundColor="{DynamicResource PageBackground}" ColumnDefinitions="*,860,*" Padding="24">
+        <ScrollView Grid.Column="1" BackgroundColor="{DynamicResource PageBackground}" VerticalOptions="Center">
             <Border
                 Padding="30,26"
                 BackgroundColor="{StaticResource Card}"

@@ -5,24 +5,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:LibraryViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
     Title="Home">
-    <Grid BackgroundColor="{DynamicResource Background}" RowDefinitions="52,*">
-        <Image
-            Grid.RowSpan="2"
-            Aspect="AspectFill"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundImageOpacity}"
-            Source="{DynamicResource CustomBackgroundImageSource}" />
-        <BoxView
-            Grid.RowSpan="2"
-            BackgroundColor="{DynamicResource Background}"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundOverlayOpacity}" />
+    <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
         <Grid
             Grid.Row="0"
             Padding="18,7"
-            BackgroundColor="{DynamicResource Background}"
+            BackgroundColor="{DynamicResource PageBackground}"
             ColumnDefinitions="310,Auto,*"
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
@@ -56,8 +46,9 @@
                 Text="+  Add Item" />
         </Grid>
 
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
             <VerticalStackLayout
+                BackgroundColor="{DynamicResource PageBackground}"
                 Padding="0,24,0,30"
                 HorizontalOptions="Center"
                 MaximumWidthRequest="920"
@@ -131,7 +122,7 @@
                             Style="{StaticResource LinkButtonStyle}"
                             Text="{Binding SeeAllText}" />
                     </Grid>
-                    <CollectionView ItemsSource="{Binding InProgressItems}" SelectionMode="None">
+                    <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding InProgressItems}" SelectionMode="None">
                         <CollectionView.ItemsLayout>
                             <LinearItemsLayout ItemSpacing="12" Orientation="Horizontal" />
                         </CollectionView.ItemsLayout>
@@ -160,7 +151,7 @@
                         <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding RecentlyAddedSectionTitle}" />
                         <Button Grid.Column="1" Command="{Binding OpenLibraryCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding SeeAllText}" />
                     </Grid>
-                    <CollectionView ItemsSource="{Binding RecentItems}" SelectionMode="None">
+                    <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding RecentItems}" SelectionMode="None">
                         <CollectionView.ItemsLayout>
                             <LinearItemsLayout ItemSpacing="12" Orientation="Horizontal" />
                         </CollectionView.ItemsLayout>
@@ -189,7 +180,7 @@
                         <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding FavoritesSectionTitle}" />
                         <Label Grid.Column="1" FontSize="18" Text="♡" TextColor="#F07CB8" />
                     </Grid>
-                    <CollectionView ItemsSource="{Binding FavoriteItems}" SelectionMode="None">
+                    <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding FavoriteItems}" SelectionMode="None">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
                                 <Grid Padding="16,10" ColumnDefinitions="48,*,Auto,Auto" ColumnSpacing="12">
@@ -215,7 +206,7 @@
                         <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding CategoryOverviewTitle}" />
                         <Button Grid.Column="1" Command="{Binding OpenStatisticsCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding FullStatsText}" />
                     </Grid>
-                    <CollectionView ItemsSource="{Binding CategorySummaries}" SelectionMode="None">
+                    <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding CategorySummaries}" SelectionMode="None">
                         <CollectionView.ItemsLayout>
                             <GridItemsLayout HorizontalItemSpacing="12" Orientation="Vertical" Span="3" VerticalItemSpacing="12" />
                         </CollectionView.ItemsLayout>

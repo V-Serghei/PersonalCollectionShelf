@@ -5,24 +5,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:SettingsViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <Grid BackgroundColor="{DynamicResource Background}" RowDefinitions="52,*">
-        <Image
-            Grid.RowSpan="2"
-            Aspect="AspectFill"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundImageOpacity}"
-            Source="{DynamicResource CustomBackgroundImageSource}" />
-        <BoxView
-            Grid.RowSpan="2"
-            BackgroundColor="{DynamicResource Background}"
-            InputTransparent="True"
-            Opacity="{DynamicResource CustomBackgroundOverlayOpacity}" />
+    <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
         <Grid
             Grid.Row="0"
             Padding="18,7"
-            BackgroundColor="{DynamicResource Background}"
+            BackgroundColor="{DynamicResource PageBackground}"
             ColumnDefinitions="310,Auto,*"
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
@@ -37,8 +27,9 @@
             <Button Grid.Column="1" Command="{Binding CreateMediaItemCommand}" Text="+  Add Item" />
         </Grid>
 
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
             <VerticalStackLayout
+                BackgroundColor="{DynamicResource PageBackground}"
                 Padding="0,24,0,30"
                 HorizontalOptions="Center"
                 MaximumWidthRequest="584"
@@ -56,45 +47,6 @@
                                     <Label FontSize="12" Text="{Binding ThemeModeDescription}" TextColor="{StaticResource Primary}" />
                                 </VerticalStackLayout>
                                 <Switch Grid.Column="1" IsToggled="{Binding IsDarkTheme}" OnColor="{StaticResource Primary}" ThumbColor="White" VerticalOptions="Center" />
-                            </Grid>
-
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
-
-                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                <VerticalStackLayout Grid.Column="0" Spacing="4">
-                                    <Label FontAttributes="Bold" FontSize="14" Text="Background Image" />
-                                    <Label FontSize="12" Text="{Binding BackgroundImageDescription}" TextColor="{StaticResource Primary}" />
-                                </VerticalStackLayout>
-                                <Button
-                                    Grid.Column="1"
-                                    Command="{Binding PickBackgroundImageCommand}"
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    Text="Choose" />
-                                <Button
-                                    Grid.Column="2"
-                                    Command="{Binding ClearBackgroundImageCommand}"
-                                    Style="{StaticResource LinkButtonStyle}"
-                                    Text="Clear" />
-                            </Grid>
-
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
-
-                            <Grid Padding="16" RowDefinitions="Auto,Auto" RowSpacing="8">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
-                                    <VerticalStackLayout Grid.Column="0" Spacing="4">
-                                        <Label FontAttributes="Bold" FontSize="14" Text="Background Softness" />
-                                        <Label FontSize="12" Text="For your custom background image" TextColor="{StaticResource Primary}" />
-                                    </VerticalStackLayout>
-                                    <Label Grid.Column="1" FontAttributes="Bold" FontSize="13" Text="{Binding BackgroundBlurText}" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
-                                </Grid>
-                                <Slider
-                                    Grid.Row="1"
-                                    Maximum="40"
-                                    MaximumTrackColor="{StaticResource Border}"
-                                    Minimum="0"
-                                    MinimumTrackColor="{StaticResource Primary}"
-                                    ThumbColor="{StaticResource Primary}"
-                                    Value="{Binding BackgroundBlur}" />
                             </Grid>
 
                             <BoxView HeightRequest="1" Color="{StaticResource Border}" />
@@ -119,6 +71,32 @@
                                 FontSize="12"
                                 Text="{Binding AppearanceStatusMessage}"
                                 TextColor="{StaticResource MutedForeground}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="BACKGROUND" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Custom background image" />
+                                    <Label FontSize="12" Text="{Binding BackgroundImageDescription}" TextColor="{StaticResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding PickBackgroundImageCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="Choose image..." />
+                                <Button Grid.Column="2" Command="{Binding ClearBackgroundImageCommand}" IsVisible="{Binding HasBackgroundImage}" Style="{StaticResource DangerButtonStyle}" Text="Remove" />
+                            </Grid>
+
+                            <BoxView HeightRequest="1" IsVisible="{Binding HasBackgroundImage}" Color="{StaticResource Border}" />
+
+                            <Grid Padding="16" ColumnDefinitions="*,60" ColumnSpacing="14" IsVisible="{Binding HasBackgroundImage}">
+                                <VerticalStackLayout Grid.Column="0" Spacing="8">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Blur" />
+                                    <Slider Maximum="40" Minimum="0" Value="{Binding BackgroundBlur}" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="1" FontSize="14" HorizontalTextAlignment="End" Text="{Binding BackgroundBlurText}" TextColor="{StaticResource MutedForeground}" VerticalOptions="Center" />
+                            </Grid>
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>

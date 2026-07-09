@@ -1,6 +1,8 @@
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices;
+using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Graphics.Platform;
 using Microsoft.Maui.Storage;
 
 namespace PersonalCollectionShelf.App.Services;
@@ -24,6 +26,8 @@ public interface IAppearanceService
     Task<bool> PickBackgroundImageAsync();
 
     void ClearBackgroundImage();
+
+    Task<string?> GetRenderableBackgroundImageAsync();
 }
 
 public sealed class AppearanceService : IAppearanceService
@@ -33,6 +37,7 @@ public sealed class AppearanceService : IAppearanceService
     private const string BackgroundBlurKey = "appearance.backgroundBlur";
     private const string DarkThemeValue = "dark";
     private const string LightThemeValue = "light";
+    private const int MaxBackgroundDimension = 1920;
 
     private static readonly FilePickerFileType BackgroundImageFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
     {
@@ -76,6 +81,10 @@ public sealed class AppearanceService : IAppearanceService
         ["PrimaryForeground"] = "#FFFFFF"
     };
 
+    private static string BackgroundsDirectory => Path.Combine(FileSystem.AppDataDirectory, "backgrounds");
+
+    private static string BlurredBackgroundCachePath => Path.Combine(BackgroundsDirectory, "custom-background-blurred.png");
+
     public event EventHandler? AppearanceChanged;
 
     public bool IsDarkTheme => Preferences.Get(ThemeKey, DarkThemeValue) == DarkThemeValue;
@@ -85,7 +94,7 @@ public sealed class AppearanceService : IAppearanceService
         get
         {
             var path = Preferences.Get(BackgroundImageKey, string.Empty);
-            return string.IsNullOrWhiteSpace(path) ? null : path;
+            return string.IsNullOrWhiteSpace(path) || !File.Exists(path) ? null : path;
         }
     }
 
@@ -139,22 +148,18 @@ public sealed class AppearanceService : IAppearanceService
             return false;
         }
 
-        var extension = Path.GetExtension(result.FileName);
-        if (string.IsNullOrWhiteSpace(extension))
-        {
-            extension = ".png";
-        }
+        Directory.CreateDirectory(BackgroundsDirectory);
+        var destination = Path.Combine(BackgroundsDirectory, "custom-background.png");
 
-        var directory = Path.Combine(FileSystem.AppDataDirectory, "backgrounds");
-        Directory.CreateDirectory(directory);
-
-        var destination = Path.Combine(directory, $"custom-background{extension}");
         await using (var source = await result.OpenReadAsync())
-        await using (var target = File.Create(destination))
         {
-            await source.CopyToAsync(target);
+            using var image = PlatformImage.FromStream(source);
+            using var resized = DownscaleToFit(image, MaxBackgroundDimension);
+            await using var target = File.Create(destination);
+            resized.Save(target, ImageFormat.Png);
         }
 
+        DeleteFileIfExists(BlurredBackgroundCachePath);
         Preferences.Set(BackgroundImageKey, destination);
         NotifyChanged();
         return true;
@@ -168,7 +173,79 @@ public sealed class AppearanceService : IAppearanceService
         }
 
         Preferences.Remove(BackgroundImageKey);
+        DeleteFileIfExists(BlurredBackgroundCachePath);
         NotifyChanged();
+    }
+
+    public async Task<string?> GetRenderableBackgroundImageAsync()
+    {
+        var sourcePath = BackgroundImagePath;
+        if (sourcePath is null)
+        {
+            return null;
+        }
+
+        var blur = BackgroundBlur;
+        if (blur <= 0)
+        {
+            return sourcePath;
+        }
+
+        try
+        {
+            return await Task.Run(() => CreateBlurredBackground(sourcePath, blur));
+        }
+        catch
+        {
+            return sourcePath;
+        }
+    }
+
+    private static string CreateBlurredBackground(string sourcePath, double blur)
+    {
+        using var source = File.OpenRead(sourcePath);
+        using var image = PlatformImage.FromStream(source);
+
+        var downscale = Math.Max(0.03, 1.0 / (1.0 + blur / 3.0));
+        var smallWidth = Math.Max(1, (int)Math.Round(image.Width * downscale));
+        var smallHeight = Math.Max(1, (int)Math.Round(image.Height * downscale));
+
+        using var shrunk = image.Resize(smallWidth, smallHeight, ResizeMode.Stretch);
+        using var blurred = shrunk.Resize(image.Width, image.Height, ResizeMode.Stretch);
+
+        Directory.CreateDirectory(BackgroundsDirectory);
+        using var destination = File.Create(BlurredBackgroundCachePath);
+        blurred.Save(destination, ImageFormat.Png);
+
+        return BlurredBackgroundCachePath;
+    }
+
+    private static Microsoft.Maui.Graphics.IImage DownscaleToFit(Microsoft.Maui.Graphics.IImage image, int maxDimension)
+    {
+        if (image.Width <= maxDimension && image.Height <= maxDimension)
+        {
+            return image;
+        }
+
+        var scale = Math.Min((double)maxDimension / image.Width, (double)maxDimension / image.Height);
+        var width = Math.Max(1, (int)Math.Round(image.Width * scale));
+        var height = Math.Max(1, (int)Math.Round(image.Height * scale));
+        return image.Resize(width, height, ResizeMode.Stretch);
+    }
+
+    private static void DeleteFileIfExists(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch
+        {
+            // Best effort cleanup; a stale cache file will simply be regenerated on next apply.
+        }
     }
 
     private void NotifyChanged()
@@ -179,7 +256,7 @@ public sealed class AppearanceService : IAppearanceService
 
     private void ApplyOnMainThread()
     {
-        var application = Application.Current;
+        var application = Microsoft.Maui.Controls.Application.Current;
         if (application is null)
         {
             return;
@@ -193,24 +270,8 @@ public sealed class AppearanceService : IAppearanceService
             application.Resources[item.Key] = Color.FromArgb(item.Value);
         }
 
-        var backgroundImagePath = BackgroundImagePath;
-        if (!string.IsNullOrWhiteSpace(backgroundImagePath) && File.Exists(backgroundImagePath))
-        {
-            application.Resources["CustomBackgroundImageSource"] = ImageSource.FromFile(backgroundImagePath);
-            application.Resources["CustomBackgroundImageOpacity"] = Math.Clamp(0.36 - (BackgroundBlur / 180), 0.12, 0.36);
-            application.Resources["CustomBackgroundOverlayOpacity"] = Math.Clamp(0.16 + (BackgroundBlur / 60), 0.16, 0.78);
-        }
-        else
-        {
-            if (application.Resources.ContainsKey("CustomBackgroundImageSource"))
-            {
-                application.Resources.Remove("CustomBackgroundImageSource");
-            }
-
-            application.Resources["CustomBackgroundImageOpacity"] = 0d;
-            application.Resources["CustomBackgroundOverlayOpacity"] = 0d;
-        }
-
-        application.Resources["CustomBackgroundBlur"] = BackgroundBlur;
+        application.Resources["PageBackground"] = BackgroundImagePath is null
+            ? Color.FromArgb(palette["Background"])
+            : Colors.Transparent;
     }
 }
