@@ -23,15 +23,15 @@
                 <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource Danger}" />
             </Border>
 
-            <Grid ColumnDefinitions="220,*" ColumnSpacing="22">
+            <Grid ColumnDefinitions="190,*" ColumnSpacing="24">
                 <Border
                     Grid.Column="0"
                     BackgroundColor="{StaticResource Muted}"
-                    HeightRequest="330"
+                    HeightRequest="278"
                     Stroke="{StaticResource Border}"
                     StrokeShape="RoundRectangle 8"
                     StrokeThickness="1"
-                    WidthRequest="220">
+                    WidthRequest="186">
                     <Grid>
                         <Image
                             Aspect="AspectFill"
@@ -45,6 +45,22 @@
                             Text="{Binding Initial}"
                             TextColor="{StaticResource MutedForeground}"
                             VerticalOptions="Center" />
+                        <HorizontalStackLayout
+                            Margin="10"
+                            HorizontalOptions="End"
+                            Spacing="7"
+                            VerticalOptions="Start">
+                            <Button
+                                Command="{Binding EditCommand}"
+                                Style="{StaticResource PosterIconButtonStyle}"
+                                Text="&#xE70F;"
+                                ToolTipProperties.Text="{Binding EditButtonText}" />
+                            <Button
+                                Command="{Binding DeleteCommand}"
+                                Style="{StaticResource PosterDangerIconButtonStyle}"
+                                Text="&#xE74D;"
+                                ToolTipProperties.Text="{Binding DeleteButtonText}" />
+                        </HorizontalStackLayout>
                     </Grid>
                 </Border>
 
@@ -83,8 +99,8 @@
                         </Border>
                     </HorizontalStackLayout>
 
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-                        <Border Grid.Column="0" Padding="14" Style="{StaticResource CardBorderStyle}">
+                    <HorizontalStackLayout Spacing="12">
+                        <Border Padding="13" Style="{StaticResource CardBorderStyle}" WidthRequest="118">
                             <VerticalStackLayout Spacing="4">
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RatingLabel}" />
                                 <HorizontalStackLayout Spacing="5">
@@ -110,10 +126,15 @@
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="1" Padding="14" Style="{StaticResource CardBorderStyle}">
+                        <Border Padding="13" Style="{StaticResource CardBorderStyle}" WidthRequest="154">
                             <VerticalStackLayout Spacing="8">
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProgressLabel}" />
-                                <Label FontAttributes="Bold" FontSize="15" Text="{Binding ProgressValue}" />
+                                <Label
+                                    FontAttributes="Bold"
+                                    FontSize="14"
+                                    LineBreakMode="TailTruncation"
+                                    MaxLines="1"
+                                    Text="{Binding ProgressValue}" />
                                 <ProgressBar
                                     BackgroundColor="{StaticResource Muted}"
                                     IsVisible="{Binding HasProgressBar}"
@@ -121,7 +142,7 @@
                                     ProgressColor="{StaticResource Info}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="2" Padding="14" Style="{StaticResource CardBorderStyle}">
+                        <Border Padding="13" Style="{StaticResource CardBorderStyle}" WidthRequest="122">
                             <VerticalStackLayout Spacing="4">
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FavoriteLabel}" />
                                 <Label
@@ -131,14 +152,6 @@
                                     TextColor="#F07CB8" />
                             </VerticalStackLayout>
                         </Border>
-                    </Grid>
-
-                    <HorizontalStackLayout Spacing="10">
-                        <Button Command="{Binding EditCommand}" Text="{Binding EditButtonText}" />
-                        <Button
-                            Command="{Binding DeleteCommand}"
-                            Style="{StaticResource DangerButtonStyle}"
-                            Text="{Binding DeleteButtonText}" />
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Grid>

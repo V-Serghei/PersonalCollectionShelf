@@ -23,10 +23,11 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
     public async Task<MediaItem?> GetByIdAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
         await databaseService.InitializeAsync(cancellationToken);
+        var idText = id.ToString();
 
         var record = await databaseService.Connection
             .Table<MediaItemRecord>()
-            .FirstOrDefaultAsync(item => item.Id == id.ToString() && item.UserId == userId && item.DeletedAt == null);
+            .FirstOrDefaultAsync(item => item.Id == idText && item.UserId == userId && item.DeletedAt == null);
 
         return record is null ? null : ToDomain(record);
     }
