@@ -29,9 +29,9 @@
             <Grid ColumnDefinitions="190,*" ColumnSpacing="24">
                 <Border
                     Grid.Column="0"
-                    BackgroundColor="{StaticResource Muted}"
+                    BackgroundColor="{DynamicResource Muted}"
                     HeightRequest="278"
-                    Stroke="{StaticResource Border}"
+                    Stroke="{DynamicResource Border}"
                     StrokeShape="RoundRectangle 8"
                     StrokeThickness="1"
                     WidthRequest="186">
@@ -46,7 +46,7 @@
                             HorizontalOptions="Center"
                             IsVisible="{Binding HasNoCoverUrl}"
                             Text="{Binding Initial}"
-                            TextColor="{StaticResource MutedForeground}"
+                            TextColor="{DynamicResource MutedForeground}"
                             VerticalOptions="Center" />
                         <HorizontalStackLayout
                             Margin="10"
@@ -73,7 +73,7 @@
                         <Label
                             FontSize="14"
                             Text="{Binding OriginalTitleValue}"
-                            TextColor="{StaticResource MutedForeground}" />
+                            TextColor="{DynamicResource MutedForeground}" />
                     </VerticalStackLayout>
 
                     <HorizontalStackLayout Spacing="8">
@@ -116,7 +116,7 @@
                                         FontAttributes="Bold"
                                         FontSize="22"
                                         Text="--"
-                                        TextColor="{StaticResource MutedForeground}">
+                                        TextColor="{DynamicResource MutedForeground}">
                                         <Label.Triggers>
                                             <DataTrigger
                                                 Binding="{Binding HasRating}"
@@ -139,7 +139,7 @@
                                     MaxLines="1"
                                     Text="{Binding ProgressValue}" />
                                 <ProgressBar
-                                    BackgroundColor="{StaticResource Muted}"
+                                    BackgroundColor="{DynamicResource Muted}"
                                     IsVisible="{Binding HasProgressBar}"
                                     Progress="{Binding ProgressPercent}"
                                     ProgressColor="{StaticResource Info}" />

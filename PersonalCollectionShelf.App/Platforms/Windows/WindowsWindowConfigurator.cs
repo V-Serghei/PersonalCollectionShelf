@@ -62,7 +62,7 @@ public static class WindowsWindowConfigurator
             var foreground = ThemeForegroundColor(appearanceService);
             var hover = ThemeHoverColor(appearanceService);
             var pressed = ThemePressedColor(appearanceService);
-            var accent = global::Windows.UI.Color.FromArgb(255, 0x9D, 0x7F, 0xF4);
+            var accent = ToWindowsColor(appearanceService.AccentColorHex);
 
             titleBar.ExtendsContentIntoTitleBar = true;
             titleBar.BackgroundColor = background;
@@ -152,6 +152,16 @@ public static class WindowsWindowConfigurator
         appearanceService.IsDarkTheme
             ? global::Windows.UI.Color.FromArgb(255, 0x2A, 0x25, 0x3A)
             : global::Windows.UI.Color.FromArgb(255, 0xEE, 0xE9, 0xFA);
+
+    private static global::Windows.UI.Color ToWindowsColor(string colorHex)
+    {
+        var color = Microsoft.Maui.Graphics.Color.FromArgb(colorHex);
+        return global::Windows.UI.Color.FromArgb(
+            255,
+            (byte)Math.Clamp(Math.Round(color.Red * 255), 0, 255),
+            (byte)Math.Clamp(Math.Round(color.Green * 255), 0, 255),
+            (byte)Math.Clamp(Math.Round(color.Blue * 255), 0, 255));
+    }
 
     private static void DisableDwmBackdrop(nint hwnd)
     {

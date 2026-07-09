@@ -11,6 +11,8 @@ public interface IAppearanceService
 {
     bool IsDarkTheme { get; }
 
+    string AccentColorHex { get; }
+
     string? BackgroundImagePath { get; }
 
     double BackgroundBlur { get; }
@@ -20,6 +22,8 @@ public interface IAppearanceService
     void Apply();
 
     void SetTheme(bool isDarkTheme);
+
+    void SetAccentColor(string colorHex);
 
     void SetBackgroundBlur(double blur);
 
@@ -33,10 +37,12 @@ public interface IAppearanceService
 public sealed class AppearanceService : IAppearanceService
 {
     private const string ThemeKey = "appearance.theme";
+    private const string AccentColorKey = "appearance.accentColor";
     private const string BackgroundImageKey = "appearance.backgroundImagePath";
     private const string BackgroundBlurKey = "appearance.backgroundBlur";
     private const string DarkThemeValue = "dark";
     private const string LightThemeValue = "light";
+    private const string DefaultAccentColor = "#9D7FF4";
     private const int MaxBackgroundDimension = 1920;
 
     private static readonly FilePickerFileType BackgroundImageFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
@@ -83,11 +89,11 @@ public sealed class AppearanceService : IAppearanceService
 
     private static string BackgroundsDirectory => Path.Combine(FileSystem.AppDataDirectory, "backgrounds");
 
-    private static string BlurredBackgroundCachePath => Path.Combine(BackgroundsDirectory, "custom-background-blurred.png");
-
     public event EventHandler? AppearanceChanged;
 
     public bool IsDarkTheme => Preferences.Get(ThemeKey, DarkThemeValue) == DarkThemeValue;
+
+    public string AccentColorHex => NormalizeColorHex(Preferences.Get(AccentColorKey, DefaultAccentColor));
 
     public string? BackgroundImagePath
     {
@@ -123,6 +129,18 @@ public sealed class AppearanceService : IAppearanceService
         NotifyChanged();
     }
 
+    public void SetAccentColor(string colorHex)
+    {
+        var normalized = NormalizeColorHex(colorHex);
+        if (string.Equals(AccentColorHex, normalized, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        Preferences.Set(AccentColorKey, normalized);
+        NotifyChanged();
+    }
+
     public void SetBackgroundBlur(double blur)
     {
         var normalized = Math.Clamp(Math.Round(blur), 0, 40);
@@ -132,6 +150,7 @@ public sealed class AppearanceService : IAppearanceService
         }
 
         Preferences.Set(BackgroundBlurKey, normalized);
+        DeleteBlurredBackgroundCacheFiles();
         NotifyChanged();
     }
 
@@ -149,7 +168,8 @@ public sealed class AppearanceService : IAppearanceService
         }
 
         Directory.CreateDirectory(BackgroundsDirectory);
-        var destination = Path.Combine(BackgroundsDirectory, "custom-background.png");
+        DeleteBackgroundImageFiles();
+        var destination = Path.Combine(BackgroundsDirectory, $"custom-background-{DateTime.UtcNow:yyyyMMddHHmmssfff}.png");
 
         await using (var source = await result.OpenReadAsync())
         {
@@ -159,7 +179,7 @@ public sealed class AppearanceService : IAppearanceService
             resized.Save(target, ImageFormat.Png);
         }
 
-        DeleteFileIfExists(BlurredBackgroundCachePath);
+        DeleteBlurredBackgroundCacheFiles();
         Preferences.Set(BackgroundImageKey, destination);
         NotifyChanged();
         return true;
@@ -173,7 +193,8 @@ public sealed class AppearanceService : IAppearanceService
         }
 
         Preferences.Remove(BackgroundImageKey);
-        DeleteFileIfExists(BlurredBackgroundCachePath);
+        DeleteBackgroundImageFiles();
+        DeleteBlurredBackgroundCacheFiles();
         NotifyChanged();
     }
 
@@ -214,10 +235,18 @@ public sealed class AppearanceService : IAppearanceService
         using var blurred = shrunk.Resize(image.Width, image.Height, ResizeMode.Stretch);
 
         Directory.CreateDirectory(BackgroundsDirectory);
-        using var destination = File.Create(BlurredBackgroundCachePath);
+        var cachePath = BlurredBackgroundCachePath(sourcePath, blur);
+        using var destination = File.Create(cachePath);
         blurred.Save(destination, ImageFormat.Png);
 
-        return BlurredBackgroundCachePath;
+        return cachePath;
+    }
+
+    private static string BlurredBackgroundCachePath(string sourcePath, double blur)
+    {
+        var sourceName = Path.GetFileNameWithoutExtension(sourcePath);
+        var blurValue = Math.Clamp((int)Math.Round(blur), 0, 40);
+        return Path.Combine(BackgroundsDirectory, $"{sourceName}-blurred-{blurValue}.png");
     }
 
     private static Microsoft.Maui.Graphics.IImage DownscaleToFit(Microsoft.Maui.Graphics.IImage image, int maxDimension)
@@ -248,6 +277,78 @@ public sealed class AppearanceService : IAppearanceService
         }
     }
 
+    private static void DeleteBlurredBackgroundCacheFiles()
+    {
+        try
+        {
+            if (!Directory.Exists(BackgroundsDirectory))
+            {
+                return;
+            }
+
+            foreach (var file in Directory.EnumerateFiles(BackgroundsDirectory, "custom-background-*-blurred-*.png"))
+            {
+                DeleteFileIfExists(file);
+            }
+
+            foreach (var file in Directory.EnumerateFiles(BackgroundsDirectory, "custom-background-blurred-*.png"))
+            {
+                DeleteFileIfExists(file);
+            }
+        }
+        catch
+        {
+            // Best effort cleanup; stale cache files are harmless.
+        }
+    }
+
+    private static void DeleteBackgroundImageFiles()
+    {
+        try
+        {
+            if (!Directory.Exists(BackgroundsDirectory))
+            {
+                return;
+            }
+
+            foreach (var file in Directory.EnumerateFiles(BackgroundsDirectory, "custom-background-*.png"))
+            {
+                DeleteFileIfExists(file);
+            }
+
+            DeleteFileIfExists(Path.Combine(BackgroundsDirectory, "custom-background.png"));
+        }
+        catch
+        {
+            // Best effort cleanup; a stale background file is ignored once preferences point elsewhere.
+        }
+    }
+
+    private static string NormalizeColorHex(string colorHex)
+    {
+        if (string.IsNullOrWhiteSpace(colorHex))
+        {
+            return DefaultAccentColor;
+        }
+
+        var value = colorHex.Trim();
+        if (!value.StartsWith('#'))
+        {
+            value = "#" + value;
+        }
+
+        return value.Length == 7 ? value.ToUpperInvariant() : DefaultAccentColor;
+    }
+
+    private static string Darken(string colorHex, double factor)
+    {
+        var color = Color.FromArgb(colorHex);
+        var red = (int)Math.Clamp(Math.Round(color.Red * 255 * factor), 0, 255);
+        var green = (int)Math.Clamp(Math.Round(color.Green * 255 * factor), 0, 255);
+        var blue = (int)Math.Clamp(Math.Round(color.Blue * 255 * factor), 0, 255);
+        return $"#{red:X2}{green:X2}{blue:X2}";
+    }
+
     private void NotifyChanged()
     {
         Apply();
@@ -269,6 +370,10 @@ public sealed class AppearanceService : IAppearanceService
         {
             application.Resources[item.Key] = Color.FromArgb(item.Value);
         }
+
+        application.Resources["Primary"] = Color.FromArgb(AccentColorHex);
+        application.Resources["PrimaryPressed"] = Color.FromArgb(Darken(AccentColorHex, 0.88));
+        application.Resources["PrimaryForeground"] = Color.FromArgb("#171421");
 
         application.Resources["PageBackground"] = BackgroundImagePath is null
             ? Color.FromArgb(palette["Background"])

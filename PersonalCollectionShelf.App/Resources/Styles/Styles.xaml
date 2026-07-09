@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
@@ -41,7 +41,7 @@
                     </VisualState>
                     <VisualState Name="PointerOver">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryPressed}" />
+                            <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryPressed}" />
                             <Setter Property="Scale" Value="1.02" />
                         </VisualState.Setters>
                     </VisualState>
@@ -87,8 +87,8 @@
     </Style>
 
     <Style x:Key="CardBorderStyle" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="#272238" />
-        <Setter Property="Stroke" Value="#3A3350" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Card}" />
+        <Setter Property="Stroke" Value="{DynamicResource Border}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 8" />
         <Setter Property="Shadow">
@@ -99,8 +99,8 @@
     </Style>
 
     <Style x:Key="MutedBorderStyle" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="#2A253A" />
-        <Setter Property="Stroke" Value="#332D47" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Muted}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderSoft}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 8" />
     </Style>
@@ -108,11 +108,11 @@
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Padding" Value="14,9" />
-        <Setter Property="BackgroundColor" Value="{StaticResource Muted}" />
-        <Setter Property="TextColor" Value="{StaticResource Foreground}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Muted}" />
+        <Setter Property="TextColor" Value="{DynamicResource Foreground}" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="BorderColor" Value="{StaticResource Border}" />
+        <Setter Property="BorderColor" Value="{DynamicResource Border}" />
         <Setter Property="BorderWidth" Value="1" />
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
@@ -124,8 +124,8 @@
                     </VisualState>
                     <VisualState Name="PointerOver">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{StaticResource MutedSoft}" />
-                            <Setter Property="BorderColor" Value="{StaticResource Primary}" />
+                            <Setter Property="BackgroundColor" Value="{DynamicResource MutedSoft}" />
+                            <Setter Property="BorderColor" Value="{DynamicResource Primary}" />
                             <Setter Property="Scale" Value="1.02" />
                         </VisualState.Setters>
                     </VisualState>
@@ -137,11 +137,11 @@
     <Style x:Key="PillButtonStyle" TargetType="Button">
         <Setter Property="CornerRadius" Value="18" />
         <Setter Property="Padding" Value="14,7" />
-        <Setter Property="BackgroundColor" Value="{StaticResource Muted}" />
-        <Setter Property="TextColor" Value="{StaticResource Foreground}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Muted}" />
+        <Setter Property="TextColor" Value="{DynamicResource Foreground}" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="BorderColor" Value="{StaticResource Border}" />
+        <Setter Property="BorderColor" Value="{DynamicResource Border}" />
         <Setter Property="BorderWidth" Value="1" />
     </Style>
 
@@ -154,7 +154,7 @@
     <Style x:Key="LinkButtonStyle" TargetType="Button">
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="BackgroundColor" Value="Transparent" />
-        <Setter Property="TextColor" Value="{StaticResource Primary}" />
+        <Setter Property="TextColor" Value="{DynamicResource Primary}" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="BorderWidth" Value="0" />
@@ -168,7 +168,7 @@
                     </VisualState>
                     <VisualState Name="PointerOver">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{StaticResource Muted}" />
+                            <Setter Property="BackgroundColor" Value="{DynamicResource Muted}" />
                         </VisualState.Setters>
                     </VisualState>
                 </VisualStateGroup>
@@ -179,7 +179,7 @@
     <Style x:Key="IconToggleButtonStyle" TargetType="Button">
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="BackgroundColor" Value="Transparent" />
-        <Setter Property="TextColor" Value="{StaticResource MutedForeground}" />
+        <Setter Property="TextColor" Value="{DynamicResource MutedForeground}" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="BorderWidth" Value="0" />
@@ -194,8 +194,8 @@
                     </VisualState>
                     <VisualState Name="PointerOver">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{StaticResource Muted}" />
-                            <Setter Property="TextColor" Value="{StaticResource Foreground}" />
+                            <Setter Property="BackgroundColor" Value="{DynamicResource Muted}" />
+                            <Setter Property="TextColor" Value="{DynamicResource Foreground}" />
                         </VisualState.Setters>
                     </VisualState>
                 </VisualStateGroup>
@@ -209,18 +209,18 @@
         <Setter Property="WidthRequest" Value="30" />
         <Setter Property="CornerRadius" Value="15" />
         <Setter Property="BackgroundColor" Value="#CC100E1A" />
-        <Setter Property="TextColor" Value="{StaticResource Foreground}" />
+        <Setter Property="TextColor" Value="{DynamicResource Foreground}" />
         <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="BorderColor" Value="{StaticResource Border}" />
+        <Setter Property="BorderColor" Value="{DynamicResource Border}" />
         <Setter Property="BorderWidth" Value="1" />
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
                 <VisualStateGroup Name="CommonStates">
                     <VisualState Name="PointerOver">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                            <Setter Property="TextColor" Value="{StaticResource PrimaryForeground}" />
+                            <Setter Property="BackgroundColor" Value="{DynamicResource Primary}" />
+                            <Setter Property="TextColor" Value="{DynamicResource PrimaryForeground}" />
                         </VisualState.Setters>
                     </VisualState>
                 </VisualStateGroup>
@@ -237,24 +237,24 @@
         <Setter Property="FontSize" Value="32" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="FontFamily" Value="Cambria" />
-        <Setter Property="TextColor" Value="{StaticResource Foreground}" />
+        <Setter Property="TextColor" Value="{DynamicResource Foreground}" />
     </Style>
 
     <Style x:Key="SectionTitleLabelStyle" TargetType="Label">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="FontFamily" Value="Cambria" />
-        <Setter Property="TextColor" Value="{StaticResource Foreground}" />
+        <Setter Property="TextColor" Value="{DynamicResource Foreground}" />
     </Style>
 
     <Style x:Key="TinyCapsLabelStyle" TargetType="Label">
         <Setter Property="FontSize" Value="11" />
         <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{StaticResource MutedForeground}" />
+        <Setter Property="TextColor" Value="{DynamicResource MutedForeground}" />
     </Style>
 
     <Style x:Key="MutedLabelStyle" TargetType="Label">
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="TextColor" Value="{StaticResource MutedForeground}" />
+        <Setter Property="TextColor" Value="{DynamicResource MutedForeground}" />
     </Style>
 </ResourceDictionary>

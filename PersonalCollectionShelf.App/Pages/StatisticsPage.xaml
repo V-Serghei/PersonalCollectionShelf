@@ -17,10 +17,10 @@
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                     <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." Text="{Binding SearchTerm}" />
-                    <Border Grid.Column="2" Padding="6,2" BackgroundColor="{StaticResource MutedSoft}" Stroke="{StaticResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
-                        <Label FontSize="10" Text="⌘K" TextColor="{StaticResource MutedForeground}" />
+                    <Border Grid.Column="2" Padding="6,2" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
+                        <Label FontSize="10" Text="⌘K" TextColor="{DynamicResource MutedForeground}" />
                     </Border>
                 </Grid>
             </Border>
@@ -49,14 +49,14 @@
                         <VerticalStackLayout Spacing="7">
                             <Label Style="{StaticResource TinyCapsLabelStyle}" Text="COMPLETION" />
                             <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="34" Text="{Binding CompletionPercentText}" />
-                            <Label FontSize="12" Text="{Binding CompletionSubtitle}" TextColor="{StaticResource Primary}" />
+                            <Label FontSize="12" Text="{Binding CompletionSubtitle}" TextColor="{DynamicResource Primary}" />
                         </VerticalStackLayout>
                     </Border>
                     <Border Grid.Column="2" Padding="18" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="7">
                             <Label Style="{StaticResource TinyCapsLabelStyle}" Text="COLLECTION" />
                             <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="34" Text="{Binding TotalItemCount}" />
-                            <Label FontSize="12" Text="{Binding CollectionSubtitle}" TextColor="{StaticResource Primary}" />
+                            <Label FontSize="12" Text="{Binding CollectionSubtitle}" TextColor="{DynamicResource Primary}" />
                         </VerticalStackLayout>
                     </Border>
                 </Grid>

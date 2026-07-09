@@ -47,6 +47,7 @@ public partial class SettingsViewModel : BaseViewModel
         _appearanceService = appearanceService;
         _isDarkTheme = _appearanceService.IsDarkTheme;
         _backgroundBlur = _appearanceService.BackgroundBlur;
+        _appearanceService.AppearanceChanged += HandleAppearanceChanged;
         InitializeLanguageOptions();
         UpdateBackgroundImageDescription();
         StatusMessage = T(_statusMessageKey);
@@ -60,7 +61,6 @@ public partial class SettingsViewModel : BaseViewModel
     private string _appearanceStatusMessage = string.Empty;
     private string _backgroundImageDescription = string.Empty;
     private bool _hasBackgroundImage;
-    private CancellationTokenSource? _blurDebounceCts;
 
     public LocalizedOption<string>? SelectedLanguageOption
     {
@@ -107,7 +107,7 @@ public partial class SettingsViewModel : BaseViewModel
             if (SetProperty(ref _backgroundBlur, value))
             {
                 OnPropertyChanged(nameof(BackgroundBlurText));
-                DebounceApplyBlur(value);
+                _appearanceService.SetBackgroundBlur(value);
             }
         }
     }
@@ -316,29 +316,11 @@ public partial class SettingsViewModel : BaseViewModel
         AppearanceStatusMessage = "Background image cleared";
     }
 
-    private void DebounceApplyBlur(double value)
+    [RelayCommand]
+    private void SetAccentColor(string colorHex)
     {
-        _blurDebounceCts?.Cancel();
-        var cts = new CancellationTokenSource();
-        _blurDebounceCts = cts;
-        _ = ApplyBlurAfterDelayAsync(value, cts.Token);
-    }
-
-    private async Task ApplyBlurAfterDelayAsync(double value, CancellationToken token)
-    {
-        try
-        {
-            await Task.Delay(220, token);
-        }
-        catch (TaskCanceledException)
-        {
-            return;
-        }
-
-        if (!token.IsCancellationRequested)
-        {
-            _appearanceService.SetBackgroundBlur(value);
-        }
+        _appearanceService.SetAccentColor(colorHex);
+        AppearanceStatusMessage = "Accent color updated";
     }
 
     private void UpdateBackgroundImageDescription()
@@ -348,6 +330,25 @@ public partial class SettingsViewModel : BaseViewModel
         BackgroundImageDescription = string.IsNullOrWhiteSpace(path)
             ? "No background selected"
             : Path.GetFileName(path);
+    }
+
+    private void HandleAppearanceChanged(object? sender, EventArgs e)
+    {
+        if (_isDarkTheme != _appearanceService.IsDarkTheme)
+        {
+            _isDarkTheme = _appearanceService.IsDarkTheme;
+            OnPropertyChanged(nameof(IsDarkTheme));
+            OnPropertyChanged(nameof(ThemeSwitchLabel));
+        }
+
+        if (Math.Abs(_backgroundBlur - _appearanceService.BackgroundBlur) > 0.1)
+        {
+            _backgroundBlur = _appearanceService.BackgroundBlur;
+            OnPropertyChanged(nameof(BackgroundBlur));
+            OnPropertyChanged(nameof(BackgroundBlurText));
+        }
+
+        UpdateBackgroundImageDescription();
     }
 
     private void InitializeLanguageOptions()

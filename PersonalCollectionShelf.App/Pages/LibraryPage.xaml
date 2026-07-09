@@ -18,10 +18,10 @@
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                     <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." Text="{Binding SearchTerm}" />
-                    <Border Grid.Column="2" Padding="6,2" BackgroundColor="{StaticResource MutedSoft}" Stroke="{StaticResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
-                        <Label FontSize="10" Text="⌘K" TextColor="{StaticResource MutedForeground}" />
+                    <Border Grid.Column="2" Padding="6,2" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
+                        <Label FontSize="10" Text="⌘K" TextColor="{DynamicResource MutedForeground}" />
                     </Border>
                 </Grid>
             </Border>
@@ -38,7 +38,7 @@
             WidthRequest="920">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
-                <Border Grid.Column="1" Padding="6" BackgroundColor="{StaticResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 16">
+                <Border Grid.Column="1" Padding="6" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 16">
                     <HorizontalStackLayout Spacing="6">
                         <Button Style="{StaticResource IconToggleButtonStyle}" Text="▦" />
                         <Button Style="{StaticResource IconToggleButtonStyle}" Text="▪" />
@@ -89,7 +89,7 @@
                 Grid.Row="3"
                 FontSize="12"
                 Text="{Binding LibraryCountText}"
-                TextColor="{StaticResource Primary}" />
+                TextColor="{DynamicResource Primary}" />
 
             <RefreshView
                 Grid.Row="4"
@@ -122,9 +122,9 @@
                                         CommandParameter="{Binding .}" />
                                 </Border.GestureRecognizers>
                                 <Grid RowDefinitions="206,Auto">
-                                    <Grid BackgroundColor="{StaticResource Muted}">
+                                    <Grid BackgroundColor="{DynamicResource Muted}">
                                         <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
-                                        <Label FontAttributes="Bold" FontSize="34" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                        <Label FontAttributes="Bold" FontSize="34" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                                         <Border Margin="8" Padding="6,3" BackgroundColor="{Binding MediaTypeColor}" HorizontalOptions="Start" StrokeThickness="0" StrokeShape="RoundRectangle 5" VerticalOptions="Start">
                                             <Label FontAttributes="Bold" FontSize="9" Text="{Binding MediaTypeLabel}" TextColor="White" />
                                         </Border>
@@ -139,12 +139,12 @@
 
                                     <Grid Grid.Row="1" Padding="10" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
                                         <Label FontAttributes="Bold" FontSize="13" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding Title}" />
-                                        <Label Grid.Row="1" FontSize="11" LineBreakMode="TailTruncation" Text="{Binding CategoryLine}" TextColor="{StaticResource MutedForeground}" />
+                                        <Label Grid.Row="1" FontSize="11" LineBreakMode="TailTruncation" Text="{Binding CategoryLine}" TextColor="{DynamicResource MutedForeground}" />
                                         <Grid Grid.Row="2" ColumnDefinitions="Auto,*">
                                             <Border Padding="8,3" BackgroundColor="{Binding StatusBackgroundColor}" Stroke="{Binding StatusForegroundColor}" StrokeShape="RoundRectangle 10" StrokeThickness="1">
                                                 <Label FontAttributes="Bold" FontSize="10" Text="{Binding StatusLabel}" TextColor="{Binding StatusForegroundColor}" />
                                             </Border>
-                                            <Label Grid.Column="1" FontSize="11" HorizontalTextAlignment="End" Text="{Binding ReleaseYearText}" TextColor="{StaticResource MutedForeground}" />
+                                            <Label Grid.Column="1" FontSize="11" HorizontalTextAlignment="End" Text="{Binding ReleaseYearText}" TextColor="{DynamicResource MutedForeground}" />
                                         </Grid>
                                     </Grid>
                                 </Grid>

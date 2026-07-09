@@ -12,8 +12,8 @@
         <ScrollView Grid.Column="1" BackgroundColor="{DynamicResource PageBackground}" VerticalOptions="Center">
             <Border
                 Padding="30,26"
-                BackgroundColor="{StaticResource Card}"
-                Stroke="{StaticResource Border}"
+                BackgroundColor="{DynamicResource Card}"
+                Stroke="{DynamicResource Border}"
                 StrokeShape="RoundRectangle 18"
                 StrokeThickness="1">
                 <VerticalStackLayout Spacing="20">
@@ -51,9 +51,9 @@
                             <Grid ColumnDefinitions="104,*" ColumnSpacing="16">
                                 <Border
                                     Grid.Column="0"
-                                    BackgroundColor="{StaticResource Muted}"
+                                    BackgroundColor="{DynamicResource Muted}"
                                     HeightRequest="144"
-                                    Stroke="{StaticResource Border}"
+                                    Stroke="{DynamicResource Border}"
                                     StrokeDashArray="4,3"
                                     StrokeShape="RoundRectangle 12"
                                     StrokeThickness="1"
@@ -63,8 +63,8 @@
                                     </Border.GestureRecognizers>
                                     <Grid>
                                         <VerticalStackLayout HorizontalOptions="Center" IsVisible="{Binding HasNoCoverUrl}" Spacing="4" VerticalOptions="Center">
-                                            <Label FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalTextAlignment="Center" Text="&#xE710;" TextColor="{StaticResource MutedForeground}" />
-                                            <Label FontSize="10" HorizontalTextAlignment="Center" Text="{Binding AddCoverText}" TextColor="{StaticResource MutedForeground}" />
+                                            <Label FontFamily="Segoe MDL2 Assets" FontSize="20" HorizontalTextAlignment="Center" Text="&#xE710;" TextColor="{DynamicResource MutedForeground}" />
+                                            <Label FontSize="10" HorizontalTextAlignment="Center" Text="{Binding AddCoverText}" TextColor="{DynamicResource MutedForeground}" />
                                         </VerticalStackLayout>
                                         <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
                                     </Grid>
@@ -92,7 +92,7 @@
                                 <Entry Placeholder="{Binding CoverUrlPlaceholder}" Text="{Binding CoverUrl}" />
                             </VerticalStackLayout>
 
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
                                 <VerticalStackLayout Grid.Column="0" Spacing="6">
@@ -133,8 +133,8 @@
                                             <Border
                                                 Margin="0,0,8,8"
                                                 Padding="12,6"
-                                                BackgroundColor="{StaticResource Muted}"
-                                                Stroke="{StaticResource Border}"
+                                                BackgroundColor="{DynamicResource Muted}"
+                                                Stroke="{DynamicResource Border}"
                                                 StrokeShape="RoundRectangle 14"
                                                 StrokeThickness="1">
                                                 <HorizontalStackLayout Spacing="8">
@@ -143,7 +143,7 @@
                                                         FontFamily="Segoe MDL2 Assets"
                                                         FontSize="10"
                                                         Text="&#xE711;"
-                                                        TextColor="{StaticResource MutedForeground}"
+                                                        TextColor="{DynamicResource MutedForeground}"
                                                         VerticalTextAlignment="Center">
                                                         <Label.GestureRecognizers>
                                                             <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveCastCommand}" CommandParameter="{Binding .}" />
@@ -186,7 +186,7 @@
                                             <TapGestureRecognizer Command="{Binding ToggleFavoriteCommand}" />
                                         </Label.GestureRecognizers>
                                     </Label>
-                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="{Binding FavoriteLabel}" TextColor="{StaticResource MutedForeground}" />
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="{Binding FavoriteLabel}" TextColor="{DynamicResource MutedForeground}" />
                                 </VerticalStackLayout>
                             </Grid>
 
@@ -207,7 +207,7 @@
                                     <DatePicker Grid.Column="0" Date="{Binding StartDate}">
                                         <DatePicker.Triggers>
                                             <DataTrigger Binding="{Binding HasStartDate}" TargetType="DatePicker" Value="False">
-                                                <Setter Property="TextColor" Value="{StaticResource MutedForeground}" />
+                                                <Setter Property="TextColor" Value="{DynamicResource MutedForeground}" />
                                             </DataTrigger>
                                         </DatePicker.Triggers>
                                     </DatePicker>
@@ -228,7 +228,7 @@
                                     <DatePicker Grid.Column="0" Date="{Binding FinishDate}">
                                         <DatePicker.Triggers>
                                             <DataTrigger Binding="{Binding HasFinishDate}" TargetType="DatePicker" Value="False">
-                                                <Setter Property="TextColor" Value="{StaticResource MutedForeground}" />
+                                                <Setter Property="TextColor" Value="{DynamicResource MutedForeground}" />
                                             </DataTrigger>
                                         </DatePicker.Triggers>
                                     </DatePicker>
@@ -243,7 +243,7 @@
                                 </Grid>
                             </VerticalStackLayout>
 
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
 
                             <VerticalStackLayout Spacing="6">
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TagsLabel}" />
@@ -256,8 +256,8 @@
                                             <Border
                                                 Margin="0,0,8,8"
                                                 Padding="12,6"
-                                                BackgroundColor="{StaticResource Muted}"
-                                                Stroke="{StaticResource Border}"
+                                                BackgroundColor="{DynamicResource Muted}"
+                                                Stroke="{DynamicResource Border}"
                                                 StrokeShape="RoundRectangle 14"
                                                 StrokeThickness="1">
                                                 <HorizontalStackLayout Spacing="8">
@@ -266,7 +266,7 @@
                                                         FontFamily="Segoe MDL2 Assets"
                                                         FontSize="10"
                                                         Text="&#xE711;"
-                                                        TextColor="{StaticResource MutedForeground}"
+                                                        TextColor="{DynamicResource MutedForeground}"
                                                         VerticalTextAlignment="Center">
                                                         <Label.GestureRecognizers>
                                                             <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveTagCommand}" CommandParameter="{Binding .}" />

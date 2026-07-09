@@ -17,10 +17,10 @@
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                     <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." />
-                    <Border Grid.Column="2" Padding="6,2" BackgroundColor="{StaticResource MutedSoft}" Stroke="{StaticResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
-                        <Label FontSize="10" Text="⌘K" TextColor="{StaticResource MutedForeground}" />
+                    <Border Grid.Column="2" Padding="6,2" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
+                        <Label FontSize="10" Text="⌘K" TextColor="{DynamicResource MutedForeground}" />
                     </Border>
                 </Grid>
             </Border>
@@ -44,26 +44,50 @@
                             <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ThemeSectionTitle}" />
-                                    <Label FontSize="12" Text="{Binding ThemeModeDescription}" TextColor="{StaticResource Primary}" />
+                                    <Label FontSize="12" Text="{Binding ThemeModeDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontAttributes="Bold" FontSize="13" Text="{Binding ThemeSwitchLabel}" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
-                                <Switch Grid.Column="2" IsToggled="{Binding IsDarkTheme}" OnColor="{StaticResource Primary}" ThumbColor="White" VerticalOptions="Center" />
+                                <Label Grid.Column="1" FontAttributes="Bold" FontSize="13" Text="{Binding ThemeSwitchLabel}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                                <Switch Grid.Column="2" IsToggled="{Binding IsDarkTheme, Mode=TwoWay}" OnColor="{DynamicResource Primary}" ThumbColor="White" VerticalOptions="Center" />
                             </Grid>
 
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
 
                             <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="Accent Color" />
-                                    <Label FontSize="12" Text="Personalize your highlight color" TextColor="{StaticResource Primary}" />
+                                    <Label FontSize="12" Text="Personalize your highlight color" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
                                 <HorizontalStackLayout Grid.Column="1" Spacing="7" VerticalOptions="Center">
-                                    <Border BackgroundColor="{StaticResource Primary}" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20" />
-                                    <Border BackgroundColor="{StaticResource Info}" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20" />
-                                    <Border BackgroundColor="{StaticResource Success}" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20" />
-                                    <Border BackgroundColor="{StaticResource Warning}" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20" />
-                                    <Border BackgroundColor="#F07CB8" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20" />
-                                    <Border BackgroundColor="#E07C54" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20" />
+                                    <Border BackgroundColor="#9D7FF4" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#9D7FF4" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#60A5FA" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#60A5FA" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#4ADE80" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#4ADE80" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#FBBF24" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#FBBF24" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#F07CB8" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#F07CB8" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#E07C54" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#E07C54" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
                                 </HorizontalStackLayout>
                             </Grid>
 
@@ -71,7 +95,7 @@
                                 Padding="16,0,16,16"
                                 FontSize="12"
                                 Text="{Binding AppearanceStatusMessage}"
-                                TextColor="{StaticResource MutedForeground}" />
+                                TextColor="{DynamicResource MutedForeground}" />
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
@@ -83,20 +107,20 @@
                             <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="Custom background image" />
-                                    <Label FontSize="12" Text="{Binding BackgroundImageDescription}" TextColor="{StaticResource Primary}" />
+                                    <Label FontSize="12" Text="{Binding BackgroundImageDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
                                 <Button Grid.Column="1" Command="{Binding PickBackgroundImageCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="Choose image..." />
                                 <Button Grid.Column="2" Command="{Binding ClearBackgroundImageCommand}" IsVisible="{Binding HasBackgroundImage}" Style="{StaticResource DangerButtonStyle}" Text="Remove" />
                             </Grid>
 
-                            <BoxView HeightRequest="1" IsVisible="{Binding HasBackgroundImage}" Color="{StaticResource Border}" />
+                            <BoxView HeightRequest="1" IsVisible="{Binding HasBackgroundImage}" Color="{DynamicResource Border}" />
 
                             <Grid Padding="16" ColumnDefinitions="*,60" ColumnSpacing="14" IsVisible="{Binding HasBackgroundImage}">
                                 <VerticalStackLayout Grid.Column="0" Spacing="8">
                                     <Label FontAttributes="Bold" FontSize="14" Text="Blur" />
-                                    <Slider Maximum="40" Minimum="0" Value="{Binding BackgroundBlur}" />
+                                    <Slider Maximum="40" Minimum="0" Value="{Binding BackgroundBlur, Mode=TwoWay}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontSize="14" HorizontalTextAlignment="End" Text="{Binding BackgroundBlurText}" TextColor="{StaticResource MutedForeground}" VerticalOptions="Center" />
+                                <Label Grid.Column="1" FontSize="14" HorizontalTextAlignment="End" Text="{Binding BackgroundBlurText}" TextColor="{DynamicResource MutedForeground}" VerticalOptions="Center" />
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
@@ -107,13 +131,13 @@
                     <Border Padding="16" Style="{StaticResource CardBorderStyle}">
                         <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="12">
                             <Border BackgroundColor="#269D7FF4" HeightRequest="40" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40">
-                                <Label FontAttributes="Bold" FontSize="17" HorizontalTextAlignment="Center" Text="A" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
+                                <Label FontAttributes="Bold" FontSize="17" HorizontalTextAlignment="Center" Text="A" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
                             </Border>
                             <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
                                 <Label FontAttributes="Bold" FontSize="14" Text="Alex Morgan" />
-                                <Label FontSize="12" Text="alex@example.com" TextColor="{StaticResource Primary}" />
+                                <Label FontSize="12" Text="alex@example.com" TextColor="{DynamicResource Primary}" />
                             </VerticalStackLayout>
-                            <Label Grid.Column="2" FontAttributes="Bold" FontSize="12" Text="Edit" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="2" FontAttributes="Bold" FontSize="12" Text="Edit" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
                         </Grid>
                     </Border>
                 </VerticalStackLayout>
@@ -125,49 +149,49 @@
                             <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ExportButtonText}" />
-                                    <Label FontSize="12" Text="Download as CSV or JSON" TextColor="{StaticResource Primary}" />
+                                    <Label FontSize="12" Text="Download as CSV or JSON" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
                                 <Button Grid.Column="1" Command="{Binding ExportCommand}" Style="{StaticResource LinkButtonStyle}" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" />
                             </Grid>
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ImportButtonText}" />
-                                    <Label FontSize="12" Text="Import collection JSON" TextColor="{StaticResource Primary}" />
+                                    <Label FontSize="12" Text="Import collection JSON" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
                                 <Button Grid.Column="1" Command="{Binding ImportCommand}" Style="{StaticResource LinkButtonStyle}" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" />
                             </Grid>
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto">
                                 <VerticalStackLayout Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="Import from Letterboxd" />
-                                    <Label FontSize="12" Text="Movies and TV series ratings" TextColor="{StaticResource Primary}" />
+                                    <Label FontSize="12" Text="Movies and TV series ratings" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                             </Grid>
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto">
                                 <VerticalStackLayout Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="Import from Goodreads" />
-                                    <Label FontSize="12" Text="Books, shelves, and reviews" TextColor="{StaticResource Primary}" />
+                                    <Label FontSize="12" Text="Books, shelves, and reviews" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                             </Grid>
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto">
                                 <VerticalStackLayout Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="Import from Steam" />
-                                    <Label FontSize="12" Text="Games, playtime, and achievements" TextColor="{StaticResource Primary}" />
+                                    <Label FontSize="12" Text="Games, playtime, and achievements" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                             </Grid>
-                            <BoxView HeightRequest="1" Color="{StaticResource Border}" />
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto">
                                 <VerticalStackLayout Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="Import from MyAnimeList" />
-                                    <Label FontSize="12" Text="Anime and manga lists" TextColor="{StaticResource Primary}" />
+                                    <Label FontSize="12" Text="Anime and manga lists" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
@@ -179,7 +203,7 @@
                         <Grid ColumnDefinitions="*,190" ColumnSpacing="14">
                             <VerticalStackLayout Grid.Column="0" Spacing="4">
                                 <Label FontAttributes="Bold" FontSize="14" Text="{Binding LanguageSectionTitle}" />
-                                <Label FontSize="12" Text="{Binding LanguageDescription}" TextColor="{StaticResource Primary}" />
+                                <Label FontSize="12" Text="{Binding LanguageDescription}" TextColor="{DynamicResource Primary}" />
                             </VerticalStackLayout>
                             <Picker Grid.Column="1" ItemDisplayBinding="{Binding DisplayName}" ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguageOption}" />
                         </Grid>

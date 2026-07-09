@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="PersonalCollectionShelf.App.Pages.DashboardPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -21,7 +21,7 @@
                         FontFamily="Segoe MDL2 Assets"
                         FontSize="15"
                         Text="&#xE721;"
-                        TextColor="{StaticResource MutedForeground}"
+                        TextColor="{DynamicResource MutedForeground}"
                         VerticalTextAlignment="Center" />
                     <Entry
                         Grid.Column="1"
@@ -31,12 +31,12 @@
                     <Border
                         Grid.Column="2"
                         Padding="6,2"
-                        BackgroundColor="{StaticResource MutedSoft}"
-                        Stroke="{StaticResource Border}"
+                        BackgroundColor="{DynamicResource MutedSoft}"
+                        Stroke="{DynamicResource Border}"
                         StrokeShape="RoundRectangle 4"
                         StrokeThickness="1"
                         VerticalOptions="Center">
-                        <Label FontSize="10" Text="⌘K" TextColor="{StaticResource MutedForeground}" />
+                        <Label FontSize="10" Text="?K" TextColor="{DynamicResource MutedForeground}" />
                     </Border>
                 </Grid>
             </Border>
@@ -63,16 +63,16 @@
                     <Label
                         FontSize="14"
                         Text="{Binding DashboardSubtitle}"
-                        TextColor="{StaticResource Primary}" />
+                        TextColor="{DynamicResource Primary}" />
                 </VerticalStackLayout>
 
                 <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
                     <Border Grid.Column="0" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
-                            <Label FontAttributes="Bold" FontSize="10" Text="Total Items" TextColor="{StaticResource Primary}" />
+                            <Label FontAttributes="Bold" FontSize="10" Text="Total Items" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
                                 <Border BackgroundColor="#269D7FF4" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
-                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="◇" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" />
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="?" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
                                 </Border>
                                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding TotalItemCount}" VerticalTextAlignment="Center" />
                             </HorizontalStackLayout>
@@ -80,10 +80,10 @@
                     </Border>
                     <Border Grid.Column="1" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
-                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding CompletedItemsLabel}" TextColor="{StaticResource Primary}" />
+                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding CompletedItemsLabel}" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
                                 <Border BackgroundColor="#224ADE80" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
-                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="✓" TextColor="{StaticResource Success}" VerticalTextAlignment="Center" />
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="?" TextColor="{StaticResource Success}" VerticalTextAlignment="Center" />
                                 </Border>
                                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding CompletedItemCount}" VerticalTextAlignment="Center" />
                             </HorizontalStackLayout>
@@ -91,10 +91,10 @@
                     </Border>
                     <Border Grid.Column="2" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
-                            <Label FontAttributes="Bold" FontSize="10" Text="In Progress" TextColor="{StaticResource Primary}" />
+                            <Label FontAttributes="Bold" FontSize="10" Text="In Progress" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
                                 <Border BackgroundColor="#2260A5FA" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
-                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="◷" TextColor="{StaticResource Info}" VerticalTextAlignment="Center" />
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="?" TextColor="{StaticResource Info}" VerticalTextAlignment="Center" />
                                 </Border>
                                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding InProgressItemCount}" VerticalTextAlignment="Center" />
                             </HorizontalStackLayout>
@@ -102,10 +102,10 @@
                     </Border>
                     <Border Grid.Column="3" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
-                            <Label FontAttributes="Bold" FontSize="10" Text="Wishlist" TextColor="{StaticResource Primary}" />
+                            <Label FontAttributes="Bold" FontSize="10" Text="Wishlist" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
                                 <Border BackgroundColor="#22FBBF24" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
-                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="▱" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="?" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
                                 </Border>
                                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding WishlistItemCount}" VerticalTextAlignment="Center" />
                             </HorizontalStackLayout>
@@ -132,10 +132,10 @@
                                     <VerticalStackLayout.GestureRecognizers>
                                         <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}" CommandParameter="{Binding .}" />
                                     </VerticalStackLayout.GestureRecognizers>
-                                    <Border BackgroundColor="{StaticResource Muted}" HeightRequest="154" StrokeThickness="0" StrokeShape="RoundRectangle 8" WidthRequest="108">
+                                    <Border BackgroundColor="{DynamicResource Muted}" HeightRequest="154" StrokeThickness="0" StrokeShape="RoundRectangle 8" WidthRequest="108">
                                         <Grid>
                                             <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
-                                            <Label FontAttributes="Bold" FontSize="36" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                            <Label FontAttributes="Bold" FontSize="36" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                                             <ProgressBar BackgroundColor="#33FFFFFF" Progress="{Binding ProgressPercent}" ProgressColor="{StaticResource Info}" VerticalOptions="End" />
                                         </Grid>
                                     </Border>
@@ -163,10 +163,10 @@
                                     </Border.GestureRecognizers>
                                     <Grid RowDefinitions="186,Auto">
                                         <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
-                                        <Label FontAttributes="Bold" FontSize="38" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{StaticResource MutedForeground}" VerticalTextAlignment="Center" />
+                                        <Label FontAttributes="Bold" FontSize="38" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                                         <Grid Grid.Row="1" Padding="10" RowDefinitions="Auto,Auto">
                                             <Label FontAttributes="Bold" FontSize="12" LineBreakMode="TailTruncation" Text="{Binding Title}" />
-                                            <Label Grid.Row="1" FontSize="11" Text="{Binding ReleaseYearText}" TextColor="{StaticResource MutedForeground}" />
+                                            <Label Grid.Row="1" FontSize="11" Text="{Binding ReleaseYearText}" TextColor="{DynamicResource MutedForeground}" />
                                         </Grid>
                                     </Grid>
                                 </Border>
@@ -178,18 +178,18 @@
                 <VerticalStackLayout Spacing="12">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding FavoritesSectionTitle}" />
-                        <Label Grid.Column="1" FontSize="18" Text="♡" TextColor="#F07CB8" />
+                        <Label Grid.Column="1" FontSize="18" Text="?" TextColor="#F07CB8" />
                     </Grid>
                     <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding FavoriteItems}" SelectionMode="None">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
                                 <Grid Padding="16,10" ColumnDefinitions="48,*,Auto,Auto" ColumnSpacing="12">
-                                    <Border BackgroundColor="{StaticResource Muted}" HeightRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="48">
+                                    <Border BackgroundColor="{DynamicResource Muted}" HeightRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="48">
                                         <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
                                     </Border>
                                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                         <Label FontAttributes="Bold" FontSize="14" Text="{Binding Title}" />
-                                        <Label FontSize="12" Text="{Binding Metadata}" TextColor="{StaticResource Primary}" />
+                                        <Label FontSize="12" Text="{Binding Metadata}" TextColor="{DynamicResource Primary}" />
                                     </VerticalStackLayout>
                                     <Label Grid.Column="2" FontAttributes="Bold" Text="{Binding RatingShort}" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
                                     <Border Grid.Column="3" Padding="8,3" BackgroundColor="{Binding StatusBackgroundColor}" Stroke="{Binding StatusForegroundColor}" StrokeShape="RoundRectangle 10" StrokeThickness="1" VerticalOptions="Center">
@@ -215,11 +215,11 @@
                                 <Border Padding="16" Style="{StaticResource CardBorderStyle}">
                                     <Grid ColumnDefinitions="42,*" ColumnSpacing="12">
                                         <Border BackgroundColor="{Binding Color}" HeightRequest="34" StrokeThickness="0" StrokeShape="RoundRectangle 17" WidthRequest="34">
-                                            <Label FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="Center" Text="•" TextColor="White" VerticalTextAlignment="Center" />
+                                            <Label FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="Center" Text="�" TextColor="White" VerticalTextAlignment="Center" />
                                         </Border>
                                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                                             <Label FontAttributes="Bold" FontSize="14" Text="{Binding Label}" />
-                                            <Label FontSize="11" Text="{Binding CountText}" TextColor="{StaticResource Primary}" />
+                                            <Label FontSize="11" Text="{Binding CountText}" TextColor="{DynamicResource Primary}" />
                                         </VerticalStackLayout>
                                     </Grid>
                                 </Border>

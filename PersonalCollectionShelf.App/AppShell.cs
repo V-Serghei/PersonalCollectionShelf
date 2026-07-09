@@ -152,11 +152,24 @@ public sealed class AppShell : Shell
             Spacing = 12,
             Children =
             {
-                new Label
+                new Border
                 {
-                    Text = _appearanceService.IsDarkTheme ? "☼  Light Mode" : "☾  Dark Mode",
-                    FontSize = 14,
-                    TextColor = SecondaryForegroundColor
+                    Padding = new Thickness(4, 6),
+                    StrokeThickness = 0,
+                    BackgroundColor = Colors.Transparent,
+                    Content = new Label
+                    {
+                        Text = _appearanceService.IsDarkTheme ? "☼  Light Mode" : "☾  Dark Mode",
+                        FontSize = 14,
+                        TextColor = SecondaryForegroundColor
+                    },
+                    GestureRecognizers =
+                    {
+                        new TapGestureRecognizer
+                        {
+                            Command = new Command(ToggleTheme)
+                        }
+                    }
                 },
                 new HorizontalStackLayout
                 {
@@ -337,7 +350,7 @@ public sealed class AppShell : Shell
 
     private Color BorderColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#3A3350" : "#D8CEEE");
 
-    private Color PrimaryColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#9D7FF4" : "#7C5CE6");
+    private Color PrimaryColor => Color.FromArgb(_appearanceService.AccentColorHex);
 
     private Color PrimaryForegroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#171421" : "#FFFFFF");
 
@@ -381,6 +394,11 @@ public sealed class AppShell : Shell
     {
         ApplyShellColors();
         FlyoutContentTemplate = new DataTemplate(BuildFlyoutContent);
+    }
+
+    private void ToggleTheme()
+    {
+        _appearanceService.SetTheme(!_appearanceService.IsDarkTheme);
     }
 
     private void ApplyLocalization()
