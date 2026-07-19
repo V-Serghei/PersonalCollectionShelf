@@ -32,6 +32,8 @@ public static class MauiProgram
         builder.Services.AddTransient<MediaDetailsViewModel>();
         builder.Services.AddTransient<EditMediaItemViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<SignInViewModel>();
+        builder.Services.AddTransient<SignInPage>();
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<LibraryPage>();
         builder.Services.AddTransient<StatisticsPage>();

@@ -141,18 +141,13 @@
                                 <Button Grid.Column="2" Command="{Binding SignOutCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding SignOutButtonText}" VerticalOptions="Center" />
                             </Grid>
 
-                            <VerticalStackLayout Padding="16" Spacing="10" IsVisible="{Binding IsAccountFormVisible}">
-                                <VerticalStackLayout Spacing="4">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14" IsVisible="{Binding IsAccountFormVisible}">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSectionTitle}" />
                                     <Label FontSize="12" Text="{Binding AccountDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Entry Keyboard="Email" Placeholder="{Binding AccountEmailPlaceholder}" Text="{Binding AccountEmail, Mode=TwoWay}" />
-                                <Entry IsPassword="True" Placeholder="{Binding AccountPasswordPlaceholder}" Text="{Binding AccountPassword, Mode=TwoWay}" />
-                                <HorizontalStackLayout Spacing="10">
-                                    <Button Command="{Binding SignInCommand}" Text="{Binding SignInButtonText}" />
-                                    <Button Command="{Binding SignUpCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding SignUpButtonText}" />
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding OpenSignInCommand}" Text="{Binding SignInButtonText}" VerticalOptions="Center" />
+                            </Grid>
 
                             <VerticalStackLayout Padding="16" Spacing="4" IsVisible="{Binding IsAccountNotConfigured}">
                                 <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSectionTitle}" />

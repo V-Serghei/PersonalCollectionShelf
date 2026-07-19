@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.SignInPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:SignInViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False"
+    Title="{Binding PageTitle}">
+    <Grid BackgroundColor="{DynamicResource PageBackground}">
+        <Border
+            HorizontalOptions="Center"
+            Padding="24"
+            Style="{StaticResource CardBorderStyle}"
+            VerticalOptions="Center"
+            WidthRequest="420">
+            <VerticalStackLayout Spacing="14">
+                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding PageTitle}" />
+                <Label FontSize="12" Text="{Binding Description}" TextColor="{DynamicResource MutedForeground}" />
+
+                <Entry Keyboard="Email" Placeholder="{Binding EmailPlaceholder}" Text="{Binding Email, Mode=TwoWay}" />
+
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Entry IsPassword="{Binding IsPasswordHidden}" Placeholder="{Binding PasswordPlaceholder}" Text="{Binding Password, Mode=TwoWay}" />
+                    <Button
+                        Grid.Column="1"
+                        Command="{Binding TogglePasswordVisibilityCommand}"
+                        FontFamily="Segoe MDL2 Assets"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Text="&#xE7B3;"
+                        VerticalOptions="Center" />
+                </Grid>
+
+                <Label FontSize="12" Text="{Binding StatusMessage}" TextColor="{StaticResource Danger}" />
+
+                <Button Command="{Binding SignInCommand}" IsEnabled="{Binding IsNotBusy}" Text="{Binding SignInButtonText}" />
+                <Button Command="{Binding SignUpCommand}" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding SignUpButtonText}" />
+                <Button Command="{Binding CancelCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding CancelButtonText}" />
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentPage>

@@ -4,6 +4,7 @@ using Microsoft.Maui.Devices;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Graphics.Platform;
 using Microsoft.Maui.Storage;
+using SkiaSharp;
 
 namespace PersonalCollectionShelf.App.Services;
 
@@ -141,6 +142,8 @@ public sealed class AppearanceService : IAppearanceService
         NotifyChanged();
     }
 
+    private CancellationTokenSource? _blurDebounce;
+
     public void SetBackgroundBlur(double blur)
     {
         var normalized = Math.Clamp(Math.Round(blur), 0, 40);
@@ -150,8 +153,27 @@ public sealed class AppearanceService : IAppearanceService
         }
 
         Preferences.Set(BackgroundBlurKey, normalized);
+
+        // Regenerating the blurred bitmap is expensive, so wait until the slider settles.
+        _blurDebounce?.Cancel();
+        var debounce = new CancellationTokenSource();
+        _blurDebounce = debounce;
+        _ = DebouncedBlurRefreshAsync(debounce.Token);
+    }
+
+    private async Task DebouncedBlurRefreshAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(300, cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
         DeleteBlurredBackgroundCacheFiles();
-        NotifyChanged();
+        MainThread.BeginInvokeOnMainThread(NotifyChanged);
     }
 
     public async Task<bool> PickBackgroundImageAsync()
@@ -224,20 +246,30 @@ public sealed class AppearanceService : IAppearanceService
 
     private static string CreateBlurredBackground(string sourcePath, double blur)
     {
-        using var source = File.OpenRead(sourcePath);
-        using var image = PlatformImage.FromStream(source);
+        var cachePath = BlurredBackgroundCachePath(sourcePath, blur);
+        if (File.Exists(cachePath))
+        {
+            return cachePath;
+        }
 
-        var downscale = Math.Max(0.03, 1.0 / (1.0 + blur / 3.0));
-        var smallWidth = Math.Max(1, (int)Math.Round(image.Width * downscale));
-        var smallHeight = Math.Max(1, (int)Math.Round(image.Height * downscale));
+        using var bitmap = SKBitmap.Decode(sourcePath) ?? throw new InvalidOperationException($"Could not decode background image '{sourcePath}'.");
 
-        using var shrunk = image.Resize(smallWidth, smallHeight, ResizeMode.Stretch);
-        using var blurred = shrunk.Resize(image.Width, image.Height, ResizeMode.Stretch);
+        var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
+        using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("Could not create drawing surface for background blur.");
+
+        var sigma = (float)Math.Clamp(blur, 0, 40);
+        using var paint = new SKPaint
+        {
+            ImageFilter = SKImageFilter.CreateBlur(sigma, sigma, SKShaderTileMode.Clamp)
+        };
+
+        surface.Canvas.DrawBitmap(bitmap, 0, 0, paint);
 
         Directory.CreateDirectory(BackgroundsDirectory);
-        var cachePath = BlurredBackgroundCachePath(sourcePath, blur);
+        using var snapshot = surface.Snapshot();
+        using var encoded = snapshot.Encode(SKEncodedImageFormat.Png, 90);
         using var destination = File.Create(cachePath);
-        blurred.Save(destination, ImageFormat.Png);
+        encoded.SaveTo(destination);
 
         return cachePath;
     }

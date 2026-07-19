@@ -140,13 +140,7 @@ public partial class SettingsViewModel : BaseViewModel
         ? T("Settings.Account.Description")
         : T("Auth.Error.NotConfigured");
 
-    public string AccountEmailPlaceholder => T("Settings.Account.EmailPlaceholder");
-
-    public string AccountPasswordPlaceholder => T("Settings.Account.PasswordPlaceholder");
-
     public string SignInButtonText => T("Settings.Account.SignIn");
-
-    public string SignUpButtonText => T("Settings.Account.SignUp");
 
     public string SignOutButtonText => T("Settings.Account.SignOut");
 
@@ -158,24 +152,10 @@ public partial class SettingsViewModel : BaseViewModel
 
     public bool IsAccountFormVisible => IsAuthConfigured && !IsSignedIn;
 
-    private string _accountEmail = string.Empty;
-    private string _accountPassword = string.Empty;
     private string? _signedInEmail;
     private bool _isSignedIn;
     private string? _accountStatusKey;
     private string _accountStatusMessage = string.Empty;
-
-    public string AccountEmail
-    {
-        get => _accountEmail;
-        set => SetProperty(ref _accountEmail, value);
-    }
-
-    public string AccountPassword
-    {
-        get => _accountPassword;
-        set => SetProperty(ref _accountPassword, value);
-    }
 
     public string? SignedInEmail
     {
@@ -209,15 +189,26 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task SignInAsync()
+    private async Task OpenSignInAsync()
     {
-        await ExecuteAuthFlowAsync(_authService.SignInAsync);
-    }
+        try
+        {
+            var page = new SignInPage();
+            await Shell.Current.Navigation.PushModalAsync(page);
+            await page.Completion;
 
-    [RelayCommand]
-    private async Task SignUpAsync()
-    {
-        await ExecuteAuthFlowAsync(_authService.SignUpAsync);
+            var wasSignedIn = IsSignedIn;
+            await LoadAccountStateAsync();
+
+            if (!wasSignedIn && IsSignedIn)
+            {
+                SetAccountStatus("Settings.Account.SignedInMessage");
+            }
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, "SettingsViewModel.OpenSignInAsync");
+        }
     }
 
     [RelayCommand]
@@ -227,42 +218,6 @@ public partial class SettingsViewModel : BaseViewModel
         IsSignedIn = false;
         SignedInEmail = null;
         SetAccountStatus("Settings.Account.SignedOutMessage");
-    }
-
-    private async Task ExecuteAuthFlowAsync(
-        Func<string, string, CancellationToken, Task<AuthResultDto>> authAction)
-    {
-        if (IsBusy)
-        {
-            return;
-        }
-
-        IsBusy = true;
-        try
-        {
-            var result = await authAction(AccountEmail, AccountPassword, CancellationToken.None);
-
-            if (result.Succeeded)
-            {
-                IsSignedIn = true;
-                SignedInEmail = result.Email ?? AccountEmail;
-                AccountPassword = string.Empty;
-                SetAccountStatus("Settings.Account.SignedInMessage");
-            }
-            else
-            {
-                SetAccountStatus(result.ErrorKey ?? "Auth.Error.Unknown");
-            }
-        }
-        catch (Exception exception)
-        {
-            SetAccountStatus("Auth.Error.Unknown");
-            await CrashReporter.ReportAsync(exception, "SettingsViewModel.ExecuteAuthFlowAsync");
-        }
-        finally
-        {
-            IsBusy = false;
-        }
     }
 
     private void SetAccountStatus(string? key)
