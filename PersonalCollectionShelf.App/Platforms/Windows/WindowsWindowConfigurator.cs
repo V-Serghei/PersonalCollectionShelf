@@ -1,10 +1,13 @@
+using Microsoft.Graphics.Canvas.Effects;
+using Microsoft.UI.Composition;
 using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml.Hosting;
 using PersonalCollectionShelf.App.Services;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 using WinControls = Microsoft.UI.Xaml.Controls;
 using WinMedia = Microsoft.UI.Xaml.Media;
-using WinImaging = Microsoft.UI.Xaml.Media.Imaging;
 
 namespace PersonalCollectionShelf.App.Platforms.Windows;
 
@@ -12,6 +15,16 @@ public static class WindowsWindowConfigurator
 {
     private const int DwmwaSystemBackdropType = 38;
     private const int DwmSystemBackdropNone = 1;
+
+    // The slider goes 0-40; Gaussian blur stops reading as "more blurred" long before
+    // 40 device pixels, so compress the scale to keep every slider step visible.
+    private const double BlurAmountScale = 0.6;
+
+    private static WinControls.Grid? _backgroundHost;
+    private static SpriteVisual? _backgroundVisual;
+    private static CompositionSurfaceBrush? _surfaceBrush;
+    private static CompositionEffectBrush? _blurBrush;
+    private static string? _loadedImagePath;
 
     public static void Configure(global::Microsoft.UI.Xaml.Window nativeWindow, IAppearanceService appearanceService)
     {
@@ -37,12 +50,13 @@ public static class WindowsWindowConfigurator
         Refresh(nativeWindow, appearanceService);
 
         nativeWindow.Activated += (_, _) => Refresh(nativeWindow, appearanceService);
+        appearanceService.BackgroundBlurChanged += (_, _) => UpdateBlurAmount(appearanceService);
     }
 
     public static void Refresh(global::Microsoft.UI.Xaml.Window nativeWindow, IAppearanceService appearanceService)
     {
         ApplyTitleBarColors(nativeWindow, appearanceService);
-        _ = ApplyBackgroundAsync(nativeWindow, appearanceService);
+        ApplyBackground(nativeWindow, appearanceService);
     }
 
     private static void ApplyTitleBarColors(global::Microsoft.UI.Xaml.Window nativeWindow, IAppearanceService appearanceService)
@@ -81,31 +95,120 @@ public static class WindowsWindowConfigurator
         }
     }
 
-    private static async Task ApplyBackgroundAsync(global::Microsoft.UI.Xaml.Window nativeWindow, IAppearanceService appearanceService)
+    private static void ApplyBackground(global::Microsoft.UI.Xaml.Window nativeWindow, IAppearanceService appearanceService)
     {
         try
         {
-            var imagePath = await appearanceService.GetRenderableBackgroundImageAsync();
+            var imagePath = appearanceService.BackgroundImagePath;
 
-            WinMedia.Brush brush;
-            if (imagePath is not null)
+            if (imagePath is null)
             {
-                brush = new WinMedia.ImageBrush
+                HideBackgroundVisual();
+                SetBackgroundBrush(nativeWindow, new WinMedia.SolidColorBrush(ThemeBackgroundColor(appearanceService)));
+                return;
+            }
+
+            SetBackgroundBrush(nativeWindow, new WinMedia.SolidColorBrush(ThemeBackgroundColor(appearanceService)));
+
+            var host = EnsureBackgroundHost(nativeWindow);
+            if (host is null)
+            {
+                return;
+            }
+
+            host.Visibility = global::Microsoft.UI.Xaml.Visibility.Visible;
+
+            var compositor = ElementCompositionPreview.GetElementVisual(host).Compositor;
+
+            if (_backgroundVisual is null)
+            {
+                _backgroundVisual = compositor.CreateSpriteVisual();
+                _backgroundVisual.RelativeSizeAdjustment = Vector2.One;
+                ElementCompositionPreview.SetElementChildVisual(host, _backgroundVisual);
+            }
+
+            if (_surfaceBrush is null || !string.Equals(_loadedImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
+            {
+                var surface = WinMedia.LoadedImageSurface.StartLoadFromUri(new Uri(imagePath));
+                _surfaceBrush = compositor.CreateSurfaceBrush(surface);
+                _surfaceBrush.Stretch = CompositionStretch.UniformToFill;
+                _loadedImagePath = imagePath;
+                _blurBrush = null;
+            }
+
+            if (_blurBrush is null)
+            {
+                var blurEffect = new GaussianBlurEffect
                 {
-                    ImageSource = new WinImaging.BitmapImage(new Uri(imagePath)),
-                    Stretch = WinMedia.Stretch.UniformToFill
+                    Name = "Blur",
+                    BlurAmount = 0f,
+                    BorderMode = EffectBorderMode.Hard,
+                    Optimization = EffectOptimization.Speed,
+                    Source = new CompositionEffectSourceParameter("source")
                 };
-            }
-            else
-            {
-                brush = new WinMedia.SolidColorBrush(ThemeBackgroundColor(appearanceService));
+
+                var factory = compositor.CreateEffectFactory(blurEffect, ["Blur.BlurAmount"]);
+                _blurBrush = factory.CreateBrush();
+                _blurBrush.SetSourceParameter("source", _surfaceBrush);
+                _backgroundVisual.Brush = _blurBrush;
             }
 
-            SetBackgroundBrush(nativeWindow, brush);
+            UpdateBlurAmount(appearanceService);
         }
         catch
         {
             // Keep the last applied background if the OS or file system rejects the update.
+        }
+    }
+
+    private static void UpdateBlurAmount(IAppearanceService appearanceService)
+    {
+        try
+        {
+            _blurBrush?.Properties.InsertScalar("Blur.BlurAmount", (float)(appearanceService.BackgroundBlur * BlurAmountScale));
+        }
+        catch
+        {
+            // A stale brush after a window teardown is harmless; it is rebuilt on the next refresh.
+        }
+    }
+
+    private static void HideBackgroundVisual()
+    {
+        if (_backgroundHost is not null)
+        {
+            _backgroundHost.Visibility = global::Microsoft.UI.Xaml.Visibility.Collapsed;
+        }
+    }
+
+    private static WinControls.Grid? EnsureBackgroundHost(global::Microsoft.UI.Xaml.Window nativeWindow)
+    {
+        if (_backgroundHost is not null)
+        {
+            return _backgroundHost;
+        }
+
+        switch (nativeWindow.Content)
+        {
+            case WinControls.Panel panel:
+                var host = new WinControls.Grid();
+                panel.Children.Insert(0, host);
+                _backgroundHost = host;
+                return host;
+            case WinControls.Control:
+            case WinControls.Border:
+                // These roots cannot host an extra child; fall back to no image background.
+                return null;
+            case global::Microsoft.UI.Xaml.UIElement element:
+                var backgroundLayer = new WinControls.Grid();
+                var root = new WinControls.Grid();
+                root.Children.Add(backgroundLayer);
+                root.Children.Add(element);
+                nativeWindow.Content = root;
+                _backgroundHost = backgroundLayer;
+                return backgroundLayer;
+            default:
+                return null;
         }
     }
 

@@ -4,7 +4,6 @@ using Microsoft.Maui.Devices;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Graphics.Platform;
 using Microsoft.Maui.Storage;
-using SkiaSharp;
 
 namespace PersonalCollectionShelf.App.Services;
 
@@ -20,6 +19,8 @@ public interface IAppearanceService
 
     event EventHandler? AppearanceChanged;
 
+    event EventHandler? BackgroundBlurChanged;
+
     void Apply();
 
     void SetTheme(bool isDarkTheme);
@@ -31,8 +32,6 @@ public interface IAppearanceService
     Task<bool> PickBackgroundImageAsync();
 
     void ClearBackgroundImage();
-
-    Task<string?> GetRenderableBackgroundImageAsync();
 }
 
 public sealed class AppearanceService : IAppearanceService
@@ -92,6 +91,8 @@ public sealed class AppearanceService : IAppearanceService
 
     public event EventHandler? AppearanceChanged;
 
+    public event EventHandler? BackgroundBlurChanged;
+
     public bool IsDarkTheme => Preferences.Get(ThemeKey, DarkThemeValue) == DarkThemeValue;
 
     public string AccentColorHex => NormalizeColorHex(Preferences.Get(AccentColorKey, DefaultAccentColor));
@@ -105,7 +106,10 @@ public sealed class AppearanceService : IAppearanceService
         }
     }
 
-    public double BackgroundBlur => Preferences.Get(BackgroundBlurKey, 0d);
+    private double? _backgroundBlur;
+    private CancellationTokenSource? _blurPersistDebounce;
+
+    public double BackgroundBlur => _backgroundBlur ??= Preferences.Get(BackgroundBlurKey, 0d);
 
     public void Apply()
     {
@@ -142,38 +146,36 @@ public sealed class AppearanceService : IAppearanceService
         NotifyChanged();
     }
 
-    private CancellationTokenSource? _blurDebounce;
-
     public void SetBackgroundBlur(double blur)
     {
         var normalized = Math.Clamp(Math.Round(blur), 0, 40);
-        if (Math.Abs(Preferences.Get(BackgroundBlurKey, 0d) - normalized) < 0.1)
+        if (Math.Abs(BackgroundBlur - normalized) < 0.1)
         {
             return;
         }
 
-        Preferences.Set(BackgroundBlurKey, normalized);
+        _backgroundBlur = normalized;
+        BackgroundBlurChanged?.Invoke(this, EventArgs.Empty);
 
-        // Regenerating the blurred bitmap is expensive, so wait until the slider settles.
-        _blurDebounce?.Cancel();
+        // Persisting hits the disk, so keep it off the slider-drag hot path.
+        _blurPersistDebounce?.Cancel();
         var debounce = new CancellationTokenSource();
-        _blurDebounce = debounce;
-        _ = DebouncedBlurRefreshAsync(debounce.Token);
+        _blurPersistDebounce = debounce;
+        _ = PersistBlurAsync(normalized, debounce.Token);
     }
 
-    private async Task DebouncedBlurRefreshAsync(CancellationToken cancellationToken)
+    private static async Task PersistBlurAsync(double value, CancellationToken cancellationToken)
     {
         try
         {
-            await Task.Delay(300, cancellationToken);
+            await Task.Delay(400, cancellationToken);
         }
         catch (TaskCanceledException)
         {
             return;
         }
 
-        DeleteBlurredBackgroundCacheFiles();
-        MainThread.BeginInvokeOnMainThread(NotifyChanged);
+        Preferences.Set(BackgroundBlurKey, value);
     }
 
     public async Task<bool> PickBackgroundImageAsync()
@@ -201,7 +203,6 @@ public sealed class AppearanceService : IAppearanceService
             resized.Save(target, ImageFormat.Png);
         }
 
-        DeleteBlurredBackgroundCacheFiles();
         Preferences.Set(BackgroundImageKey, destination);
         NotifyChanged();
         return true;
@@ -216,69 +217,7 @@ public sealed class AppearanceService : IAppearanceService
 
         Preferences.Remove(BackgroundImageKey);
         DeleteBackgroundImageFiles();
-        DeleteBlurredBackgroundCacheFiles();
         NotifyChanged();
-    }
-
-    public async Task<string?> GetRenderableBackgroundImageAsync()
-    {
-        var sourcePath = BackgroundImagePath;
-        if (sourcePath is null)
-        {
-            return null;
-        }
-
-        var blur = BackgroundBlur;
-        if (blur <= 0)
-        {
-            return sourcePath;
-        }
-
-        try
-        {
-            return await Task.Run(() => CreateBlurredBackground(sourcePath, blur));
-        }
-        catch
-        {
-            return sourcePath;
-        }
-    }
-
-    private static string CreateBlurredBackground(string sourcePath, double blur)
-    {
-        var cachePath = BlurredBackgroundCachePath(sourcePath, blur);
-        if (File.Exists(cachePath))
-        {
-            return cachePath;
-        }
-
-        using var bitmap = SKBitmap.Decode(sourcePath) ?? throw new InvalidOperationException($"Could not decode background image '{sourcePath}'.");
-
-        var info = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
-        using var surface = SKSurface.Create(info) ?? throw new InvalidOperationException("Could not create drawing surface for background blur.");
-
-        var sigma = (float)Math.Clamp(blur, 0, 40);
-        using var paint = new SKPaint
-        {
-            ImageFilter = SKImageFilter.CreateBlur(sigma, sigma, SKShaderTileMode.Clamp)
-        };
-
-        surface.Canvas.DrawBitmap(bitmap, 0, 0, paint);
-
-        Directory.CreateDirectory(BackgroundsDirectory);
-        using var snapshot = surface.Snapshot();
-        using var encoded = snapshot.Encode(SKEncodedImageFormat.Png, 90);
-        using var destination = File.Create(cachePath);
-        encoded.SaveTo(destination);
-
-        return cachePath;
-    }
-
-    private static string BlurredBackgroundCachePath(string sourcePath, double blur)
-    {
-        var sourceName = Path.GetFileNameWithoutExtension(sourcePath);
-        var blurValue = Math.Clamp((int)Math.Round(blur), 0, 40);
-        return Path.Combine(BackgroundsDirectory, $"{sourceName}-blurred-{blurValue}.png");
     }
 
     private static Microsoft.Maui.Graphics.IImage DownscaleToFit(Microsoft.Maui.Graphics.IImage image, int maxDimension)
@@ -306,31 +245,6 @@ public sealed class AppearanceService : IAppearanceService
         catch
         {
             // Best effort cleanup; a stale cache file will simply be regenerated on next apply.
-        }
-    }
-
-    private static void DeleteBlurredBackgroundCacheFiles()
-    {
-        try
-        {
-            if (!Directory.Exists(BackgroundsDirectory))
-            {
-                return;
-            }
-
-            foreach (var file in Directory.EnumerateFiles(BackgroundsDirectory, "custom-background-*-blurred-*.png"))
-            {
-                DeleteFileIfExists(file);
-            }
-
-            foreach (var file in Directory.EnumerateFiles(BackgroundsDirectory, "custom-background-blurred-*.png"))
-            {
-                DeleteFileIfExists(file);
-            }
-        }
-        catch
-        {
-            // Best effort cleanup; stale cache files are harmless.
         }
     }
 
