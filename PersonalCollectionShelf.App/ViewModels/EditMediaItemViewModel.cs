@@ -29,16 +29,20 @@ public partial class EditMediaItemViewModel : BaseViewModel
 #endif
 
     private readonly IMediaItemService _mediaItemService;
+    private readonly IPersonService _personService;
     private readonly IAuthService _authService;
     public EditMediaItemViewModel(
         IMediaItemService mediaItemService,
+        IPersonService personService,
         IAuthService authService,
         ILocalizationService localizationService)
         : base(localizationService)
     {
         _mediaItemService = mediaItemService;
+        _personService = personService;
         _authService = authService;
         ReloadOptions();
+        InitializeBookFields();
         ResetFields();
     }
 
@@ -51,6 +55,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
     public ObservableCollection<string> CastChips { get; } = [];
 
     private Guid? _mediaItemId;
+    private Guid? _mediaCategoryId;
     private string _itemTitle = string.Empty;
     private string _originalTitle = string.Empty;
     private string _description = string.Empty;
@@ -151,6 +156,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
             {
                 OnPropertyChanged(nameof(CreatorLabel));
                 OnPropertyChanged(nameof(ShowCastField));
+                OnPropertyChanged(nameof(ShowBookFields));
             }
         }
     }
@@ -166,7 +172,13 @@ public partial class EditMediaItemViewModel : BaseViewModel
     public string Rating
     {
         get => _rating;
-        set => SetProperty(ref _rating, value);
+        set
+        {
+            if (SetProperty(ref _rating, value))
+            {
+                OnRatingTextChanged();
+            }
+        }
     }
 
     public string ProgressCurrent
@@ -394,10 +406,11 @@ public partial class EditMediaItemViewModel : BaseViewModel
         OriginalTitle = item.OriginalTitle ?? string.Empty;
         Description = item.Description ?? string.Empty;
         Category = item.Category ?? string.Empty;
+        _mediaCategoryId = item.MediaCategoryId;
         Creator = item.Creator ?? string.Empty;
         Publisher = item.Publisher ?? string.Empty;
         SerialNumber = item.SerialNumber ?? string.Empty;
-        SetTagChips(item.Tags);
+        SetTagChips(item.TagNames.Count > 0 ? item.TagNames : null);
         SetCastChips(item.Cast);
         SelectedMediaType = MediaTypes.First(option => option.Value == item.MediaType);
         SelectedStatus = Statuses.First(option => option.Value == item.Status);
@@ -412,12 +425,14 @@ public partial class EditMediaItemViewModel : BaseViewModel
         CoverUrl = item.CoverUrl ?? string.Empty;
         Notes = item.Notes ?? string.Empty;
         IsFavorite = item.IsFavorite;
+        LoadBookFields(item);
     }
 
     protected override void RefreshLocalizedProperties()
     {
         base.RefreshLocalizedProperties();
         ReloadOptions();
+        ReloadBookOptions();
     }
 
     [RelayCommand]
@@ -425,10 +440,11 @@ public partial class EditMediaItemViewModel : BaseViewModel
     {
         ErrorMessage = string.Empty;
 
-        if (!TryParseOptionalInt(Rating, out var parsedRating) ||
+        if (!TryParseOptionalDecimal(Rating, out var parsedRating) ||
             !TryParseRequiredInt(ProgressCurrent, 0, out var parsedProgressCurrent) ||
             !TryParseOptionalInt(ProgressTotal, out var parsedProgressTotal) ||
-            !TryParseOptionalInt(ReleaseYear, out var parsedReleaseYear))
+            !TryParseOptionalInt(ReleaseYear, out var parsedReleaseYear) ||
+            !TryBuildBookInputs(out var bookDetails, out var collection))
         {
             ErrorMessage = T("Validation.NumberInvalid");
             return;
@@ -448,11 +464,18 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     OriginalTitle = OriginalTitle,
                     Description = Description,
                     Category = Category,
+                    MediaCategoryId = _mediaCategoryId,
                     Tags = BuildTagsString(),
+                    TagNames = TagChips.ToList(),
+                    Genres = GenreChips.ToList(),
                     Creator = Creator,
                     Publisher = Publisher,
                     SerialNumber = SerialNumber,
                     Cast = BuildCastList(),
+                    Contributions = BuildContributions(),
+                    BookDetails = bookDetails,
+                    Collection = collection,
+                    Relations = BuildRelations(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -475,11 +498,18 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     OriginalTitle = OriginalTitle,
                     Description = Description,
                     Category = Category,
+                    MediaCategoryId = _mediaCategoryId,
                     Tags = BuildTagsString(),
+                    TagNames = TagChips.ToList(),
+                    Genres = GenreChips.ToList(),
                     Creator = Creator,
                     Publisher = Publisher,
                     SerialNumber = SerialNumber,
                     Cast = BuildCastList(),
+                    Contributions = BuildContributions(),
+                    BookDetails = bookDetails,
+                    Collection = collection,
+                    Relations = BuildRelations(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
                     Status = SelectedStatus?.Value ?? MediaStatus.Planned,
                     Rating = parsedRating,
@@ -510,6 +540,12 @@ public partial class EditMediaItemViewModel : BaseViewModel
     private async Task CancelAsync()
     {
         await NavigateBackAsync("EditMediaItemViewModel.CancelAsync");
+    }
+
+    [RelayCommand]
+    private void ToggleFavorite()
+    {
+        IsFavorite = !IsFavorite;
     }
 
     [RelayCommand]
@@ -733,6 +769,19 @@ public partial class EditMediaItemViewModel : BaseViewModel
         }
     }
 
+    private void SetTagChips(IReadOnlyList<string>? tags)
+    {
+        TagChips.Clear();
+        NewTagText = string.Empty;
+        foreach (var tag in tags ?? [])
+        {
+            if (!string.IsNullOrWhiteSpace(tag) && !TagChips.Any(existing => string.Equals(existing, tag, StringComparison.OrdinalIgnoreCase)))
+            {
+                TagChips.Add(tag.Trim());
+            }
+        }
+    }
+
     private string BuildTagsString()
     {
         return TagChips.Count == 0 ? string.Empty : string.Join(", ", TagChips);
@@ -768,10 +817,11 @@ public partial class EditMediaItemViewModel : BaseViewModel
         OriginalTitle = string.Empty;
         Description = string.Empty;
         Category = string.Empty;
+        _mediaCategoryId = null;
         Creator = string.Empty;
         Publisher = string.Empty;
         SerialNumber = string.Empty;
-        SetTagChips(null);
+        SetTagChips((IReadOnlyList<string>?)null);
         SetCastChips(null);
         SelectedMediaType = MediaTypes.First(option => option.Value == MediaType.Other);
         SelectedStatus = Statuses.First(option => option.Value == MediaStatus.Planned);
@@ -787,6 +837,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
         Notes = string.Empty;
         IsFavorite = false;
         ErrorMessage = string.Empty;
+        ResetBookFields();
     }
 
     private static bool TryParseOptionalInt(string value, out int? result)
@@ -815,6 +866,23 @@ public partial class EditMediaItemViewModel : BaseViewModel
         }
 
         return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out result);
+    }
+
+    private static bool TryParseOptionalDecimal(string value, out decimal? result)
+    {
+        result = null;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        if (decimal.TryParse(value.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed))
+        {
+            result = parsed;
+            return true;
+        }
+
+        return false;
     }
 
     private async Task<string> GetCurrentUserIdAsync()

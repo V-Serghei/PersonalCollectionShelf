@@ -16,6 +16,8 @@ public sealed class MediaItem
 
     public string? Category { get; set; }
 
+    public Guid? CategoryId { get; set; }
+
     public string? Tags { get; set; }
 
     public Guid? CreatorId { get; set; }
@@ -28,7 +30,7 @@ public sealed class MediaItem
 
     public MediaStatus Status { get; set; } = MediaStatus.Planned;
 
-    public int? Rating { get; set; }
+    public decimal? Rating { get; set; }
 
     public int ProgressCurrent { get; set; }
 

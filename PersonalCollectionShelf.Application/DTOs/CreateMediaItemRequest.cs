@@ -14,6 +14,8 @@ public sealed record CreateMediaItemRequest
 
     public string? Category { get; init; }
 
+    public Guid? MediaCategoryId { get; init; }
+
     public string? Tags { get; init; }
 
     public string? Creator { get; init; }
@@ -28,7 +30,19 @@ public sealed record CreateMediaItemRequest
 
     public MediaStatus Status { get; init; } = MediaStatus.Planned;
 
-    public int? Rating { get; init; }
+    public decimal? Rating { get; init; }
+
+    public IReadOnlyList<string>? TagNames { get; init; }
+
+    public IReadOnlyList<string>? Genres { get; init; }
+
+    public IReadOnlyList<PersonCreditInput>? Contributions { get; init; }
+
+    public BookDetailsInput? BookDetails { get; init; }
+
+    public CollectionMembershipInput? Collection { get; init; }
+
+    public IReadOnlyList<MediaRelationInput>? Relations { get; init; }
 
     public int ProgressCurrent { get; init; }
 

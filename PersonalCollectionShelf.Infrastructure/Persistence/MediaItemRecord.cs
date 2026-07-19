@@ -21,6 +21,9 @@ public sealed class MediaItemRecord
     [Indexed]
     public string? Category { get; set; }
 
+    [Indexed]
+    public string? CategoryId { get; set; }
+
     public string? Tags { get; set; }
 
     [Indexed]
@@ -37,7 +40,7 @@ public sealed class MediaItemRecord
     [Indexed]
     public int Status { get; set; }
 
-    public int? Rating { get; set; }
+    public decimal? Rating { get; set; }
 
     public int ProgressCurrent { get; set; }
 

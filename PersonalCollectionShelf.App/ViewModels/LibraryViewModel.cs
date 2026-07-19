@@ -266,7 +266,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
                 return "--";
             }
 
-            return (ratedItems.Sum(item => item.Rating!.Value) / (double)ratedItems.Count).ToString("0.0", CultureInfo.InvariantCulture);
+            return (ratedItems.Sum(item => item.Rating!.Value) / ratedItems.Count).ToString("0.0", CultureInfo.InvariantCulture);
         }
     }
 

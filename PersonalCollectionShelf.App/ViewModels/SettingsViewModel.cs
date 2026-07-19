@@ -483,7 +483,33 @@ public partial class SettingsViewModel : BaseViewModel
             OriginalTitle = item.OriginalTitle,
             Description = item.Description,
             Category = item.Category,
+            MediaCategoryId = item.MediaCategoryId,
             Tags = item.Tags,
+            TagNames = item.TagNames,
+            Genres = item.Genres,
+            Contributions = item.Contributions.Select(value => new PersonCreditInput
+            {
+                PersonId = value.PersonId,
+                CreditRoleId = value.CreditRoleId,
+                Name = value.PersonName,
+                Role = value.Role,
+                SortOrder = value.SortOrder,
+                Details = value.Details,
+                CreditedAs = value.CreditedAs
+            }).ToList(),
+            BookDetails = ToBookDetailsInput(item.BookDetails),
+            Collection = item.Collection is null ? null : new CollectionMembershipInput
+            {
+                Name = item.Collection.Name,
+                Kind = item.Collection.Kind,
+                Position = item.Collection.Position
+            },
+            Relations = item.Relations.Where(value => value.IsOutgoing).Select(value => new MediaRelationInput
+            {
+                RelatedItemId = value.RelatedItemId,
+                Kind = value.Kind,
+                Notes = value.Notes
+            }).ToList(),
             MediaType = item.MediaType,
             Status = item.Status,
             Rating = item.Rating,
@@ -508,7 +534,33 @@ public partial class SettingsViewModel : BaseViewModel
             OriginalTitle = item.OriginalTitle,
             Description = item.Description,
             Category = item.Category,
+            MediaCategoryId = item.MediaCategoryId,
             Tags = item.Tags,
+            TagNames = item.TagNames,
+            Genres = item.Genres,
+            Contributions = item.Contributions.Select(value => new PersonCreditInput
+            {
+                PersonId = value.PersonId,
+                CreditRoleId = value.CreditRoleId,
+                Name = value.PersonName,
+                Role = value.Role,
+                SortOrder = value.SortOrder,
+                Details = value.Details,
+                CreditedAs = value.CreditedAs
+            }).ToList(),
+            BookDetails = ToBookDetailsInput(item.BookDetails),
+            Collection = item.Collection is null ? null : new CollectionMembershipInput
+            {
+                Name = item.Collection.Name,
+                Kind = item.Collection.Kind,
+                Position = item.Collection.Position
+            },
+            Relations = item.Relations.Where(value => value.IsOutgoing).Select(value => new MediaRelationInput
+            {
+                RelatedItemId = value.RelatedItemId,
+                Kind = value.Kind,
+                Notes = value.Notes
+            }).ToList(),
             MediaType = item.MediaType,
             Status = item.Status,
             Rating = item.Rating,
@@ -526,5 +578,28 @@ public partial class SettingsViewModel : BaseViewModel
     private async Task<string> GetCurrentUserIdAsync()
     {
         return await _authService.GetCurrentUserIdAsync() ?? "local-user";
+    }
+
+    private static BookDetailsInput? ToBookDetailsInput(BookDetailsDto? value)
+    {
+        return value is null ? null : new BookDetailsInput
+        {
+            Subtitle = value.Subtitle,
+            Publisher = value.Publisher,
+            Edition = value.Edition,
+            EditionNumber = value.EditionNumber,
+            EditionYear = value.EditionYear,
+            OriginalPublicationYear = value.OriginalPublicationYear,
+            TranslationYear = value.TranslationYear,
+            OriginalLanguage = value.OriginalLanguage,
+            Language = value.Language,
+            PageCount = value.PageCount,
+            Isbn10 = value.Isbn10,
+            Isbn13 = value.Isbn13,
+            Format = value.Format,
+            Binding = value.Binding,
+            CountryOfOrigin = value.CountryOfOrigin,
+            AgeRating = value.AgeRating
+        };
     }
 }

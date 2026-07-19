@@ -40,6 +40,38 @@ public sealed class PersonService(IPersonRepository personRepository) : IPersonS
         return ToDto(created);
     }
 
+    public async Task<IReadOnlyList<PersonDto>> SearchAsync(string userId, string? searchTerm, int limit = 20, CancellationToken cancellationToken = default)
+    {
+        var people = await personRepository.SearchAsync(userId, searchTerm, limit, cancellationToken);
+        return people.Select(ToDto).ToList();
+    }
+
+    public async Task<PersonDto> CreateAsync(string userId, string displayName, CancellationToken cancellationToken = default)
+    {
+        var trimmedName = displayName.Trim();
+        if (trimmedName.Length == 0)
+        {
+            throw new ArgumentException("A display name is required.", nameof(displayName));
+        }
+
+        var existing = await personRepository.GetByNameAsync(userId, trimmedName, cancellationToken);
+        if (existing is not null)
+        {
+            return ToDto(existing);
+        }
+
+        var now = DateTime.UtcNow;
+        var created = await personRepository.AddAsync(new Person
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId.Trim(),
+            Name = trimmedName,
+            CreatedAt = now,
+            UpdatedAt = now
+        }, cancellationToken);
+        return ToDto(created);
+    }
+
     private static PersonDto ToDto(Person person)
     {
         return new PersonDto(person.Id, person.Name);

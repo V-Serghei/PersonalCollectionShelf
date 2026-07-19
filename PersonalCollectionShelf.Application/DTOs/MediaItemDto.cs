@@ -16,6 +16,10 @@ public sealed record MediaItemDto
 
     public string? Category { get; init; }
 
+    public Guid? MediaCategoryId { get; init; }
+
+    public string? MediaCategoryName { get; init; }
+
     public string? Tags { get; init; }
 
     public Guid? CreatorId { get; init; }
@@ -34,7 +38,19 @@ public sealed record MediaItemDto
 
     public MediaStatus Status { get; init; }
 
-    public int? Rating { get; init; }
+    public decimal? Rating { get; init; }
+
+    public IReadOnlyList<string> TagNames { get; init; } = [];
+
+    public IReadOnlyList<string> Genres { get; init; } = [];
+
+    public IReadOnlyList<MediaContributionDto> Contributions { get; init; } = [];
+
+    public BookDetailsDto? BookDetails { get; init; }
+
+    public CollectionMembershipDto? Collection { get; init; }
+
+    public IReadOnlyList<MediaRelationDto> Relations { get; init; } = [];
 
     public int ProgressCurrent { get; init; }
 

@@ -198,6 +198,20 @@
                     </Grid>
                 </VerticalStackLayout>
             </Border>
+
+            <Border IsVisible="{Binding ShowBookDetails}" Padding="18" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding BookDetailsSectionTitle}" />
+                    <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="18" RowSpacing="12">
+                        <Label Grid.Row="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AuthorsLabel}" /><Label Grid.Row="0" Grid.Column="1" Text="{Binding AuthorsValue}" />
+                        <Label Grid.Row="1" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TranslatorsLabel}" /><Label Grid.Row="1" Grid.Column="1" Text="{Binding TranslatorsValue}" />
+                        <Label Grid.Row="2" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding GenresLabel}" /><Label Grid.Row="2" Grid.Column="1" Text="{Binding GenresValue}" />
+                        <Label Grid.Row="3" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BookDetailsSectionTitle}" /><Label Grid.Row="3" Grid.Column="1" Text="{Binding BookMetadataValue}" />
+                        <Label Grid.Row="4" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CollectionLabel}" /><Label Grid.Row="4" Grid.Column="1" Text="{Binding CollectionValue}" />
+                        <Label Grid.Row="5" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RelationsLabel}" /><Label Grid.Row="5" Grid.Column="1" Text="{Binding RelationsValue}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
         </ScrollView>
     </Grid>

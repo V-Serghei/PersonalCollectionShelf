@@ -24,6 +24,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IAuthTokenStore, SecureStorageAuthTokenStore>();
         builder.Services.AddSingleton<IPersonService, PersonService>();
         builder.Services.AddSingleton<IStudioService, StudioService>();
+        builder.Services.AddSingleton<ITagService, TagService>();
         builder.Services.AddSingleton<IMediaItemService, MediaItemService>();
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
 

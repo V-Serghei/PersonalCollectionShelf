@@ -215,7 +215,7 @@
                                 <Border Padding="16" Style="{StaticResource CardBorderStyle}">
                                     <Grid ColumnDefinitions="42,*" ColumnSpacing="12">
                                         <Border BackgroundColor="{Binding Color}" HeightRequest="34" StrokeThickness="0" StrokeShape="RoundRectangle 17" WidthRequest="34">
-                                            <Label FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="Center" Text="•" TextColor="White" VerticalTextAlignment="Center" />
+                                            <Label FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="Center" Text="&#x2022;" TextColor="White" VerticalTextAlignment="Center" />
                                         </Border>
                                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                                             <Label FontAttributes="Bold" FontSize="14" Text="{Binding Label}" />

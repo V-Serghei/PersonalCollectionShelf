@@ -238,6 +238,20 @@ public sealed class MediaItemServiceTests
             _people.Add(created);
             return Task.FromResult(created);
         }
+
+        public Task<IReadOnlyList<PersonDto>> SearchAsync(string userId, string? searchTerm, int limit = 20, CancellationToken cancellationToken = default)
+        {
+            var results = _people
+                .Where(person => string.IsNullOrWhiteSpace(searchTerm) || person.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .Take(limit)
+                .ToList();
+            return Task.FromResult<IReadOnlyList<PersonDto>>(results);
+        }
+
+        public Task<PersonDto> CreateAsync(string userId, string displayName, CancellationToken cancellationToken = default)
+        {
+            return GetOrCreateAsync(userId, displayName, cancellationToken);
+        }
     }
 
     private sealed class InMemoryStudioService : IStudioService

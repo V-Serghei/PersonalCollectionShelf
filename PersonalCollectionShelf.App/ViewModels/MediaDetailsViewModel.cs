@@ -86,6 +86,20 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public bool ShowCast => Item is not null && Item.MediaType is MediaType.Movie or MediaType.Series;
 
+    public bool ShowBookDetails => Item?.MediaType == MediaType.Book;
+
+    public string BookDetailsSectionTitle => T("Edit.Section.BookDetails");
+
+    public string AuthorsLabel => T("Edit.Label.Authors");
+
+    public string TranslatorsLabel => T("Edit.Label.Translators");
+
+    public string GenresLabel => T("Edit.Label.Genres");
+
+    public string CollectionLabel => T("Edit.Section.Collections");
+
+    public string RelationsLabel => T("Edit.Section.Relations");
+
     public string StartDateLabel => T("Details.StartDateLabel");
 
     public string FinishDateLabel => T("Details.FinishDateLabel");
@@ -127,6 +141,47 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string SerialNumberValue => Item?.SerialNumber ?? T("Common.NotSet");
 
     public string CastValue => Item is null || Item.Cast.Count == 0 ? T("Common.NotSet") : string.Join(", ", Item.Cast);
+
+    public string AuthorsValue => JoinContributors(ContributionRole.Author);
+
+    public string TranslatorsValue => JoinContributors(ContributionRole.Translator);
+
+    public string GenresValue => Item is null || Item.Genres.Count == 0 ? T("Common.NotSet") : string.Join(", ", Item.Genres);
+
+    public string BookMetadataValue
+    {
+        get
+        {
+            var book = Item?.BookDetails;
+            if (book is null)
+            {
+                return T("Common.NotSet");
+            }
+
+            var values = new[]
+            {
+                book.Subtitle,
+                book.Edition,
+                book.EditionYear?.ToString(CultureInfo.InvariantCulture),
+                book.Format.HasValue ? T($"BookFormat.{book.Format.Value}") : null,
+                book.PageCount.HasValue ? $"{book.PageCount.Value} p." : null,
+                book.Isbn13 ?? book.Isbn10,
+                book.Language
+            }.Where(value => !string.IsNullOrWhiteSpace(value));
+            var result = string.Join(" · ", values);
+            return result.Length == 0 ? T("Common.NotSet") : result;
+        }
+    }
+
+    public string CollectionValue => Item?.Collection is null
+        ? T("Common.NotSet")
+        : Item.Collection.Position.HasValue
+            ? $"{Item.Collection.Name} #{Item.Collection.Position.Value.ToString(CultureInfo.InvariantCulture)}"
+            : Item.Collection.Name;
+
+    public string RelationsValue => Item is null || Item.Relations.Count == 0
+        ? T("Common.NotSet")
+        : string.Join(", ", Item.Relations.Select(value => value.RelatedItemTitle));
 
     public string TypeValue => Item is null ? T("Common.NotSet") : T($"MediaType.{Item.MediaType}");
 
@@ -272,6 +327,13 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(SerialNumberValue));
         OnPropertyChanged(nameof(CastValue));
         OnPropertyChanged(nameof(ShowCast));
+        OnPropertyChanged(nameof(ShowBookDetails));
+        OnPropertyChanged(nameof(AuthorsValue));
+        OnPropertyChanged(nameof(TranslatorsValue));
+        OnPropertyChanged(nameof(GenresValue));
+        OnPropertyChanged(nameof(BookMetadataValue));
+        OnPropertyChanged(nameof(CollectionValue));
+        OnPropertyChanged(nameof(RelationsValue));
         OnPropertyChanged(nameof(TypeValue));
         OnPropertyChanged(nameof(StatusValue));
         OnPropertyChanged(nameof(MediaTypeColor));
@@ -299,6 +361,12 @@ public partial class MediaDetailsViewModel : BaseViewModel
     private string FormatDate(DateTime? value)
     {
         return value?.ToString("d", CultureInfo.CurrentCulture) ?? T("Common.NotSet");
+    }
+
+    private string JoinContributors(ContributionRole role)
+    {
+        var values = Item?.Contributions.Where(value => value.Role == role).OrderBy(value => value.SortOrder).Select(value => value.PersonName).ToList();
+        return values is null || values.Count == 0 ? T("Common.NotSet") : string.Join(", ", values);
     }
 
     private async Task<string> GetCurrentUserIdAsync()
