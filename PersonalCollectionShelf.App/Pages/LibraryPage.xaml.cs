@@ -17,6 +17,8 @@ public partial class LibraryPage : ContentPage
         BindingContext = viewModel;
     }
 
+    public LibraryViewModel ViewModel => (LibraryViewModel)BindingContext;
+
     protected override async void OnAppearing()
     {
         base.OnAppearing();

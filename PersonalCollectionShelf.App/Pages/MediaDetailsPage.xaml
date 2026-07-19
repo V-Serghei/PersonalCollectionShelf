@@ -8,211 +8,145 @@
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <Grid BackgroundColor="{DynamicResource PageBackground}">
-        <ScrollView BackgroundColor="{DynamicResource PageBackground}">
+    <ScrollView>
         <VerticalStackLayout
-            BackgroundColor="{DynamicResource PageBackground}"
-            Padding="{OnIdiom Phone=14, Tablet=20, Desktop=24}"
+            Padding="24"
             Spacing="18"
             HorizontalOptions="Center"
-            MaximumWidthRequest="980">
+            MaximumWidthRequest="1120">
+
             <Border
                 Padding="12"
                 BackgroundColor="#1AF87171"
                 IsVisible="{Binding HasErrorMessage}"
                 Stroke="#40F87171"
-                StrokeShape="RoundRectangle 8"
-                StrokeThickness="1">
+                StrokeShape="RoundRectangle 10">
                 <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource Danger}" />
             </Border>
 
-            <Grid ColumnDefinitions="190,*" ColumnSpacing="24">
-                <Border
-                    Grid.Column="0"
-                    BackgroundColor="{DynamicResource Muted}"
-                    HeightRequest="278"
-                    Stroke="{DynamicResource Border}"
-                    StrokeShape="RoundRectangle 8"
-                    StrokeThickness="1"
-                    WidthRequest="186">
-                    <Grid>
-                        <Image
-                            Aspect="AspectFill"
-                            IsVisible="{Binding HasCoverUrl}"
-                            Source="{Binding CoverUrl}" />
+            <!-- Hero: cover, identity and visible actions -->
+            <Border Padding="22" Style="{StaticResource CardBorderStyle}">
+                <Grid ColumnDefinitions="180,*" ColumnSpacing="26">
+                    <Border
+                        Grid.Column="0"
+                        BackgroundColor="{DynamicResource Muted}"
+                        HeightRequest="264"
+                        Stroke="{DynamicResource Border}"
+                        StrokeShape="RoundRectangle 12"
+                        WidthRequest="176">
+                        <Grid>
+                            <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="58"
+                                HorizontalOptions="Center"
+                                IsVisible="{Binding HasNoCoverUrl}"
+                                Text="{Binding Initial}"
+                                TextColor="{DynamicResource MutedForeground}"
+                                VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" RowSpacing="18">
+                        <VerticalStackLayout Spacing="9">
+                            <Label Style="{StaticResource PageTitleLabelStyle}" Text="{Binding PageTitle}" />
+                            <Label FontSize="15" Text="{Binding OriginalTitleValue}" TextColor="{DynamicResource MutedForeground}" />
+                            <Label FontSize="13" Text="{Binding HeroMetaValue}" TextColor="{DynamicResource Primary}" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Border Padding="11,5" BackgroundColor="{Binding MediaTypeColor}" StrokeThickness="0" StrokeShape="RoundRectangle 13">
+                                    <Label FontAttributes="Bold" FontSize="11" Text="{Binding TypeValue}" TextColor="White" />
+                                </Border>
+                                <Border Padding="11,5" BackgroundColor="{Binding StatusBackgroundColor}" Stroke="{Binding StatusForegroundColor}" StrokeShape="RoundRectangle 13">
+                                    <Label FontAttributes="Bold" FontSize="11" Text="{Binding StatusValue}" TextColor="{Binding StatusForegroundColor}" />
+                                </Border>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+
                         <Label
-                            FontAttributes="Bold"
-                            FontSize="58"
-                            HorizontalOptions="Center"
-                            IsVisible="{Binding HasNoCoverUrl}"
-                            Text="{Binding Initial}"
+                            Grid.Row="1"
+                            FontSize="14"
+                            LineBreakMode="TailTruncation"
+                            MaxLines="4"
+                            Text="{Binding DescriptionValue}"
                             TextColor="{DynamicResource MutedForeground}"
                             VerticalOptions="Center" />
-                        <HorizontalStackLayout
-                            Margin="10"
-                            HorizontalOptions="End"
-                            Spacing="7"
-                            VerticalOptions="Start">
-                            <Button
-                                Command="{Binding EditCommand}"
-                                Style="{StaticResource PosterIconButtonStyle}"
-                                Text="&#xE70F;"
-                                ToolTipProperties.Text="{Binding EditButtonText}" />
-                            <Button
-                                Command="{Binding DeleteCommand}"
-                                Style="{StaticResource PosterDangerIconButtonStyle}"
-                                Text="&#xE74D;"
-                                ToolTipProperties.Text="{Binding DeleteButtonText}" />
-                        </HorizontalStackLayout>
+
+                        <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="10">
+                            <Button Command="{Binding EditCommand}" Text="{Binding EditButtonText}" />
+                            <Button Grid.Column="1" Command="{Binding ToggleFavoriteCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding FavoriteActionText}" />
+                            <Button Grid.Column="2" Command="{Binding DeleteCommand}" Style="{StaticResource DangerButtonStyle}" Text="{Binding DeleteButtonText}" />
+                        </Grid>
                     </Grid>
+                </Grid>
+            </Border>
+
+            <!-- At-a-glance metrics -->
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                <Border Padding="16" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RatingLabel}" /><Label FontAttributes="Bold" FontSize="24" Text="{Binding RatingValue}" TextColor="{StaticResource Warning}" /></VerticalStackLayout>
                 </Border>
+                <Border Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="7"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProgressLabel}" /><Label FontAttributes="Bold" FontSize="16" Text="{Binding ProgressValue}" /><ProgressBar IsVisible="{Binding HasProgressBar}" Progress="{Binding ProgressPercent}" ProgressColor="{StaticResource Info}" /></VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Padding="16" Style="{StaticResource CardBorderStyle}">
+                    <Grid ColumnDefinitions="*,Auto"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FavoriteLabel}" /><Label FontAttributes="Bold" FontSize="16" Text="{Binding FavoriteValue}" /></VerticalStackLayout><Button Grid.Column="1" Command="{Binding ToggleFavoriteCommand}" FontSize="28" Padding="8,0" Style="{StaticResource LinkButtonStyle}" Text="{Binding FavoriteIcon}" TextColor="#F07CB8" /></Grid>
+                </Border>
+                <Border Grid.Column="3" Padding="16" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ReleaseYearLabel}" /><Label FontAttributes="Bold" FontSize="20" Text="{Binding ReleaseYearValue}" /></VerticalStackLayout>
+                </Border>
+            </Grid>
 
-                <VerticalStackLayout Grid.Column="1" Spacing="16" VerticalOptions="Center">
-                    <VerticalStackLayout Spacing="6">
-                        <Label Style="{StaticResource PageTitleLabelStyle}" Text="{Binding PageTitle}" />
-                        <Label
-                            FontSize="14"
-                            Text="{Binding OriginalTitleValue}"
-                            TextColor="{DynamicResource MutedForeground}" />
-                    </VerticalStackLayout>
+            <!-- Grouped content instead of one long property list -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
+                <VerticalStackLayout Spacing="18">
+                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="16">
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding DetailsSectionTitle}" />
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+                                <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CategoryLabel}" /><Label FontAttributes="Bold" Text="{Binding CategoryValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TagsLabel}" /><Label Text="{Binding TagsValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Row="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CreatorLabel}" /><Label FontAttributes="Bold" Text="{Binding CreatorValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Row="1" Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding PublisherLabel}" /><Label Text="{Binding PublisherValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Row="2" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SerialNumberLabel}" /><Label Text="{Binding SerialNumberValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Row="2" Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CastLabel}" /><Label Text="{Binding CastValue}" /></VerticalStackLayout></Border>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
 
-                    <HorizontalStackLayout Spacing="8">
-                        <Border
-                            Padding="10,5"
-                            BackgroundColor="{Binding MediaTypeColor}"
-                            StrokeThickness="0"
-                            StrokeShape="RoundRectangle 6">
-                            <Label
-                                FontAttributes="Bold"
-                                FontSize="11"
-                                Text="{Binding TypeValue}"
-                                TextColor="White" />
-                        </Border>
-                        <Border
-                            Padding="10,5"
-                            BackgroundColor="{Binding StatusBackgroundColor}"
-                            Stroke="{Binding StatusForegroundColor}"
-                            StrokeShape="RoundRectangle 12"
-                            StrokeThickness="1">
-                            <Label
-                                FontAttributes="Bold"
-                                FontSize="11"
-                                Text="{Binding StatusValue}"
-                                TextColor="{Binding StatusForegroundColor}" />
-                        </Border>
-                    </HorizontalStackLayout>
+                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding DescriptionLabel}" /><Label FontSize="14" Text="{Binding DescriptionValue}" /></VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
 
-                    <HorizontalStackLayout Spacing="12">
-                        <Border Padding="13" Style="{StaticResource CardBorderStyle}" WidthRequest="118">
-                            <VerticalStackLayout Spacing="4">
-                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RatingLabel}" />
-                                <HorizontalStackLayout Spacing="5">
-                                    <Label
-                                        FontAttributes="Bold"
-                                        FontSize="22"
-                                        Text="{Binding RatingShort}"
-                                        TextColor="{StaticResource Warning}" />
-                                    <Label
-                                        FontAttributes="Bold"
-                                        FontSize="22"
-                                        Text="--"
-                                        TextColor="{DynamicResource MutedForeground}">
-                                        <Label.Triggers>
-                                            <DataTrigger
-                                                Binding="{Binding HasRating}"
-                                                TargetType="Label"
-                                                Value="True">
-                                                <Setter Property="IsVisible" Value="False" />
-                                            </DataTrigger>
-                                        </Label.Triggers>
-                                    </Label>
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-                        </Border>
-                        <Border Padding="13" Style="{StaticResource CardBorderStyle}" WidthRequest="154">
-                            <VerticalStackLayout Spacing="8">
-                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProgressLabel}" />
-                                <Label
-                                    FontAttributes="Bold"
-                                    FontSize="14"
-                                    LineBreakMode="TailTruncation"
-                                    MaxLines="1"
-                                    Text="{Binding ProgressValue}" />
-                                <ProgressBar
-                                    BackgroundColor="{DynamicResource Muted}"
-                                    IsVisible="{Binding HasProgressBar}"
-                                    Progress="{Binding ProgressPercent}"
-                                    ProgressColor="{StaticResource Info}" />
-                            </VerticalStackLayout>
-                        </Border>
-                        <Border Padding="13" Style="{StaticResource CardBorderStyle}" WidthRequest="122">
-                            <VerticalStackLayout Spacing="4">
-                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FavoriteLabel}" />
-                                <Label
-                                    FontAttributes="Bold"
-                                    FontSize="22"
-                                    Text="{Binding FavoriteValue}"
-                                    TextColor="#F07CB8" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </HorizontalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="18">
+                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="16">
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ProgressLabel}" />
+                            <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StatusLabel}" /><Label FontAttributes="Bold" Text="{Binding StatusValue}" /></VerticalStackLayout></Border>
+                            <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StartDateLabel}" /><Label Text="{Binding DatesValue}" /></VerticalStackLayout></Border>
+                            <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding UpdatedAtLabel}" /><Label Text="{Binding AuditValue}" /></VerticalStackLayout></Border>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding NotesLabel}" /><Label FontSize="14" Text="{Binding NotesValue}" /></VerticalStackLayout>
+                    </Border>
                 </VerticalStackLayout>
             </Grid>
 
-            <Border Padding="18" Style="{StaticResource CardBorderStyle}">
-                <VerticalStackLayout Spacing="14">
-                    <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding DetailsSectionTitle}" />
-                    <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="18" RowSpacing="12">
-                        <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TypeLabel}" />
-                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding TypeValue}" />
-                        <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StatusLabel}" />
-                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding StatusValue}" />
-                        <Label Grid.Row="2" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CategoryLabel}" />
-                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding CategoryValue}" />
-                        <Label Grid.Row="3" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TagsLabel}" />
-                        <Label Grid.Row="3" Grid.Column="1" Text="{Binding TagsValue}" />
-                        <Label Grid.Row="4" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CreatorLabel}" />
-                        <Label Grid.Row="4" Grid.Column="1" Text="{Binding CreatorValue}" />
-                        <Label Grid.Row="5" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CastLabel}" />
-                        <Label Grid.Row="5" Grid.Column="1" Text="{Binding CastValue}" />
-                        <Label Grid.Row="6" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding PublisherLabel}" />
-                        <Label Grid.Row="6" Grid.Column="1" Text="{Binding PublisherValue}" />
-                        <Label Grid.Row="7" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SerialNumberLabel}" />
-                        <Label Grid.Row="7" Grid.Column="1" Text="{Binding SerialNumberValue}" />
-                        <Label Grid.Row="8" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding DescriptionLabel}" />
-                        <Label Grid.Row="8" Grid.Column="1" Text="{Binding DescriptionValue}" />
-                        <Label Grid.Row="9" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding NotesLabel}" />
-                        <Label Grid.Row="9" Grid.Column="1" Text="{Binding NotesValue}" />
-                        <Label Grid.Row="10" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StartDateLabel}" />
-                        <Label Grid.Row="10" Grid.Column="1" Text="{Binding StartDateValue}" />
-                        <Label Grid.Row="11" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FinishDateLabel}" />
-                        <Label Grid.Row="11" Grid.Column="1" Text="{Binding FinishDateValue}" />
-                        <Label Grid.Row="12" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ReleaseYearLabel}" />
-                        <Label Grid.Row="12" Grid.Column="1" Text="{Binding ReleaseYearValue}" />
-                        <Label Grid.Row="13" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding OriginalTitleLabel}" />
-                        <Label Grid.Row="13" Grid.Column="1" Text="{Binding OriginalTitleValue}" />
-                        <Label Grid.Row="14" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CreatedAtLabel}" />
-                        <Label Grid.Row="14" Grid.Column="1" Text="{Binding CreatedAtValue}" />
-                        <Label Grid.Row="15" Grid.Column="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding UpdatedAtLabel}" />
-                        <Label Grid.Row="15" Grid.Column="1" Text="{Binding UpdatedAtValue}" />
-                    </Grid>
-                </VerticalStackLayout>
-            </Border>
-
-            <Border IsVisible="{Binding ShowBookDetails}" Padding="18" Style="{StaticResource CardBorderStyle}">
-                <VerticalStackLayout Spacing="14">
+            <Border IsVisible="{Binding ShowBookDetails}" Padding="20" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding BookDetailsSectionTitle}" />
-                    <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="18" RowSpacing="12">
-                        <Label Grid.Row="0" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AuthorsLabel}" /><Label Grid.Row="0" Grid.Column="1" Text="{Binding AuthorsValue}" />
-                        <Label Grid.Row="1" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TranslatorsLabel}" /><Label Grid.Row="1" Grid.Column="1" Text="{Binding TranslatorsValue}" />
-                        <Label Grid.Row="2" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding GenresLabel}" /><Label Grid.Row="2" Grid.Column="1" Text="{Binding GenresValue}" />
-                        <Label Grid.Row="3" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BookDetailsSectionTitle}" /><Label Grid.Row="3" Grid.Column="1" Text="{Binding BookMetadataValue}" />
-                        <Label Grid.Row="4" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CollectionLabel}" /><Label Grid.Row="4" Grid.Column="1" Text="{Binding CollectionValue}" />
-                        <Label Grid.Row="5" Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RelationsLabel}" /><Label Grid.Row="5" Grid.Column="1" Text="{Binding RelationsValue}" />
+                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+                        <Border Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AuthorsLabel}" /><Label FontAttributes="Bold" Text="{Binding AuthorsValue}" /></VerticalStackLayout></Border>
+                        <Border Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TranslatorsLabel}" /><Label Text="{Binding TranslatorsValue}" /></VerticalStackLayout></Border>
+                        <Border Grid.Column="2" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding GenresLabel}" /><Label Text="{Binding GenresValue}" /></VerticalStackLayout></Border>
+                        <Border Grid.Row="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BookDetailsSectionTitle}" /><Label Text="{Binding BookMetadataValue}" /></VerticalStackLayout></Border>
+                        <Border Grid.Row="1" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CollectionLabel}" /><Label Text="{Binding CollectionValue}" /></VerticalStackLayout></Border>
+                        <Border Grid.Row="1" Grid.Column="2" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RelationsLabel}" /><Label Text="{Binding RelationsValue}" /></VerticalStackLayout></Border>
                     </Grid>
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
-        </ScrollView>
-    </Grid>
+    </ScrollView>
 </ContentPage>

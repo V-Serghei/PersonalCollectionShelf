@@ -6,12 +6,14 @@ namespace PersonalCollectionShelf.Infrastructure.Persistence;
 
 public sealed class LocalDatabaseService
 {
+    private static readonly object ProviderLock = new();
+    private static bool _providerInitialized;
     private readonly SemaphoreSlim _initializationLock = new(1, 1);
     private bool _isInitialized;
 
     public LocalDatabaseService(string databasePath)
     {
-        SQLitePCL.Batteries_V2.Init();
+        InitializeProvider();
 
         Connection = new SQLiteAsyncConnection(
             databasePath,
@@ -19,6 +21,20 @@ public sealed class LocalDatabaseService
     }
 
     public SQLiteAsyncConnection Connection { get; }
+
+    private static void InitializeProvider()
+    {
+        lock (ProviderLock)
+        {
+            if (_providerInitialized)
+            {
+                return;
+            }
+
+            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());
+            _providerInitialized = true;
+        }
+    }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {

@@ -23,6 +23,8 @@ public static class MauiProgram
         builder.Services.AddInfrastructure(GetDatabasePath(), FirebaseOptions.Load(FileSystem.AppDataDirectory));
         builder.Services.AddSingleton<IAuthTokenStore, SecureStorageAuthTokenStore>();
         builder.Services.AddSingleton<IPersonService, PersonService>();
+        builder.Services.AddSingleton<IPeopleManagementService, PeopleManagementService>();
+        builder.Services.AddSingleton<ICategoryManagementService, CategoryManagementService>();
         builder.Services.AddSingleton<IStudioService, StudioService>();
         builder.Services.AddSingleton<ITagService, TagService>();
         builder.Services.AddSingleton<IMediaItemService, MediaItemService>();
@@ -33,6 +35,8 @@ public static class MauiProgram
         builder.Services.AddTransient<MediaDetailsViewModel>();
         builder.Services.AddTransient<EditMediaItemViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<PeopleViewModel>();
+        builder.Services.AddTransient<CategoryManagementViewModel>();
         builder.Services.AddTransient<SignInViewModel>();
         builder.Services.AddTransient<SignInPage>();
         builder.Services.AddTransient<DashboardPage>();
@@ -41,6 +45,8 @@ public static class MauiProgram
         builder.Services.AddTransient<MediaDetailsPage>();
         builder.Services.AddTransient<EditMediaItemPage>();
         builder.Services.AddTransient<SettingsPage>();
+        builder.Services.AddTransient<PeoplePage>();
+        builder.Services.AddTransient<CategoryManagementPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

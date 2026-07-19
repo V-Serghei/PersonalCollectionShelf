@@ -12,4 +12,8 @@ public interface IMediaCategoryRepository
     Task<MediaCategory> GetSystemAsync(MediaType mediaType, CancellationToken cancellationToken = default);
 
     Task<MediaCategory> GetOrCreateCustomAsync(string userId, string name, MediaType? baseMediaType, CancellationToken cancellationToken = default);
+
+    Task<MediaCategory> UpdateAsync(MediaCategory category, CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default);
 }

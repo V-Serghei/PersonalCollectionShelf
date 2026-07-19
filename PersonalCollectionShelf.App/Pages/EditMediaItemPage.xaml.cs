@@ -56,5 +56,5 @@ public partial class EditMediaItemPage : ContentPage, IQueryAttributable
         }
     }
 
-    private EditMediaItemViewModel ViewModel => (EditMediaItemViewModel)BindingContext;
+    public EditMediaItemViewModel ViewModel => (EditMediaItemViewModel)BindingContext;
 }

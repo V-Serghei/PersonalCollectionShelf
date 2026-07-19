@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
     x:DataType="viewModels:LibraryViewModel"
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
@@ -130,7 +131,7 @@
                             <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
                                 <VerticalStackLayout Spacing="8" WidthRequest="108">
                                     <VerticalStackLayout.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}" CommandParameter="{Binding .}" />
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:DashboardPage}}, Path=ViewModel.OpenMediaItemCommand, x:DataType={x:Type pages:DashboardPage}}" CommandParameter="{Binding .}" />
                                     </VerticalStackLayout.GestureRecognizers>
                                     <Border BackgroundColor="{DynamicResource Muted}" HeightRequest="154" StrokeThickness="0" StrokeShape="RoundRectangle 8" WidthRequest="108">
                                         <Grid>
@@ -159,7 +160,7 @@
                             <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
                                 <Border Padding="0" Style="{StaticResource CardBorderStyle}" WidthRequest="124">
                                     <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}" CommandParameter="{Binding .}" />
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:DashboardPage}}, Path=ViewModel.OpenMediaItemCommand, x:DataType={x:Type pages:DashboardPage}}" CommandParameter="{Binding .}" />
                                     </Border.GestureRecognizers>
                                     <Grid RowDefinitions="186,Auto">
                                         <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />

@@ -160,6 +160,29 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding LibraryDataSectionTitle}" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding PeopleEditorTitle}" />
+                                    <Label FontSize="12" Text="{Binding PeopleEditorDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding OpenPeopleCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="&#x2192;" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding CategoryEditorTitle}" />
+                                    <Label FontSize="12" Text="{Binding CategoryEditorDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding OpenCategoriesCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="&#x2192;" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="DATA &amp; IMPORT" />
                     <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="0">
@@ -230,7 +253,7 @@
                                 <Label FontAttributes="Bold" FontSize="14" Text="{Binding LanguageSectionTitle}" />
                                 <Label FontSize="12" Text="{Binding LanguageDescription}" TextColor="{DynamicResource Primary}" />
                             </VerticalStackLayout>
-                            <Picker Grid.Column="1" ItemDisplayBinding="{Binding DisplayName}" ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguageOption}" />
+                            <Picker Grid.Column="1" ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguageOption}" />
                         </Grid>
                     </Border>
                 </VerticalStackLayout>

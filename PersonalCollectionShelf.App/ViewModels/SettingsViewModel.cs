@@ -395,6 +395,18 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private Task OpenPeopleAsync() => Shell.Current.GoToAsync(nameof(PeoplePage));
+
+    [RelayCommand]
+    private Task OpenCategoriesAsync() => Shell.Current.GoToAsync(nameof(CategoryManagementPage));
+
+    public string LibraryDataSectionTitle => T("Settings.LibraryData.Title");
+    public string PeopleEditorTitle => T("Settings.People.Title");
+    public string PeopleEditorDescription => T("Settings.People.Description");
+    public string CategoryEditorTitle => T("Settings.Categories.Title");
+    public string CategoryEditorDescription => T("Settings.Categories.Description");
+
+    [RelayCommand]
     private async Task PickBackgroundImageAsync()
     {
         try

@@ -13,4 +13,6 @@ public interface IPersonRepository
     Task<IReadOnlyList<Person>> SearchAsync(string userId, string? searchTerm, int limit = 20, CancellationToken cancellationToken = default);
 
     Task<Person> AddAsync(Person person, CancellationToken cancellationToken = default);
+
+    Task<Person> UpdateAsync(Person person, CancellationToken cancellationToken = default);
 }

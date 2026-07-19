@@ -1,9 +1,10 @@
 namespace PersonalCollectionShelf.App.Models;
 
-public sealed record LocalizedOption<T>(T Value, string DisplayName)
+public abstract record DisplayOption(string DisplayName)
 {
-    public override string ToString()
-    {
-        return DisplayName;
-    }
+    public override string ToString() => DisplayName;
+}
+
+public sealed record LocalizedOption<T>(T Value, string DisplayName) : DisplayOption(DisplayName)
+{
 }

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.PeoplePage"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:PeopleViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="64,*" BackgroundColor="{DynamicResource PageBackground}">
+        <Grid Padding="24,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+            <Button Command="{Binding GoBackCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding BackText}" />
+            <Label Grid.Column="1" FontAttributes="Bold" FontFamily="Cambria" FontSize="28" Text="{Binding PageTitle}" VerticalTextAlignment="Center" />
+            <Button Grid.Column="2" Command="{Binding NewPersonCommand}" Text="{Binding NewPersonText}" />
+        </Grid>
+
+        <Grid Grid.Row="1" Padding="24,8,24,24" ColumnDefinitions="280,*" ColumnSpacing="18">
+            <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                <Grid RowDefinitions="Auto,*">
+                    <Label Padding="16,14" FontAttributes="Bold" Text="{Binding PageTitle}" />
+                    <CollectionView Grid.Row="1" ItemsSource="{Binding People}" SelectedItem="{Binding SelectedPerson, Mode=TwoWay}" SelectionMode="Single">
+                        <CollectionView.EmptyView>
+                            <Label Padding="16" Text="{Binding Source={x:Reference Root}, Path=ViewModel.EmptyText, x:DataType={x:Type pages:PeoplePage}}" TextColor="{DynamicResource MutedForeground}" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="dto:PersonDto">
+                                <Grid Padding="16,11" RowDefinitions="Auto,Auto">
+                                    <Label FontAttributes="Bold" Text="{Binding Name}" />
+                                    <Label Grid.Row="1" FontSize="11" Text="{Binding Tagline}" TextColor="{DynamicResource MutedForeground}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Border>
+
+            <ScrollView Grid.Column="1">
+                <VerticalStackLayout Spacing="16">
+                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProfileSectionTitle}" />
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="10">
+                                <VerticalStackLayout><Label Text="{Binding NameLabel}" /><Entry Text="{Binding Name}" /></VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1"><Label Text="{Binding PenNameLabel}" /><Entry Text="{Binding PenName}" /></VerticalStackLayout>
+                                <Entry Grid.Row="1" Placeholder="{Binding FirstNameLabel}" Text="{Binding FirstName}" />
+                                <Entry Grid.Row="1" Grid.Column="1" Placeholder="{Binding LastNameLabel}" Text="{Binding LastName}" />
+                                <VerticalStackLayout Grid.Row="2"><Label Text="{Binding SortNameLabel}" /><Entry Text="{Binding SortName}" /></VerticalStackLayout>
+                                <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <Entry Placeholder="{Binding BirthYearLabel}" Keyboard="Numeric" Text="{Binding BirthYear}" />
+                                    <Entry Grid.Column="1" Placeholder="{Binding DeathYearLabel}" Keyboard="Numeric" Text="{Binding DeathYear}" />
+                                </Grid>
+                                <Entry Grid.Row="3" Placeholder="{Binding CountryLabel}" Text="{Binding Country}" />
+                                <Entry Grid.Row="3" Grid.Column="1" Placeholder="{Binding PlaceOfBirthLabel}" Text="{Binding PlaceOfBirth}" />
+                                <Entry Grid.Row="4" Placeholder="{Binding GenderLabel}" Text="{Binding Gender}" />
+                                <Entry Grid.Row="4" Grid.Column="1" Placeholder="{Binding WebsiteLabel}" Text="{Binding OfficialWebsite}" />
+                                <Entry Grid.Row="5" Grid.ColumnSpan="2" Placeholder="{Binding TaglineLabel}" Text="{Binding Tagline}" />
+                            </Grid>
+                            <Editor AutoSize="TextChanges" MinimumHeightRequest="80" Placeholder="{Binding DescriptionLabel}" Text="{Binding Description}" />
+                            <Editor AutoSize="TextChanges" MinimumHeightRequest="70" Placeholder="{Binding NotesLabel}" Text="{Binding Notes}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                        <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                            <VerticalStackLayout Spacing="12">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProfessionsSectionTitle}" />
+                                <FlexLayout BindableLayout.ItemsSource="{Binding Professions}" Direction="Row" Wrap="Wrap">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <Border Margin="0,0,7,7" Padding="10,5" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 12">
+                                                <HorizontalStackLayout Spacing="6">
+                                                    <Label Text="{Binding .}" />
+                                                    <Button Command="{Binding Source={x:Reference Root}, Path=ViewModel.RemoveProfessionCommand, x:DataType={x:Type pages:PeoplePage}}" CommandParameter="{Binding .}" FontSize="11" Padding="3,0" Text="×" />
+                                                </HorizontalStackLayout>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <Entry Placeholder="{Binding ProfessionPlaceholder}" ReturnCommand="{Binding AddProfessionCommand}" Text="{Binding NewProfession}" />
+                                    <Button Grid.Column="1" Command="{Binding AddProfessionCommand}" Text="{Binding AddText}" />
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Grid.Column="1" Padding="20" Style="{StaticResource CardBorderStyle}">
+                            <VerticalStackLayout Spacing="10">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RelationsSectionTitle}" />
+                                <CollectionView ItemsSource="{Binding Relations}" MaximumHeightRequest="190" SelectionMode="None">
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate x:DataType="dto:PersonRelationDto">
+                                            <Grid Padding="0,5" ColumnDefinitions="*,Auto">
+                                                <VerticalStackLayout>
+                                                    <Label FontAttributes="Bold" Text="{Binding RelatedPersonName}" />
+                                                    <Label FontSize="11" Text="{Binding Kind}" TextColor="{DynamicResource MutedForeground}" />
+                                                </VerticalStackLayout>
+                                                <Button Grid.Column="1" Command="{Binding Source={x:Reference Root}, Path=ViewModel.RemoveRelationCommand, x:DataType={x:Type pages:PeoplePage}}" CommandParameter="{Binding .}" Style="{StaticResource LinkButtonStyle}" Text="×" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                                <Picker ItemsSource="{Binding RelatedPeople}" SelectedItem="{Binding SelectedRelatedPerson}" Title="{Binding RelatedPersonLabel}" />
+                                <Picker ItemsSource="{Binding RelationKinds}" SelectedItem="{Binding SelectedRelationKind}" Title="{Binding RelationKindLabel}" />
+                                <Entry Placeholder="{Binding NotesLabel}" Text="{Binding RelationNotes}" />
+                                <Button Command="{Binding AddRelationCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding AddText}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <Label Text="{Binding StatusMessage}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                        <Button Grid.Column="1" Command="{Binding SaveCommand}" IsEnabled="{Binding IsNotBusy}" Text="{Binding SaveText}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+    </Grid>
+</ContentPage>

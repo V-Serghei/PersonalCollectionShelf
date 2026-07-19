@@ -235,6 +235,45 @@ public sealed class BookPersistenceTests
         }
     }
 
+    [Fact]
+    public async Task Transaction_runner_rolls_back_all_writes_when_graph_save_fails()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"pcs-transaction-{Guid.NewGuid():N}.db3");
+        LocalDatabaseService? database = null;
+        try
+        {
+            database = new LocalDatabaseService(databasePath);
+            var runner = new LocalDatabaseTransactionRunner(database);
+            var id = Guid.NewGuid().ToString();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => runner.ExecuteAsync<int>(async _ =>
+            {
+                await database.Connection.InsertAsync(new MediaItemRecord
+                {
+                    Id = id,
+                    UserId = "user-1",
+                    Title = "Must roll back",
+                    MediaType = (int)MediaType.Book,
+                    Status = (int)MediaStatus.Planned,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+                throw new InvalidOperationException("Simulated graph failure");
+            }));
+
+            Assert.Null(await database.Connection.FindAsync<MediaItemRecord>(id));
+        }
+        finally
+        {
+            if (database is not null)
+            {
+                await database.Connection.CloseAsync();
+            }
+
+            TryDelete(databasePath);
+        }
+    }
+
     private static MediaItemService CreateService(LocalDatabaseService database)
     {
         var people = new PersonService(new PersonRepository(database));
@@ -248,7 +287,8 @@ public sealed class BookPersistenceTests
             new BookDetailsRepository(database),
             new MediaCollectionRepository(database),
             new MediaRelationRepository(database),
-            new MediaCategoryRepository(database));
+            new MediaCategoryRepository(database),
+            new LocalDatabaseTransactionRunner(database));
     }
 
     private static void TryDelete(string path)

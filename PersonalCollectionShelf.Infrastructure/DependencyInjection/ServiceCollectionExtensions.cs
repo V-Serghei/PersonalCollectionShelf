@@ -16,8 +16,11 @@ public static class ServiceCollectionExtensions
         FirebaseOptions? firebaseOptions = null)
     {
         services.AddSingleton(new LocalDatabaseService(databasePath));
+        services.AddSingleton<ITransactionRunner, LocalDatabaseTransactionRunner>();
         services.AddSingleton<IMediaItemRepository, MediaItemRepository>();
         services.AddSingleton<IPersonRepository, PersonRepository>();
+        services.AddSingleton<IPersonRelationRepository, PersonRelationRepository>();
+        services.AddSingleton<IProfessionRepository, ProfessionRepository>();
         services.AddSingleton<IStudioRepository, StudioRepository>();
         services.AddSingleton<IMediaCategoryRepository, MediaCategoryRepository>();
         services.AddSingleton<IBookDetailsRepository, BookDetailsRepository>();

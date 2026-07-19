@@ -74,6 +74,44 @@ public sealed class MediaCategoryRepository(LocalDatabaseService databaseService
         return ToDomain(created);
     }
 
+    public async Task<MediaCategory> UpdateAsync(MediaCategory category, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        var record = await databaseService.Connection.FindAsync<MediaCategoryRecord>(category.Id.ToString())
+            ?? throw new InvalidOperationException("Category was not found.");
+        if (record.IsSystem || category.IsSystem || record.UserId != category.UserId)
+        {
+            throw new InvalidOperationException("System categories cannot be changed.");
+        }
+
+        record.Name = category.Name.Trim();
+        record.NormalizedName = Normalize(record.Name);
+        record.BaseMediaType = category.BaseMediaType.HasValue ? (int)category.BaseMediaType.Value : null;
+        record.FieldSchemaJson = category.FieldSchemaJson;
+        record.UpdatedAt = DateTime.UtcNow;
+        await databaseService.Connection.UpdateAsync(record);
+        return ToDomain(record);
+    }
+
+    public async Task DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        var record = await databaseService.Connection.FindAsync<MediaCategoryRecord>(id.ToString());
+        if (record is null || record.UserId != userId)
+        {
+            return;
+        }
+
+        if (record.IsSystem)
+        {
+            throw new InvalidOperationException("System categories cannot be deleted.");
+        }
+
+        record.DeletedAt = DateTime.UtcNow;
+        record.UpdatedAt = record.DeletedAt.Value;
+        await databaseService.Connection.UpdateAsync(record);
+    }
+
     private static MediaCategory ToDomain(MediaCategoryRecord value) => new()
     {
         Id = Guid.Parse(value.Id), UserId = value.UserId, Key = value.Key, Name = value.Name,

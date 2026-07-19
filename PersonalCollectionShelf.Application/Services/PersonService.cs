@@ -72,8 +72,14 @@ public sealed class PersonService(IPersonRepository personRepository) : IPersonS
         return ToDto(created);
     }
 
-    private static PersonDto ToDto(Person person)
+    private static PersonDto ToDto(Person person) => new(person.Id, person.Name)
     {
-        return new PersonDto(person.Id, person.Name);
-    }
+        SortName = person.SortName,
+        PenName = person.PenName,
+        BirthYear = person.BirthYear,
+        DeathYear = person.DeathYear,
+        Country = person.Country,
+        PhotoPath = person.PhotoPath,
+        Tagline = person.Tagline
+    };
 }

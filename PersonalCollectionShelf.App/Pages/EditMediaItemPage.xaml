@@ -3,6 +3,8 @@
     x:Class="PersonalCollectionShelf.App.Pages.EditMediaItemPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:EditMediaItemViewModel"
     BackgroundColor="{DynamicResource PageBackground}"
@@ -98,14 +100,12 @@
                                 <VerticalStackLayout Grid.Column="0" Spacing="6">
                                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding MediaTypeLabel}" />
                                     <Picker
-                                        ItemDisplayBinding="{Binding DisplayName}"
                                         ItemsSource="{Binding MediaTypes}"
                                         SelectedItem="{Binding SelectedMediaType}" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="1" Spacing="6">
                                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StatusLabel}" />
                                     <Picker
-                                        ItemDisplayBinding="{Binding DisplayName}"
                                         ItemsSource="{Binding Statuses}"
                                         SelectedItem="{Binding SelectedStatus}" />
                                 </VerticalStackLayout>
@@ -146,7 +146,7 @@
                                                         TextColor="{DynamicResource MutedForeground}"
                                                         VerticalTextAlignment="Center">
                                                         <Label.GestureRecognizers>
-                                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveCastCommand}" CommandParameter="{Binding .}" />
+                                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.RemoveCastCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" />
                                                         </Label.GestureRecognizers>
                                                     </Label>
                                                 </HorizontalStackLayout>
@@ -187,7 +187,7 @@
                                             <DataTemplate x:DataType="viewModels:RatingStarViewModel">
                                                 <Label Margin="0,0,3,0" FontSize="23" Text="{Binding Glyph}" TextColor="{DynamicResource Accent}">
                                                     <Label.GestureRecognizers>
-                                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SetRatingCommand}" CommandParameter="{Binding Value}" />
+                                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.SetRatingCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding Value}" />
                                                     </Label.GestureRecognizers>
                                                 </Label>
                                             </DataTemplate>
@@ -195,11 +195,16 @@
                                     </FlexLayout>
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center" VerticalOptions="End">
-                                    <Label FontSize="28" HorizontalTextAlignment="Center" Text="{Binding FavoriteIcon}" TextColor="{Binding FavoriteIconColor}">
-                                        <Label.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding ToggleFavoriteCommand}" />
-                                        </Label.GestureRecognizers>
-                                    </Label>
+                                    <Button
+                                        Command="{Binding ToggleFavoriteCommand}"
+                                        FontSize="25"
+                                        HeightRequest="44"
+                                        Padding="8,2"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Text="{Binding FavoriteIcon}"
+                                        TextColor="{Binding FavoriteIconColor}"
+                                        ToolTipProperties.Text="{Binding FavoriteLabel}"
+                                        WidthRequest="52" />
                                     <Label FontSize="11" HorizontalTextAlignment="Center" Text="{Binding FavoriteLabel}" TextColor="{DynamicResource MutedForeground}" />
                                 </VerticalStackLayout>
                             </Grid>
@@ -283,7 +288,7 @@
                                                         TextColor="{DynamicResource MutedForeground}"
                                                         VerticalTextAlignment="Center">
                                                         <Label.GestureRecognizers>
-                                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveTagCommand}" CommandParameter="{Binding .}" />
+                                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.RemoveTagCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" />
                                                         </Label.GestureRecognizers>
                                                     </Label>
                                                 </HorizontalStackLayout>
@@ -323,9 +328,9 @@
                                             <Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14">
                                                 <HorizontalStackLayout Spacing="7">
                                                     <Label Text="{Binding Name}" VerticalTextAlignment="Center" />
-                                                    <Label Text="↑" TextColor="{DynamicResource MutedForeground}"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MoveContributorUpCommand}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label>
-                                                    <Label Text="↓" TextColor="{DynamicResource MutedForeground}"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MoveContributorDownCommand}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label>
-                                                    <Label Text="&#x2715;" TextColor="{DynamicResource MutedForeground}"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveContributorCommand}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label>
+                                                    <Label Text="↑" TextColor="{DynamicResource MutedForeground}"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.MoveContributorUpCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label>
+                                                    <Label Text="↓" TextColor="{DynamicResource MutedForeground}"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.MoveContributorDownCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label>
+                                                    <Label Text="&#x2715;" TextColor="{DynamicResource MutedForeground}"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.RemoveContributorCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label>
                                                 </HorizontalStackLayout>
                                             </Border>
                                         </DataTemplate>
@@ -335,7 +340,7 @@
 
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TranslatorsLabel}" />
                                 <FlexLayout BindableLayout.ItemsSource="{Binding Translators}" Direction="Row" Wrap="Wrap">
-                                    <BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:ContributorChipViewModel"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding Name}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveContributorCommand}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate>
+                                    <BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:ContributorChipViewModel"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding Name}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.RemoveContributorCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate>
                                 </FlexLayout>
                                 <Button Command="{Binding OpenPersonPickerCommand}" CommandParameter="Translator" HorizontalOptions="Start" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding AddPersonText}" />
 
@@ -343,19 +348,19 @@
                                     <VerticalStackLayout Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding IllustratorsLabel}" /><Button Command="{Binding OpenPersonPickerCommand}" CommandParameter="Illustrator" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding AddPersonText}" /></VerticalStackLayout>
                                     <VerticalStackLayout Grid.Column="1" Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding EditorsLabel}" /><Button Command="{Binding OpenPersonPickerCommand}" CommandParameter="Editor" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding AddPersonText}" /></VerticalStackLayout>
                                 </Grid>
-                                <FlexLayout BindableLayout.ItemsSource="{Binding Illustrators}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:ContributorChipViewModel"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding Name}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveContributorCommand}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></FlexLayout>
-                                <FlexLayout BindableLayout.ItemsSource="{Binding Editors}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:ContributorChipViewModel"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding Name}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveContributorCommand}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></FlexLayout>
+                                <FlexLayout BindableLayout.ItemsSource="{Binding Illustrators}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:ContributorChipViewModel"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding Name}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.RemoveContributorCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></FlexLayout>
+                                <FlexLayout BindableLayout.ItemsSource="{Binding Editors}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:ContributorChipViewModel"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding Name}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.RemoveContributorCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></FlexLayout>
 
                                 <VerticalStackLayout Spacing="6">
                                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding GenresLabel}" />
-                                    <FlexLayout BindableLayout.ItemsSource="{Binding GenreChips}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding .}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveGenreCommand}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></FlexLayout>
+                                    <FlexLayout BindableLayout.ItemsSource="{Binding GenreChips}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding .}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.RemoveGenreCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></FlexLayout>
                                     <Entry Placeholder="{Binding GenresPlaceholder}" ReturnCommand="{Binding AddGenreCommand}" ReturnType="Done" Text="{Binding NewGenreText}" />
                                 </VerticalStackLayout>
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Grid.Column="1" Spacing="16">
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12"><VerticalStackLayout Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SubtitleLabel}" /><Entry Text="{Binding Subtitle}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1" Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding EditionLabel}" /><Entry Text="{Binding Edition}" /></VerticalStackLayout></Grid>
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12"><VerticalStackLayout Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding EditionNumberLabel}" /><Entry Keyboard="Numeric" Text="{Binding EditionNumber}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1" Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BookFormatLabel}" /><Picker ItemDisplayBinding="{Binding DisplayName}" ItemsSource="{Binding BookFormats}" SelectedItem="{Binding SelectedBookFormat}" /></VerticalStackLayout></Grid>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12"><VerticalStackLayout Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding EditionNumberLabel}" /><Entry Keyboard="Numeric" Text="{Binding EditionNumber}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1" Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BookFormatLabel}" /><Picker ItemsSource="{Binding BookFormats}" SelectedItem="{Binding SelectedBookFormat}" /></VerticalStackLayout></Grid>
                                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10"><VerticalStackLayout Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding OriginalPublicationYearLabel}" /><Entry Keyboard="Numeric" Text="{Binding OriginalPublicationYear}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1" Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding EditionYearLabel}" /><Entry Keyboard="Numeric" Text="{Binding EditionYear}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="2" Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TranslationYearLabel}" /><Entry Keyboard="Numeric" Text="{Binding TranslationYear}" /></VerticalStackLayout></Grid>
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12"><VerticalStackLayout Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding OriginalLanguageLabel}" /><Entry Text="{Binding OriginalLanguage}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1" Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BookLanguageLabel}" /><Entry Text="{Binding BookLanguage}" /></VerticalStackLayout></Grid>
                                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10"><VerticalStackLayout Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding PageCountLabel}" /><Entry Keyboard="Numeric" Text="{Binding PageCount}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1" Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding Isbn10Label}" /><Entry Text="{Binding Isbn10}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="2" Spacing="6"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding Isbn13Label}" /><Entry Text="{Binding Isbn13}" /></VerticalStackLayout></Grid>
@@ -366,13 +371,13 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="32">
                             <VerticalStackLayout Spacing="10">
                                 <Label FontAttributes="Bold" FontSize="16" Text="{Binding CollectionsSectionTitle}" />
-                                <Grid ColumnDefinitions="2*,*,*" ColumnSpacing="10"><Entry Placeholder="{Binding CollectionNamePlaceholder}" Text="{Binding CollectionName}" /><Picker Grid.Column="1" ItemDisplayBinding="{Binding DisplayName}" ItemsSource="{Binding CollectionKinds}" SelectedItem="{Binding SelectedCollectionKind}" /><Entry Grid.Column="2" Keyboard="Numeric" Placeholder="{Binding EditionNumberLabel}" Text="{Binding CollectionPosition}" /></Grid>
+                                <Grid ColumnDefinitions="2*,*,*" ColumnSpacing="10"><Entry Placeholder="{Binding CollectionNamePlaceholder}" Text="{Binding CollectionName}" /><Picker Grid.Column="1" ItemsSource="{Binding CollectionKinds}" SelectedItem="{Binding SelectedCollectionKind}" /><Entry Grid.Column="2" Keyboard="Numeric" Placeholder="{Binding EditionNumberLabel}" Text="{Binding CollectionPosition}" /></Grid>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="10">
                                 <Label FontAttributes="Bold" FontSize="16" Text="{Binding RelationsSectionTitle}" />
-                                <Grid ColumnDefinitions="*,150" ColumnSpacing="10"><Entry Placeholder="{Binding RelatedSearchPlaceholder}" Text="{Binding RelatedSearchText}" /><Picker Grid.Column="1" ItemDisplayBinding="{Binding DisplayName}" ItemsSource="{Binding RelationKinds}" SelectedItem="{Binding SelectedRelationKind}" /></Grid>
-                                <CollectionView HeightRequest="100" ItemsSource="{Binding RelatedSearchResults}"><CollectionView.ItemTemplate><DataTemplate x:DataType="{x:Null}"><Button Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddRelatedItemCommand}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding Title}" /></DataTemplate></CollectionView.ItemTemplate></CollectionView>
-                                <FlexLayout BindableLayout.ItemsSource="{Binding RelatedItems}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:RelatedItemChipViewModel"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding Title}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveRelatedItemCommand}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></FlexLayout>
+                                <Grid ColumnDefinitions="*,150" ColumnSpacing="10"><Entry Placeholder="{Binding RelatedSearchPlaceholder}" Text="{Binding RelatedSearchText}" /><Picker Grid.Column="1" ItemsSource="{Binding RelationKinds}" SelectedItem="{Binding SelectedRelationKind}" /></Grid>
+                                <CollectionView HeightRequest="100" ItemsSource="{Binding RelatedSearchResults}"><CollectionView.ItemTemplate><DataTemplate x:DataType="dto:MediaItemDto"><Button Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.AddRelatedItemCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding Title}" /></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+                                <FlexLayout BindableLayout.ItemsSource="{Binding RelatedItems}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:RelatedItemChipViewModel"><Border Margin="0,0,8,8" Padding="10,5" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 14"><HorizontalStackLayout Spacing="7"><Label Text="{Binding Title}" /><Label Text="&#x2715;"><Label.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.RemoveRelatedItemCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" /></Label.GestureRecognizers></Label></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></FlexLayout>
                             </VerticalStackLayout>
                         </Grid>
                     </VerticalStackLayout>
@@ -391,7 +396,7 @@
                     <Grid ColumnDefinitions="*,Auto"><Label FontAttributes="Bold" FontSize="20" Text="{Binding PersonPickerTitle}" /><Button Grid.Column="1" Command="{Binding ClosePersonPickerCommand}" FontFamily="Segoe MDL2 Assets" Style="{StaticResource IconToggleButtonStyle}" Text="&#xE711;" /></Grid>
                     <Entry Placeholder="{Binding SearchPersonPlaceholder}" Text="{Binding PersonSearchText}" />
                     <CollectionView HeightRequest="260" ItemsSource="{Binding PersonSearchResults}">
-                        <CollectionView.ItemTemplate><DataTemplate x:DataType="{x:Null}"><Button Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectPersonCommand}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding Name}" /></DataTemplate></CollectionView.ItemTemplate>
+                        <CollectionView.ItemTemplate><DataTemplate x:DataType="dto:PersonDto"><Button Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.SelectPersonCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding Name}" /></DataTemplate></CollectionView.ItemTemplate>
                     </CollectionView>
                     <Button Command="{Binding CreatePersonCommand}" Text="{Binding CreatePersonText}" />
                 </VerticalStackLayout>

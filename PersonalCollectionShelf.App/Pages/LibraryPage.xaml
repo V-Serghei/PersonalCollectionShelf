@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:models="clr-namespace:PersonalCollectionShelf.App.Models"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:LibraryViewModel"
     BackgroundColor="{DynamicResource PageBackground}"
@@ -68,12 +69,10 @@
                     Text="{Binding SearchTerm}" />
                 <Picker
                     Grid.Column="1"
-                    ItemDisplayBinding="{Binding DisplayName}"
                     ItemsSource="{Binding StatusFilters}"
                     SelectedItem="{Binding SelectedStatusFilter}" />
                 <Picker
                     Grid.Column="2"
-                    ItemDisplayBinding="{Binding DisplayName}"
                     ItemsSource="{Binding SortOptions}"
                     SelectedItem="{Binding SelectedSortOption}" />
             </Grid>
@@ -88,10 +87,9 @@
                     <LinearItemsLayout ItemSpacing="8" Orientation="Horizontal" />
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
-                    <!-- LocalizedOption<T> is generic, so compiled bindings cannot type this template. -->
-                    <DataTemplate x:DataType="{x:Null}">
+                    <DataTemplate x:DataType="models:DisplayOption">
                         <Button
-                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectMediaTypeFilterCommand}"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type pages:LibraryPage}}, Path=ViewModel.SelectMediaTypeFilterCommand, x:DataType={x:Type pages:LibraryPage}}"
                             CommandParameter="{Binding .}"
                             Style="{StaticResource PillButtonStyle}"
                             Text="{Binding DisplayName}" />
@@ -126,7 +124,7 @@
                     </CollectionView.ItemsLayout>
                     <CollectionView.EmptyView>
                         <Border Margin="0,50,0,0" Padding="28" Style="{StaticResource CardBorderStyle}" WidthRequest="340">
-                            <Label HorizontalTextAlignment="Center" Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EmptyLibraryText}" />
+                            <Label HorizontalTextAlignment="Center" Text="{Binding Source={RelativeSource AncestorType={x:Type pages:LibraryPage}}, Path=ViewModel.EmptyLibraryText, x:DataType={x:Type pages:LibraryPage}}" />
                         </Border>
                     </CollectionView.EmptyView>
                     <CollectionView.ItemTemplate>
@@ -134,7 +132,7 @@
                             <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type pages:LibraryPage}}, Path=ViewModel.OpenMediaItemCommand, x:DataType={x:Type pages:LibraryPage}}"
                                         CommandParameter="{Binding .}" />
                                 </Border.GestureRecognizers>
                                 <Grid RowDefinitions="206,Auto">
@@ -179,7 +177,7 @@
                     </CollectionView.ItemsLayout>
                     <CollectionView.EmptyView>
                         <Border Margin="0,50,0,0" Padding="28" Style="{StaticResource CardBorderStyle}" WidthRequest="340">
-                            <Label HorizontalTextAlignment="Center" Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EmptyLibraryText}" />
+                            <Label HorizontalTextAlignment="Center" Text="{Binding Source={RelativeSource AncestorType={x:Type pages:LibraryPage}}, Path=ViewModel.EmptyLibraryText, x:DataType={x:Type pages:LibraryPage}}" />
                         </Border>
                     </CollectionView.EmptyView>
                     <CollectionView.ItemTemplate>
@@ -187,7 +185,7 @@
                             <Border Padding="10" Style="{StaticResource CardBorderStyle}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type pages:LibraryPage}}, Path=ViewModel.OpenMediaItemCommand, x:DataType={x:Type pages:LibraryPage}}"
                                         CommandParameter="{Binding .}" />
                                 </Border.GestureRecognizers>
                                 <Grid ColumnDefinitions="42,*,Auto,Auto,Auto" ColumnSpacing="12">

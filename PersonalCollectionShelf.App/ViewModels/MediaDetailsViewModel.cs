@@ -229,6 +229,25 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string FavoriteValue => Item?.IsFavorite == true ? T("Common.Yes") : T("Common.No");
 
+    public string FavoriteIcon => Item?.IsFavorite == true ? "♥" : "♡";
+
+    public string FavoriteActionText => Item?.IsFavorite == true
+        ? T("Details.RemoveFavoriteButton")
+        : T("Details.AddFavoriteButton");
+
+    public string HeroMetaValue
+    {
+        get
+        {
+            var values = new[] { CreatorValue == T("Common.NotSet") ? null : CreatorValue, ReleaseYearValue == T("Common.NotSet") ? null : ReleaseYearValue };
+            return string.Join(" · ", values.Where(value => !string.IsNullOrWhiteSpace(value)));
+        }
+    }
+
+    public string DatesValue => $"{StartDateValue} → {FinishDateValue}";
+
+    public string AuditValue => $"{CreatedAtValue} · {UpdatedAtValue}";
+
     public string CreatedAtValue => FormatDate(Item?.CreatedAt);
 
     public string UpdatedAtValue => FormatDate(Item?.UpdatedAt);
@@ -281,6 +300,25 @@ public partial class MediaDetailsViewModel : BaseViewModel
         catch (Exception exception)
         {
             await CrashReporter.ReportAsync(exception, $"MediaDetailsViewModel.EditAsync id={Item.Id}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task ToggleFavoriteAsync()
+    {
+        if (Item is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var userId = await GetCurrentUserIdAsync();
+            Item = await _mediaItemService.UpdateMediaItemAsync(ToUpdateRequest(Item, userId, !Item.IsFavorite));
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, $"MediaDetailsViewModel.ToggleFavoriteAsync id={Item.Id}");
         }
     }
 
@@ -350,6 +388,11 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(FinishDateValue));
         OnPropertyChanged(nameof(ReleaseYearValue));
         OnPropertyChanged(nameof(FavoriteValue));
+        OnPropertyChanged(nameof(FavoriteIcon));
+        OnPropertyChanged(nameof(FavoriteActionText));
+        OnPropertyChanged(nameof(HeroMetaValue));
+        OnPropertyChanged(nameof(DatesValue));
+        OnPropertyChanged(nameof(AuditValue));
         OnPropertyChanged(nameof(CreatedAtValue));
         OnPropertyChanged(nameof(UpdatedAtValue));
         OnPropertyChanged(nameof(CoverUrl));
@@ -372,5 +415,79 @@ public partial class MediaDetailsViewModel : BaseViewModel
     private async Task<string> GetCurrentUserIdAsync()
     {
         return await _authService.GetCurrentUserIdAsync() ?? "local-user";
+    }
+
+    private static UpdateMediaItemRequest ToUpdateRequest(MediaItemDto item, string userId, bool isFavorite)
+    {
+        return new UpdateMediaItemRequest
+        {
+            Id = item.Id,
+            UserId = userId,
+            Title = item.Title,
+            OriginalTitle = item.OriginalTitle,
+            Description = item.Description,
+            Category = item.Category,
+            MediaCategoryId = item.MediaCategoryId,
+            Tags = item.Tags,
+            TagNames = item.TagNames,
+            Genres = item.Genres,
+            Contributions = item.Contributions.Select(value => new PersonCreditInput
+            {
+                PersonId = value.PersonId,
+                CreditRoleId = value.CreditRoleId,
+                Name = value.PersonName,
+                Role = value.Role,
+                SortOrder = value.SortOrder,
+                Details = value.Details,
+                CreditedAs = value.CreditedAs
+            }).ToList(),
+            BookDetails = item.BookDetails is null ? null : new BookDetailsInput
+            {
+                Subtitle = item.BookDetails.Subtitle,
+                Publisher = item.BookDetails.Publisher,
+                Edition = item.BookDetails.Edition,
+                EditionNumber = item.BookDetails.EditionNumber,
+                EditionYear = item.BookDetails.EditionYear,
+                OriginalPublicationYear = item.BookDetails.OriginalPublicationYear,
+                TranslationYear = item.BookDetails.TranslationYear,
+                OriginalLanguage = item.BookDetails.OriginalLanguage,
+                Language = item.BookDetails.Language,
+                PageCount = item.BookDetails.PageCount,
+                Isbn10 = item.BookDetails.Isbn10,
+                Isbn13 = item.BookDetails.Isbn13,
+                Format = item.BookDetails.Format,
+                Binding = item.BookDetails.Binding,
+                CountryOfOrigin = item.BookDetails.CountryOfOrigin,
+                AgeRating = item.BookDetails.AgeRating
+            },
+            Collection = item.Collection is null ? null : new CollectionMembershipInput
+            {
+                CollectionId = item.Collection.CollectionId,
+                Name = item.Collection.Name,
+                Kind = item.Collection.Kind,
+                Position = item.Collection.Position
+            },
+            Relations = item.Relations.Where(value => value.IsOutgoing).Select(value => new MediaRelationInput
+            {
+                RelatedItemId = value.RelatedItemId,
+                Kind = value.Kind,
+                Notes = value.Notes
+            }).ToList(),
+            Creator = item.Creator,
+            Publisher = item.Publisher,
+            SerialNumber = item.SerialNumber,
+            Cast = item.Cast,
+            MediaType = item.MediaType,
+            Status = item.Status,
+            Rating = item.Rating,
+            ProgressCurrent = item.ProgressCurrent,
+            ProgressTotal = item.ProgressTotal,
+            StartDate = item.StartDate,
+            FinishDate = item.FinishDate,
+            ReleaseYear = item.ReleaseYear,
+            CoverUrl = item.CoverUrl,
+            Notes = item.Notes,
+            IsFavorite = isFavorite
+        };
     }
 }

@@ -56,6 +56,14 @@ public sealed class PersonRepository(LocalDatabaseService databaseService) : IPe
         return person;
     }
 
+    public async Task<Person> UpdateAsync(Person person, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        person.Touch();
+        await databaseService.Connection.UpdateAsync(ToRecord(person));
+        return person;
+    }
+
     public async Task<IReadOnlyList<Person>> SearchAsync(
         string userId,
         string? searchTerm,

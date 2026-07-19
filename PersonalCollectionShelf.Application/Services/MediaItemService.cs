@@ -19,12 +19,13 @@ public sealed class MediaItemService : IMediaItemService
     private readonly IMediaCollectionRepository? _collections;
     private readonly IMediaRelationRepository? _relations;
     private readonly IMediaCategoryRepository? _categories;
+    private readonly ITransactionRunner? _transactionRunner;
 
     public MediaItemService(
         IMediaItemRepository mediaItems,
         IPersonService people,
         IStudioService studios)
-        : this(mediaItems, people, studios, null, null, null, null, null, null)
+        : this(mediaItems, people, studios, null, null, null, null, null, null, null)
     {
     }
 
@@ -37,7 +38,8 @@ public sealed class MediaItemService : IMediaItemService
         IBookDetailsRepository? bookDetails,
         IMediaCollectionRepository? collections,
         IMediaRelationRepository? relations,
-        IMediaCategoryRepository? categories = null)
+        IMediaCategoryRepository? categories = null,
+        ITransactionRunner? transactionRunner = null)
     {
         _mediaItems = mediaItems;
         _people = people;
@@ -48,6 +50,7 @@ public sealed class MediaItemService : IMediaItemService
         _collections = collections;
         _relations = relations;
         _categories = categories;
+        _transactionRunner = transactionRunner;
     }
 
     public async Task<IReadOnlyList<MediaItemDto>> GetLibraryAsync(string userId, CancellationToken cancellationToken = default)
@@ -65,6 +68,19 @@ public sealed class MediaItemService : IMediaItemService
     public async Task<MediaItemDto> CreateMediaItemAsync(CreateMediaItemRequest request, CancellationToken cancellationToken = default)
     {
         ThrowIfInvalid(MediaItemValidator.Validate(request));
+
+        if (_transactionRunner is not null)
+        {
+            return await _transactionRunner.ExecuteAsync(
+                transactionCancellation => CreateMediaItemCoreAsync(request, transactionCancellation),
+                cancellationToken);
+        }
+
+        return await CreateMediaItemCoreAsync(request, cancellationToken);
+    }
+
+    private async Task<MediaItemDto> CreateMediaItemCoreAsync(CreateMediaItemRequest request, CancellationToken cancellationToken)
+    {
 
         var now = DateTime.UtcNow;
         var userId = request.UserId.Trim();
@@ -99,22 +115,40 @@ public sealed class MediaItemService : IMediaItemService
         };
 
         var created = await _mediaItems.AddAsync(mediaItem, cancellationToken);
+        if (_transactionRunner is not null)
+        {
+            await SaveAssociatedDataAsync(created, request, cancellationToken);
+            return await ToDtoAsync(created, cancellationToken);
+        }
+
         try
         {
             await SaveAssociatedDataAsync(created, request, cancellationToken);
+            return await ToDtoAsync(created, cancellationToken);
         }
         catch
         {
             await _mediaItems.DeleteAsync(created.Id, created.UserId, cancellationToken);
             throw;
         }
-
-        return await ToDtoAsync(created, cancellationToken);
     }
 
     public async Task<MediaItemDto> UpdateMediaItemAsync(UpdateMediaItemRequest request, CancellationToken cancellationToken = default)
     {
         ThrowIfInvalid(MediaItemValidator.Validate(request));
+
+        if (_transactionRunner is not null)
+        {
+            return await _transactionRunner.ExecuteAsync(
+                transactionCancellation => UpdateMediaItemCoreAsync(request, transactionCancellation),
+                cancellationToken);
+        }
+
+        return await UpdateMediaItemCoreAsync(request, cancellationToken);
+    }
+
+    private async Task<MediaItemDto> UpdateMediaItemCoreAsync(UpdateMediaItemRequest request, CancellationToken cancellationToken)
+    {
 
         var existing = await _mediaItems.GetByIdAsync(request.Id, request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("Media item was not found.");
