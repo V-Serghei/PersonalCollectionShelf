@@ -75,7 +75,8 @@
                     <LinearItemsLayout ItemSpacing="8" Orientation="Horizontal" />
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <!-- LocalizedOption<T> is generic, so compiled bindings cannot type this template. -->
+                    <DataTemplate x:DataType="{x:Null}">
                         <Button
                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectMediaTypeFilterCommand}"
                             CommandParameter="{Binding .}"
