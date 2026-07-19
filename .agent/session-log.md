@@ -24,3 +24,31 @@
 - Removed WinRT MVVM generator warnings by replacing `[ObservableProperty]` fields with manual `SetProperty` properties.
 - Added UX-first development rules requiring senior product/UX analysis before new screens and progressive disclosure over large forms.
 - Fixed language switching behavior so localization refresh does not reload library data or recreate the language picker options.
+- Added Dashboard and Statistics pages with category/status summaries, monthly activity, and crash reporting.
+
+## 2026-07-07
+
+- Added cover image selection with covers persisted to app storage.
+- Added creator, publisher, serial number, release year, and richer progress tracking fields to the edit form.
+- Customized the Windows window title bar.
+
+## 2026-07-08
+
+- Widened the edit form to a two-column layout.
+- Added sorting to the Library page.
+- Simplified date/favorite inputs and added a per-movie cast list.
+- Modeled Creator, Studio, and Cast as real entities (Person and Studio) with their own repositories instead of free text.
+
+## 2026-07-09
+
+- Refactored Dashboard, Library, and MediaDetails layouts; added edit and delete buttons to MediaDetails.
+- Implemented dynamic theming with an appearance service: dark/light mode support, dynamic background and title bar colors on Windows, and accent color handling across UI components.
+- Made MediaItemRepositoryTests handle database cleanup more robustly.
+
+## 2026-07-19
+
+- Updated `.agent` docs and README roadmap to reflect completed work (statistics, covers, tags, categories, JSON export/import, sorting, theming).
+- Rechecked the SQLitePCLRaw advisory: latest published `SQLitePCLRaw.bundle_green` is still `2.1.11`, so no patched release exists yet; keep monitoring NuGet. `sqlite-net-pcl 1.11.285` is available as a newer line to evaluate when touching SQLite packages.
+- Added `.agent/sync-plan.md` with the phased Firebase Auth + Firestore synchronization design (soft-delete tombstones, last-write-wins conflict resolution).
+- Implemented the Firebase Auth foundation without UI: REST client for the Identity Toolkit API, options loaded from an uncommitted `firebase.json` in app data, token store abstraction with a MAUI SecureStorage implementation, and an updated `FirebaseAuthService` with sign-in/sign-up/sign-out plus token refresh. Everything stays disabled until Firebase is configured.
+- Remaining before MVP release: verify the Android target end to end and bump `ApplicationDisplayVersion`/`ApplicationVersion` in the App csproj.

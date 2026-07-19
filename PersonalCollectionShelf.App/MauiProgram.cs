@@ -6,6 +6,7 @@ using PersonalCollectionShelf.App.Pages;
 using PersonalCollectionShelf.App.Services;
 using PersonalCollectionShelf.App.ViewModels;
 using PersonalCollectionShelf.Infrastructure.DependencyInjection;
+using PersonalCollectionShelf.Infrastructure.Services.Firebase;
 
 namespace PersonalCollectionShelf.App;
 
@@ -19,7 +20,8 @@ public static class MauiProgram
             .UseMauiApp<App>();
 
         builder.Services.AddSingleton<ILocalizationService, JsonLocalizationService>();
-        builder.Services.AddInfrastructure(GetDatabasePath());
+        builder.Services.AddInfrastructure(GetDatabasePath(), FirebaseOptions.Load(FileSystem.AppDataDirectory));
+        builder.Services.AddSingleton<IAuthTokenStore, SecureStorageAuthTokenStore>();
         builder.Services.AddSingleton<IPersonService, PersonService>();
         builder.Services.AddSingleton<IStudioService, StudioService>();
         builder.Services.AddSingleton<IMediaItemService, MediaItemService>();

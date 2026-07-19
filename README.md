@@ -38,25 +38,30 @@ Dependencies flow inward: App depends on Application and Infrastructure, Infrast
 
 ## Roadmap
 
-MVP:
+MVP (done on Windows; Android verification pending):
 
 - Local media library
 - Add, edit, and delete media items
-- Search and filters
+- Search, smart filters, and sorting
 - English and Russian localization
 - SQLite persistence
-- Windows and Android support
+- Windows support (Android target builds but is not yet verified on a device)
 
-Next versions:
+Already delivered beyond MVP:
 
-- Firebase Auth
-- Firestore synchronization
-- Conflict resolution
 - Statistics dashboard
 - Import and export JSON
 - Cover images
-- Tags and custom lists
+- Tags and categories
+- Dark/light theming
+
+Next versions:
+
+- Firebase Auth (foundation in place; see `.agent/sync-plan.md`)
+- Firestore synchronization
+- Conflict resolution
 - Calendar and progress history
+- Custom lists
 
 Long-term ideas:
 
