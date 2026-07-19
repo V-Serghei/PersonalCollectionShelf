@@ -176,5 +176,19 @@
   "Validation.ProgressTotalInvalid": "Total progress cannot be negative.",
   "Validation.ProgressCurrentExceedsTotal": "Current progress cannot be greater than total progress.",
   "Validation.ReleaseYearRange": "Release year must be between 1800 and 2200.",
-  "Validation.NumberInvalid": "Use whole numbers for numeric fields."
+  "Validation.NumberInvalid": "Use whole numbers for numeric fields.",
+  "Settings.Export.Description": "Export your library to a JSON file.",
+  "Settings.Import.ComingSoon": "Coming soon",
+  "Settings.Import.Description": "Import items from a JSON export.",
+  "Settings.Import.Goodreads.Description": "Books, shelves, and reviews",
+  "Settings.Import.Letterboxd.Description": "Movies and TV series ratings",
+  "Settings.Import.Mal.Description": "Anime and manga lists",
+  "Settings.Import.Steam.Description": "Games, playtime, and achievements",
+  "Shell.Categories": "CATEGORIES",
+  "Shell.DarkMode": "Dark Mode",
+  "Shell.Home": "Home",
+  "Shell.ItemsCollected": "{0} items collected",
+  "Shell.LightMode": "Light Mode",
+  "Shell.LocalProfile": "Local profile",
+  "Shell.Statistics": "Statistics"
 }

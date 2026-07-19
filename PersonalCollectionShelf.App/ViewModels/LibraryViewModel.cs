@@ -11,12 +11,15 @@ using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.App.ViewModels;
 
-public partial class LibraryViewModel : BaseViewModel
+public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 {
+    private const string ViewModePreferenceKey = "library.viewMode";
+
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
     private IReadOnlyList<MediaItemDto> _visibleItems = [];
     private bool _suppressFilterReload;
+    private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewModePreferenceKey, "grid") != "list";
 
     public LibraryViewModel(
         IMediaItemService mediaItemService,
@@ -52,6 +55,46 @@ public partial class LibraryViewModel : BaseViewModel
     public ObservableCollection<LocalizedOption<string?>> TagFilters { get; } = [];
 
     public ObservableCollection<LocalizedOption<LibrarySortOption>> SortOptions { get; } = [];
+
+    public bool IsGridView
+    {
+        get => _isGridView;
+        private set
+        {
+            if (SetProperty(ref _isGridView, value))
+            {
+                OnPropertyChanged(nameof(IsListView));
+                Microsoft.Maui.Storage.Preferences.Set(ViewModePreferenceKey, value ? "grid" : "list");
+            }
+        }
+    }
+
+    public bool IsListView => !_isGridView;
+
+    [RelayCommand]
+    private void SetGridView()
+    {
+        IsGridView = true;
+    }
+
+    [RelayCommand]
+    private void SetListView()
+    {
+        IsGridView = false;
+    }
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("mediaType", out var raw) &&
+            Enum.TryParse<MediaType>(raw?.ToString(), true, out var mediaType))
+        {
+            var option = MediaTypeFilters.FirstOrDefault(candidate => candidate.Value == mediaType);
+            if (option is not null)
+            {
+                SelectedMediaTypeFilter = option;
+            }
+        }
+    }
 
     private string _searchTerm = string.Empty;
     private LocalizedOption<MediaType?>? _selectedMediaTypeFilter;

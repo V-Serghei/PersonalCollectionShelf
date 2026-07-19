@@ -176,5 +176,19 @@
   "Validation.ProgressTotalInvalid": "Общий прогресс не может быть отрицательным.",
   "Validation.ProgressCurrentExceedsTotal": "Текущий прогресс не может быть больше общего прогресса.",
   "Validation.ReleaseYearRange": "Год выпуска должен быть между 1800 и 2200.",
-  "Validation.NumberInvalid": "Используйте целые числа для числовых полей."
+  "Validation.NumberInvalid": "Используйте целые числа для числовых полей.",
+  "Settings.Export.Description": "Экспорт библиотеки в JSON-файл.",
+  "Settings.Import.ComingSoon": "Скоро",
+  "Settings.Import.Description": "Импорт объектов из JSON-экспорта.",
+  "Settings.Import.Goodreads.Description": "Книги, полки и рецензии",
+  "Settings.Import.Letterboxd.Description": "Оценки фильмов и сериалов",
+  "Settings.Import.Mal.Description": "Списки аниме и манги",
+  "Settings.Import.Steam.Description": "Игры, время в игре и достижения",
+  "Shell.Categories": "КАТЕГОРИИ",
+  "Shell.DarkMode": "Тёмная тема",
+  "Shell.Home": "Главная",
+  "Shell.ItemsCollected": "В коллекции: {0}",
+  "Shell.LightMode": "Светлая тема",
+  "Shell.LocalProfile": "Локальный профиль",
+  "Shell.Statistics": "Статистика"
 }

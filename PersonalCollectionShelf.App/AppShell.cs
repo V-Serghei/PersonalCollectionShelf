@@ -3,6 +3,8 @@ using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Graphics;
 using PersonalCollectionShelf.App.Pages;
 using PersonalCollectionShelf.App.Services;
+using PersonalCollectionShelf.Application.Interfaces;
+using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.App;
 
@@ -16,6 +18,20 @@ public sealed class AppShell : Shell
     private readonly FlyoutItem _statisticsItem;
     private readonly FlyoutItem _settingsItem;
     private readonly List<(Border Container, Label Icon, Label Text)> _navigationButtons = [];
+    private Label? _profileInitialLabel;
+    private Label? _profileNameLabel;
+    private Label? _profileDetailLabel;
+
+    private static readonly (MediaType Type, string Color)[] SidebarCategories =
+    [
+        (MediaType.Movie, "#E07C54"),
+        (MediaType.Series, "#5BA4F0"),
+        (MediaType.Book, "#7CCC8A"),
+        (MediaType.Manga, "#F0C040"),
+        (MediaType.Comic, "#6FD8C8"),
+        (MediaType.Game, "#C47CF0"),
+        (MediaType.Anime, "#F07CB8")
+    ];
 
     public AppShell(
         IServiceProvider services,
@@ -124,27 +140,51 @@ public sealed class AppShell : Shell
             Spacing = 6
         };
 
-        navigation.Children.Add(CreateNavButton("", "Home", "//Home", true, symbolFont: true));
-        navigation.Children.Add(CreateNavButton("▤", "Library", "//Library", false, symbolFont: false));
-        navigation.Children.Add(CreateNavButton("▥", "Statistics", "//Statistics", false, symbolFont: false));
-        navigation.Children.Add(CreateNavButton("", "Settings", "//Settings", false, symbolFont: true));
+        navigation.Children.Add(CreateNavButton("", T("Shell.Home"), "//Home", true, symbolFont: true));
+        navigation.Children.Add(CreateNavButton("▤", T("Library.Title"), "//Library", false, symbolFont: false));
+        navigation.Children.Add(CreateNavButton("▥", T("Shell.Statistics"), "//Statistics", false, symbolFont: false));
+        navigation.Children.Add(CreateNavButton("", T("Settings.Title"), "//Settings", false, symbolFont: true));
         navigation.Children.Add(new Label
         {
-            Text = "CATEGORIES",
+            Text = T("Shell.Categories"),
             FontAttributes = FontAttributes.Bold,
             FontSize = 10,
             TextColor = MutedForegroundColor,
             Margin = new Thickness(4, 18, 0, 6)
         });
 
-        navigation.Children.Add(CreateCategoryLabel("Movies", "#E07C54"));
-        navigation.Children.Add(CreateCategoryLabel("TV Series", "#5BA4F0"));
-        navigation.Children.Add(CreateCategoryLabel("Books", "#7CCC8A"));
-        navigation.Children.Add(CreateCategoryLabel("Games", "#C47CF0"));
-        navigation.Children.Add(CreateCategoryLabel("Anime", "#F07CB8"));
-        navigation.Children.Add(CreateCategoryLabel("Music", "#F0C040"));
+        foreach (var (mediaType, color) in SidebarCategories)
+        {
+            navigation.Children.Add(CreateCategoryLabel(mediaType, color));
+        }
 
         root.Add(new ScrollView { Content = navigation }, 0, 1);
+
+        _profileInitialLabel = new Label
+        {
+            Text = "S",
+            FontAttributes = FontAttributes.Bold,
+            FontSize = 12,
+            TextColor = PrimaryColor,
+            HorizontalTextAlignment = TextAlignment.Center,
+            VerticalTextAlignment = TextAlignment.Center
+        };
+
+        _profileNameLabel = new Label
+        {
+            Text = T("Shell.LocalProfile"),
+            FontAttributes = FontAttributes.Bold,
+            FontSize = 12,
+            LineBreakMode = LineBreakMode.TailTruncation,
+            TextColor = ForegroundColor
+        };
+
+        _profileDetailLabel = new Label
+        {
+            Text = string.Empty,
+            FontSize = 10,
+            TextColor = PrimaryColor
+        };
 
         var footer = new VerticalStackLayout
         {
@@ -159,7 +199,7 @@ public sealed class AppShell : Shell
                     BackgroundColor = Colors.Transparent,
                     Content = new Label
                     {
-                        Text = _appearanceService.IsDarkTheme ? "☼  Light Mode" : "☾  Dark Mode",
+                        Text = _appearanceService.IsDarkTheme ? $"☼  {T("Shell.LightMode")}" : $"☾  {T("Shell.DarkMode")}",
                         FontSize = 14,
                         TextColor = SecondaryForegroundColor
                     },
@@ -183,35 +223,13 @@ public sealed class AppShell : Shell
                             StrokeThickness = 0,
                             StrokeShape = new RoundRectangle { CornerRadius = 14 },
                             WidthRequest = 28,
-                            Content = new Label
-                            {
-                                Text = "A",
-                                FontAttributes = FontAttributes.Bold,
-                                FontSize = 12,
-                                TextColor = PrimaryColor,
-                                HorizontalTextAlignment = TextAlignment.Center,
-                                VerticalTextAlignment = TextAlignment.Center
-                            }
+                            Content = _profileInitialLabel
                         },
                         new VerticalStackLayout
                         {
                             Spacing = 1,
-                            Children =
-                            {
-                                new Label
-                                {
-                                    Text = "Alex Morgan",
-                                    FontAttributes = FontAttributes.Bold,
-                                    FontSize = 12,
-                                    TextColor = ForegroundColor
-                                },
-                                new Label
-                                {
-                                    Text = "14 items collected",
-                                    FontSize = 10,
-                                    TextColor = PrimaryColor
-                                }
-                            }
+                            MaximumWidthRequest = 140,
+                            Children = { _profileNameLabel, _profileDetailLabel }
                         }
                     }
                 }
@@ -219,7 +237,45 @@ public sealed class AppShell : Shell
         };
         root.Add(footer, 0, 2);
 
+        _ = RefreshProfileAsync();
+
         return root;
+    }
+
+    private async Task RefreshProfileAsync()
+    {
+        try
+        {
+            var authService = _services.GetRequiredService<IAuthService>();
+            var mediaItemService = _services.GetRequiredService<IMediaItemService>();
+
+            var email = await authService.GetSignedInEmailAsync();
+            var userId = await authService.GetCurrentUserIdAsync() ?? "local-user";
+            var itemCount = (await mediaItemService.GetLibraryAsync(userId)).Count;
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (_profileNameLabel is null || _profileDetailLabel is null || _profileInitialLabel is null)
+                {
+                    return;
+                }
+
+                _profileNameLabel.Text = email ?? T("Shell.LocalProfile");
+                _profileDetailLabel.Text = string.Format(T("Shell.ItemsCollected"), itemCount);
+                _profileInitialLabel.Text = string.IsNullOrEmpty(email)
+                    ? "S"
+                    : char.ToUpperInvariant(email[0]).ToString();
+            });
+        }
+        catch
+        {
+            // The sidebar profile is informational; keep the defaults if data is unavailable.
+        }
+    }
+
+    private string T(string key)
+    {
+        return _localizationService.GetString(key);
     }
 
     private Border CreateNavButton(string icon, string label, string route, bool active, bool symbolFont)
@@ -291,7 +347,7 @@ public sealed class AppShell : Shell
         return container;
     }
 
-    private static View CreateCategoryLabel(string text, string color)
+    private View CreateCategoryLabel(MediaType mediaType, string color)
     {
         var row = new HorizontalStackLayout
         {
@@ -310,13 +366,28 @@ public sealed class AppShell : Shell
                 },
                 new Label
                 {
-                    Text = text,
+                    Text = T($"MediaType.{mediaType}"),
                     FontSize = 14,
                     TextColor = Color.FromArgb(color),
                     VerticalTextAlignment = TextAlignment.Center
                 }
             }
         };
+
+        row.GestureRecognizers.Add(new TapGestureRecognizer
+        {
+            Command = new Command(async () =>
+            {
+                try
+                {
+                    await GoToAsync($"//Library?mediaType={mediaType}");
+                }
+                catch (Exception exception)
+                {
+                    await Services.CrashReporter.ReportAsync(exception, $"AppShell.CategoryNavigate {mediaType}");
+                }
+            })
+        });
 
         var pointer = new PointerGestureRecognizer();
         pointer.PointerEntered += (_, _) => row.Scale = 1.05;
@@ -383,11 +454,14 @@ public sealed class AppShell : Shell
             var entry = _navigationButtons[index];
             SetActiveButton(entry.Container, entry.Icon, entry.Text);
         }
+
+        _ = RefreshProfileAsync();
     }
 
     private void HandleLanguageChanged(object? sender, EventArgs e)
     {
         ApplyLocalization();
+        FlyoutContentTemplate = new DataTemplate(BuildFlyoutContent);
     }
 
     private void HandleAppearanceChanged(object? sender, EventArgs e)
@@ -404,9 +478,9 @@ public sealed class AppShell : Shell
     private void ApplyLocalization()
     {
         Title = _localizationService.GetString("App.Name");
-        _homeItem.Title = "Home";
-        _libraryItem.Title = _localizationService.GetString("Library.Title");
-        _statisticsItem.Title = "Statistics";
-        _settingsItem.Title = _localizationService.GetString("Settings.Title");
+        _homeItem.Title = T("Shell.Home");
+        _libraryItem.Title = T("Library.Title");
+        _statisticsItem.Title = T("Shell.Statistics");
+        _settingsItem.Title = T("Settings.Title");
     }
 }

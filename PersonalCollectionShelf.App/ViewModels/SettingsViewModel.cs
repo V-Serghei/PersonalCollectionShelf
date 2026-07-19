@@ -238,6 +238,20 @@ public partial class SettingsViewModel : BaseViewModel
 
     public string ImportButtonText => T("Settings.Import.Button");
 
+    public string ExportDescriptionText => T("Settings.Export.Description");
+
+    public string ImportDescriptionText => T("Settings.Import.Description");
+
+    public string ComingSoonText => T("Settings.Import.ComingSoon");
+
+    public string ImportLetterboxdDescription => T("Settings.Import.Letterboxd.Description");
+
+    public string ImportGoodreadsDescription => T("Settings.Import.Goodreads.Description");
+
+    public string ImportSteamDescription => T("Settings.Import.Steam.Description");
+
+    public string ImportMalDescription => T("Settings.Import.Mal.Description");
+
     public string ThemeSectionTitle => T("Settings.Theme.Title");
 
     public string ThemeDescription => T("Settings.Theme.Description");

@@ -166,7 +166,7 @@
                             <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ExportButtonText}" />
-                                    <Label FontSize="12" Text="Download as CSV or JSON" TextColor="{DynamicResource Primary}" />
+                                    <Label FontSize="12" Text="{Binding ExportDescriptionText}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
                                 <Button Grid.Column="1" Command="{Binding ExportCommand}" Style="{StaticResource LinkButtonStyle}" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" />
                             </Grid>
@@ -174,41 +174,49 @@
                             <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ImportButtonText}" />
-                                    <Label FontSize="12" Text="Import collection JSON" TextColor="{DynamicResource Primary}" />
+                                    <Label FontSize="12" Text="{Binding ImportDescriptionText}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
                                 <Button Grid.Column="1" Command="{Binding ImportCommand}" Style="{StaticResource LinkButtonStyle}" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
-                            <Grid Padding="16" ColumnDefinitions="*,Auto">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" Opacity="0.55">
                                 <VerticalStackLayout Spacing="4">
-                                    <Label FontAttributes="Bold" FontSize="14" Text="Import from Letterboxd" />
-                                    <Label FontSize="12" Text="Movies and TV series ratings" TextColor="{DynamicResource Primary}" />
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Letterboxd" />
+                                    <Label FontSize="12" Text="{Binding ImportLetterboxdDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="10" Text="{Binding ComingSoonText}" TextColor="{DynamicResource MutedForeground}" />
+                                </Border>
                             </Grid>
                             <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
-                            <Grid Padding="16" ColumnDefinitions="*,Auto">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" Opacity="0.55">
                                 <VerticalStackLayout Spacing="4">
-                                    <Label FontAttributes="Bold" FontSize="14" Text="Import from Goodreads" />
-                                    <Label FontSize="12" Text="Books, shelves, and reviews" TextColor="{DynamicResource Primary}" />
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Goodreads" />
+                                    <Label FontSize="12" Text="{Binding ImportGoodreadsDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="10" Text="{Binding ComingSoonText}" TextColor="{DynamicResource MutedForeground}" />
+                                </Border>
                             </Grid>
                             <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
-                            <Grid Padding="16" ColumnDefinitions="*,Auto">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" Opacity="0.55">
                                 <VerticalStackLayout Spacing="4">
-                                    <Label FontAttributes="Bold" FontSize="14" Text="Import from Steam" />
-                                    <Label FontSize="12" Text="Games, playtime, and achievements" TextColor="{DynamicResource Primary}" />
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Steam" />
+                                    <Label FontSize="12" Text="{Binding ImportSteamDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="10" Text="{Binding ComingSoonText}" TextColor="{DynamicResource MutedForeground}" />
+                                </Border>
                             </Grid>
                             <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
-                            <Grid Padding="16" ColumnDefinitions="*,Auto">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" Opacity="0.55">
                                 <VerticalStackLayout Spacing="4">
-                                    <Label FontAttributes="Bold" FontSize="14" Text="Import from MyAnimeList" />
-                                    <Label FontSize="12" Text="Anime and manga lists" TextColor="{DynamicResource Primary}" />
+                                    <Label FontAttributes="Bold" FontSize="14" Text="MyAnimeList" />
+                                    <Label FontSize="12" Text="{Binding ImportMalDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                                <Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="10" Text="{Binding ComingSoonText}" TextColor="{DynamicResource MutedForeground}" />
+                                </Border>
                             </Grid>
                         </VerticalStackLayout>
                     </Border>

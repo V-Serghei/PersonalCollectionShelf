@@ -40,9 +40,22 @@
                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
                 <Border Grid.Column="1" Padding="6" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 16">
                     <HorizontalStackLayout Spacing="6">
-                        <Button Style="{StaticResource IconToggleButtonStyle}" Text="▦" />
-                        <Button Style="{StaticResource IconToggleButtonStyle}" Text="▪" />
-                        <Button Style="{StaticResource IconToggleButtonStyle}" Text="≡" />
+                        <Button Command="{Binding SetGridViewCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="▦">
+                            <Button.Triggers>
+                                <DataTrigger Binding="{Binding IsGridView}" TargetType="Button" Value="True">
+                                    <Setter Property="TextColor" Value="{DynamicResource Primary}" />
+                                    <Setter Property="BackgroundColor" Value="{DynamicResource MutedSoft}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Command="{Binding SetListViewCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="≡">
+                            <Button.Triggers>
+                                <DataTrigger Binding="{Binding IsListView}" TargetType="Button" Value="True">
+                                    <Setter Property="TextColor" Value="{DynamicResource Primary}" />
+                                    <Setter Property="BackgroundColor" Value="{DynamicResource MutedSoft}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
                     </HorizontalStackLayout>
                 </Border>
             </Grid>
@@ -68,7 +81,7 @@
             <CollectionView
                 BackgroundColor="{DynamicResource PageBackground}"
                 Grid.Row="2"
-                HeightRequest="34"
+                HeightRequest="44"
                 ItemsSource="{Binding MediaTypeFilters}"
                 SelectionMode="None">
                 <CollectionView.ItemsLayout>
@@ -97,8 +110,10 @@
                 BackgroundColor="{DynamicResource PageBackground}"
                 Command="{Binding LoadCommand}"
                 IsRefreshing="{Binding IsBusy}">
+                <Grid>
                 <CollectionView
                     BackgroundColor="{DynamicResource PageBackground}"
+                    IsVisible="{Binding IsGridView}"
                     ItemSizingStrategy="MeasureAllItems"
                     ItemsSource="{Binding MediaItems}"
                     SelectionMode="None">
@@ -153,6 +168,53 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
+
+                <CollectionView
+                    BackgroundColor="{DynamicResource PageBackground}"
+                    IsVisible="{Binding IsListView}"
+                    ItemsSource="{Binding MediaItems}"
+                    SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout ItemSpacing="8" Orientation="Vertical" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.EmptyView>
+                        <Border Margin="0,50,0,0" Padding="28" Style="{StaticResource CardBorderStyle}" WidthRequest="340">
+                            <Label HorizontalTextAlignment="Center" Text="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EmptyLibraryText}" />
+                        </Border>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
+                            <Border Padding="10" Style="{StaticResource CardBorderStyle}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenMediaItemCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="42,*,Auto,Auto,Auto" ColumnSpacing="12">
+                                    <Border Padding="0" BackgroundColor="{DynamicResource Muted}" HeightRequest="56" StrokeThickness="0" StrokeShape="RoundRectangle 6" WidthRequest="42">
+                                        <Grid>
+                                            <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                                            <Label FontAttributes="Bold" FontSize="16" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                        <Label FontAttributes="Bold" FontSize="13" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding Title}" />
+                                        <Label FontSize="11" LineBreakMode="TailTruncation" Text="{Binding CategoryLine}" TextColor="{DynamicResource MutedForeground}" />
+                                    </VerticalStackLayout>
+                                    <Border Grid.Column="2" Padding="8,3" BackgroundColor="{Binding StatusBackgroundColor}" Stroke="{Binding StatusForegroundColor}" StrokeShape="RoundRectangle 10" StrokeThickness="1" VerticalOptions="Center">
+                                        <Label FontAttributes="Bold" FontSize="10" Text="{Binding StatusLabel}" TextColor="{Binding StatusForegroundColor}" />
+                                    </Border>
+                                    <HorizontalStackLayout Grid.Column="3" IsVisible="{Binding HasRating}" Spacing="4" VerticalOptions="Center">
+                                        <Label FontAttributes="Bold" FontSize="11" Text="★" TextColor="{StaticResource Warning}" />
+                                        <Label FontAttributes="Bold" FontSize="11" Text="{Binding RatingShort}" />
+                                    </HorizontalStackLayout>
+                                    <Label Grid.Column="4" FontSize="11" Text="{Binding ReleaseYearText}" TextColor="{DynamicResource MutedForeground}" VerticalOptions="Center" WidthRequest="34" HorizontalTextAlignment="End" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                </Grid>
             </RefreshView>
         </Grid>
     </Grid>
