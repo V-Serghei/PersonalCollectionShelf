@@ -136,7 +136,140 @@ public partial class SettingsViewModel : BaseViewModel
 
     public string AccountSectionTitle => T("Settings.Account.Title");
 
-    public string AccountDescription => T("Settings.Account.Description");
+    public string AccountDescription => IsAuthConfigured
+        ? T("Settings.Account.Description")
+        : T("Auth.Error.NotConfigured");
+
+    public string AccountEmailPlaceholder => T("Settings.Account.EmailPlaceholder");
+
+    public string AccountPasswordPlaceholder => T("Settings.Account.PasswordPlaceholder");
+
+    public string SignInButtonText => T("Settings.Account.SignIn");
+
+    public string SignUpButtonText => T("Settings.Account.SignUp");
+
+    public string SignOutButtonText => T("Settings.Account.SignOut");
+
+    public string AccountSignedInLabel => T("Settings.Account.SignedIn");
+
+    public bool IsAuthConfigured => _authService.IsConfigured;
+
+    public bool IsAccountNotConfigured => !IsAuthConfigured;
+
+    public bool IsAccountFormVisible => IsAuthConfigured && !IsSignedIn;
+
+    private string _accountEmail = string.Empty;
+    private string _accountPassword = string.Empty;
+    private string? _signedInEmail;
+    private bool _isSignedIn;
+    private string? _accountStatusKey;
+    private string _accountStatusMessage = string.Empty;
+
+    public string AccountEmail
+    {
+        get => _accountEmail;
+        set => SetProperty(ref _accountEmail, value);
+    }
+
+    public string AccountPassword
+    {
+        get => _accountPassword;
+        set => SetProperty(ref _accountPassword, value);
+    }
+
+    public string? SignedInEmail
+    {
+        get => _signedInEmail;
+        set => SetProperty(ref _signedInEmail, value);
+    }
+
+    public bool IsSignedIn
+    {
+        get => _isSignedIn;
+        set
+        {
+            if (SetProperty(ref _isSignedIn, value))
+            {
+                OnPropertyChanged(nameof(IsAccountFormVisible));
+            }
+        }
+    }
+
+    public string AccountStatusMessage
+    {
+        get => _accountStatusMessage;
+        set => SetProperty(ref _accountStatusMessage, value);
+    }
+
+    [RelayCommand]
+    public async Task LoadAccountStateAsync()
+    {
+        IsSignedIn = await _authService.IsSignedInAsync();
+        SignedInEmail = IsSignedIn ? await _authService.GetSignedInEmailAsync() : null;
+    }
+
+    [RelayCommand]
+    private async Task SignInAsync()
+    {
+        await ExecuteAuthFlowAsync(_authService.SignInAsync);
+    }
+
+    [RelayCommand]
+    private async Task SignUpAsync()
+    {
+        await ExecuteAuthFlowAsync(_authService.SignUpAsync);
+    }
+
+    [RelayCommand]
+    private async Task SignOutAsync()
+    {
+        await _authService.SignOutAsync();
+        IsSignedIn = false;
+        SignedInEmail = null;
+        SetAccountStatus("Settings.Account.SignedOutMessage");
+    }
+
+    private async Task ExecuteAuthFlowAsync(
+        Func<string, string, CancellationToken, Task<AuthResultDto>> authAction)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var result = await authAction(AccountEmail, AccountPassword, CancellationToken.None);
+
+            if (result.Succeeded)
+            {
+                IsSignedIn = true;
+                SignedInEmail = result.Email ?? AccountEmail;
+                AccountPassword = string.Empty;
+                SetAccountStatus("Settings.Account.SignedInMessage");
+            }
+            else
+            {
+                SetAccountStatus(result.ErrorKey ?? "Auth.Error.Unknown");
+            }
+        }
+        catch (Exception exception)
+        {
+            SetAccountStatus("Auth.Error.Unknown");
+            await CrashReporter.ReportAsync(exception, "SettingsViewModel.ExecuteAuthFlowAsync");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void SetAccountStatus(string? key)
+    {
+        _accountStatusKey = key;
+        AccountStatusMessage = key is null ? string.Empty : T(key);
+    }
 
     public string SyncSectionTitle => T("Settings.Sync.Title");
 
@@ -162,6 +295,11 @@ public partial class SettingsViewModel : BaseViewModel
     {
         base.RefreshLocalizedProperties();
         StatusMessage = T(_statusMessageKey);
+
+        if (_accountStatusKey is not null)
+        {
+            AccountStatusMessage = T(_accountStatusKey);
+        }
     }
 
     private void OnSelectedLanguageOptionChanged(LocalizedOption<string>? value)

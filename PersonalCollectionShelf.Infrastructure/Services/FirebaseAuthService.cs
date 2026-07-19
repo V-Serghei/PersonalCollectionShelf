@@ -15,6 +15,8 @@ public sealed class FirebaseAuthService(
 
     private static readonly TimeSpan ExpiryBuffer = TimeSpan.FromMinutes(1);
 
+    public bool IsConfigured => options.IsConfigured;
+
     public Task<string?> GetCurrentUserIdAsync(CancellationToken cancellationToken = default)
     {
         return Task.FromResult<string?>(LocalUserId);

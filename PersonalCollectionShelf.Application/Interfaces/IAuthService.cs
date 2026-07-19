@@ -4,6 +4,8 @@ namespace PersonalCollectionShelf.Application.Interfaces;
 
 public interface IAuthService
 {
+    bool IsConfigured { get; }
+
     Task<string?> GetCurrentUserIdAsync(CancellationToken cancellationToken = default);
 
     Task<bool> IsSignedInAsync(CancellationToken cancellationToken = default);

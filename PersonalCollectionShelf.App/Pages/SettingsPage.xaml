@@ -127,18 +127,40 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="8">
-                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="ACCOUNT" />
-                    <Border Padding="16" Style="{StaticResource CardBorderStyle}">
-                        <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="12">
-                            <Border BackgroundColor="#269D7FF4" HeightRequest="40" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40">
-                                <Label FontAttributes="Bold" FontSize="17" HorizontalTextAlignment="Center" Text="A" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
-                            </Border>
-                            <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
-                                <Label FontAttributes="Bold" FontSize="14" Text="Alex Morgan" />
-                                <Label FontSize="12" Text="alex@example.com" TextColor="{DynamicResource Primary}" />
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AccountSectionTitle}" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid Padding="16" ColumnDefinitions="44,*,Auto" ColumnSpacing="12" IsVisible="{Binding IsSignedIn}">
+                                <Border BackgroundColor="#269D7FF4" HeightRequest="40" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40">
+                                    <Label FontFamily="Segoe MDL2 Assets" FontSize="17" HorizontalTextAlignment="Center" Text="&#xE77B;" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSignedInLabel}" />
+                                    <Label FontSize="12" Text="{Binding SignedInEmail}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="2" Command="{Binding SignOutCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding SignOutButtonText}" VerticalOptions="Center" />
+                            </Grid>
+
+                            <VerticalStackLayout Padding="16" Spacing="10" IsVisible="{Binding IsAccountFormVisible}">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSectionTitle}" />
+                                    <Label FontSize="12" Text="{Binding AccountDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Entry Keyboard="Email" Placeholder="{Binding AccountEmailPlaceholder}" Text="{Binding AccountEmail, Mode=TwoWay}" />
+                                <Entry IsPassword="True" Placeholder="{Binding AccountPasswordPlaceholder}" Text="{Binding AccountPassword, Mode=TwoWay}" />
+                                <HorizontalStackLayout Spacing="10">
+                                    <Button Command="{Binding SignInCommand}" Text="{Binding SignInButtonText}" />
+                                    <Button Command="{Binding SignUpCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding SignUpButtonText}" />
+                                </HorizontalStackLayout>
                             </VerticalStackLayout>
-                            <Label Grid.Column="2" FontAttributes="Bold" FontSize="12" Text="Edit" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
-                        </Grid>
+
+                            <VerticalStackLayout Padding="16" Spacing="4" IsVisible="{Binding IsAccountNotConfigured}">
+                                <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSectionTitle}" />
+                                <Label FontSize="12" Text="{Binding AccountDescription}" TextColor="{DynamicResource Primary}" />
+                            </VerticalStackLayout>
+
+                            <Label Padding="16,0,16,16" FontSize="12" Text="{Binding AccountStatusMessage}" TextColor="{DynamicResource MutedForeground}" />
+                        </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
 

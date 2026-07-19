@@ -26,6 +26,7 @@ public partial class SettingsPage : ContentPage
             try
             {
                 await viewModel.LoadSyncStatusAsync();
+                await viewModel.LoadAccountStateAsync();
             }
             catch (Exception exception)
             {
