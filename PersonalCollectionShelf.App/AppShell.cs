@@ -42,8 +42,8 @@ public sealed class AppShell : Shell
         _localizationService = localizationService;
         _appearanceService = appearanceService;
 
-        FlyoutBehavior = FlyoutBehavior.Locked;
-        FlyoutWidth = 210;
+        FlyoutBehavior = UsesCompactNavigation ? FlyoutBehavior.Flyout : FlyoutBehavior.Locked;
+        FlyoutWidth = UsesCompactNavigation ? 300 : 210;
         ApplyShellColors();
 
         _homeItem = CreateItem("Home", nameof(DashboardPage), () => _services.GetRequiredService<DashboardPage>());
@@ -324,6 +324,7 @@ public sealed class AppShell : Shell
             {
                 SetActiveButton(container, iconLabel, textLabel);
                 await GoToAsync(route);
+                CloseCompactFlyout();
             })
         });
 
@@ -383,6 +384,7 @@ public sealed class AppShell : Shell
                 try
                 {
                     await GoToAsync($"//Library?mediaType={mediaType}");
+                    CloseCompactFlyout();
                 }
                 catch (Exception exception)
                 {
@@ -431,6 +433,8 @@ public sealed class AppShell : Shell
 
     private Color HoverNavigationBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#272238" : "#EAE4F7");
 
+    private bool UsesCompactNavigation => DeviceInfo.Current.Idiom == DeviceIdiom.Phone;
+
     private void ApplyShellColors()
     {
         FlyoutBackgroundColor = SidebarColor;
@@ -457,7 +461,21 @@ public sealed class AppShell : Shell
             SetActiveButton(entry.Container, entry.Icon, entry.Text);
         }
 
+        if (CurrentPage is not null)
+        {
+            Shell.SetNavBarIsVisible(CurrentPage, UsesCompactNavigation);
+        }
+
+        CloseCompactFlyout();
         _ = RefreshProfileAsync();
+    }
+
+    private void CloseCompactFlyout()
+    {
+        if (UsesCompactNavigation)
+        {
+            FlyoutIsPresented = false;
+        }
     }
 
     private void HandleLanguageChanged(object? sender, EventArgs e)

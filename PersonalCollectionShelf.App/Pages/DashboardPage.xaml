@@ -11,10 +11,11 @@
     Title="Home">
     <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
         <Grid
+            x:Name="TopBar"
             Grid.Row="0"
             Padding="18,7"
             BackgroundColor="{DynamicResource PageBackground}"
-            ColumnDefinitions="310,Auto,*"
+            ColumnDefinitions="*,Auto"
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
@@ -49,12 +50,12 @@
 
         <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
             <VerticalStackLayout
+                x:Name="DashboardContent"
                 BackgroundColor="{DynamicResource PageBackground}"
                 Padding="0,24,0,30"
-                HorizontalOptions="Center"
+                HorizontalOptions="Fill"
                 MaximumWidthRequest="920"
-                Spacing="28"
-                WidthRequest="920">
+                Spacing="28">
                 <VerticalStackLayout Spacing="4">
                     <Label
                         FontAttributes="Bold"
@@ -67,8 +68,8 @@
                         TextColor="{DynamicResource Primary}" />
                 </VerticalStackLayout>
 
-                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
-                    <Border Grid.Column="0" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                <Grid x:Name="StatsGrid" ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+                    <Border x:Name="TotalItemsCard" Grid.Column="0" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
                             <Label FontAttributes="Bold" FontSize="10" Text="Total Items" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
@@ -79,7 +80,7 @@
                             </HorizontalStackLayout>
                         </Grid>
                     </Border>
-                    <Border Grid.Column="1" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                    <Border x:Name="CompletedItemsCard" Grid.Column="1" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
                             <Label FontAttributes="Bold" FontSize="10" Text="{Binding CompletedItemsLabel}" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
@@ -90,7 +91,7 @@
                             </HorizontalStackLayout>
                         </Grid>
                     </Border>
-                    <Border Grid.Column="2" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                    <Border x:Name="InProgressItemsCard" Grid.Column="2" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
                             <Label FontAttributes="Bold" FontSize="10" Text="In Progress" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
@@ -101,7 +102,7 @@
                             </HorizontalStackLayout>
                         </Grid>
                     </Border>
-                    <Border Grid.Column="3" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                    <Border x:Name="WishlistItemsCard" Grid.Column="3" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
                             <Label FontAttributes="Bold" FontSize="10" Text="Wishlist" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
@@ -209,7 +210,7 @@
                     </Grid>
                     <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding CategorySummaries}" SelectionMode="None">
                         <CollectionView.ItemsLayout>
-                            <GridItemsLayout HorizontalItemSpacing="12" Orientation="Vertical" Span="3" VerticalItemSpacing="12" />
+                            <GridItemsLayout x:Name="CategoryGridLayout" HorizontalItemSpacing="12" Orientation="Vertical" Span="3" VerticalItemSpacing="12" />
                         </CollectionView.ItemsLayout>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:CategorySummaryViewModel">
