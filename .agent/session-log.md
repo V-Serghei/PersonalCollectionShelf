@@ -79,3 +79,8 @@
 - Added a dedicated tag explorer that groups library items by tag and opens their detail pages.
 - Strengthened Android keyboard handling by attaching focus scrolling to dynamically created form
   inputs and repeating the scroll after IME resize animation. Changes remain intentionally unrun.
+- Fixed the remaining Android IME overlay case by adding focus-driven scroll extents to both the
+  main media form and the person-picker overlay. The spacer appears only while a field is focused,
+  so description, notes, save actions, and picker actions can scroll fully above overlay keyboards.
+- Changed keyboard-aware focus scrolling to run exactly once per newly focused input. Manual
+  scrolling is no longer overridden while the same field remains selected.

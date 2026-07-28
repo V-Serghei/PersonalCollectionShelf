@@ -19,7 +19,8 @@ public partial class EditMediaItemPage : ContentPage, IQueryAttributable
     {
         InitializeComponent();
         BindingContext = viewModel;
-        MobileFormFocus.Attach(this, FormScrollView);
+        MobileFormFocus.Attach(this, FormScrollView, KeyboardScrollSpacer);
+        MobileFormFocus.Attach(this, PersonPickerScroll, PersonPickerKeyboardSpacer);
     }
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)

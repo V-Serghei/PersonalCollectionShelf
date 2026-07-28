@@ -8,10 +8,15 @@ internal static class MobileFormFocus
         typeof(MobileFormFocus),
         default(ScrollView));
 
-    public static void Attach(ContentPage page, ScrollView scrollView)
+    public static void Attach(ContentPage page, ScrollView scrollView, VisualElement? keyboardSpacer = null)
     {
         void AttachInput(InputView input)
         {
+            if (!IsDescendantOf(input, scrollView))
+            {
+                return;
+            }
+
             if (input.GetValue(ScrollOwnerProperty) is not null)
             {
                 return;
@@ -19,6 +24,18 @@ internal static class MobileFormFocus
 
             input.SetValue(ScrollOwnerProperty, scrollView);
             input.Focused += HandleFocused;
+            if (keyboardSpacer is not null)
+            {
+                input.Focused += (_, _) => ShowKeyboardSpacer(page, keyboardSpacer);
+                input.Unfocused += async (_, _) =>
+                {
+                    await Task.Delay(120);
+                    if (!page.GetVisualTreeDescendants().OfType<InputView>().Any(value => value.IsFocused))
+                    {
+                        keyboardSpacer.HeightRequest = 0;
+                    }
+                };
+            }
         }
 
         page.Loaded += (_, _) =>
@@ -37,6 +54,33 @@ internal static class MobileFormFocus
         };
     }
 
+    private static bool IsDescendantOf(Element element, Element ancestor)
+    {
+        for (var current = element.Parent; current is not null; current = current.Parent)
+        {
+            if (ReferenceEquals(current, ancestor))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void ShowKeyboardSpacer(ContentPage page, VisualElement keyboardSpacer)
+    {
+        if (DeviceInfo.Current.Platform != DevicePlatform.Android ||
+            DeviceInfo.Current.Idiom != DeviceIdiom.Phone)
+        {
+            return;
+        }
+
+        // AdjustResize is not reliable for edge-to-edge modal pages on every Android keyboard.
+        // Extra scroll extent lets the last controls move completely above an overlaying IME.
+        var pageHeight = page.Height > 0 ? page.Height : 720;
+        keyboardSpacer.HeightRequest = Math.Clamp(pageHeight * 0.48, 280, 430);
+    }
+
     private static async void HandleFocused(object? sender, FocusEventArgs e)
     {
         if (sender is not InputView input ||
@@ -45,16 +89,11 @@ internal static class MobileFormFocus
             return;
         }
 
-        // Android keyboards resize the activity asynchronously. Repeating the scroll after
-        // both animation stages keeps fields added by dynamic templates above the IME.
-        foreach (var delay in new[] { 120, 260, 420 })
+        // Move to the field once when it receives focus. Further scrolling must remain under
+        // the user's control until another input is selected.
+        await Task.Delay(120);
+        if (input.IsFocused)
         {
-            await Task.Delay(delay);
-            if (!input.IsFocused)
-            {
-                return;
-            }
-
             await scrollView.ScrollToAsync(input, ScrollToPosition.Center, true);
         }
     }
