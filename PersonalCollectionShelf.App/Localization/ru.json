@@ -71,6 +71,7 @@
   "Details.PublisherLabel": "Издатель",
   "Details.SerialNumberLabel": "ISBN / серийный номер",
   "Details.CastLabel": "Актёры",
+  "Details.MinutesFormat": "{0} мин",
   "Details.StartDateLabel": "Дата начала",
   "Details.FinishDateLabel": "Дата завершения",
   "Details.ReleaseYearLabel": "Год выпуска",
@@ -104,6 +105,7 @@
   "Edit.Label.Creator.Generic": "Автор",
   "Edit.Placeholder.Creator": "Необязательно",
   "Edit.Label.Publisher": "Издатель",
+  "Edit.Label.Studio": "Студия / кинокомпания",
   "Edit.Placeholder.Publisher": "Необязательно",
   "Edit.Label.SerialNumber": "ISBN / серийный номер",
   "Edit.Placeholder.SerialNumber": "Необязательно",
@@ -207,6 +209,12 @@
   "Edit.Label.Genres": "Жанры",
   "Edit.Placeholder.Genres": "Введите жанр и нажмите Enter",
   "Edit.Section.BookDetails": "Данные книги",
+  "Edit.Section.MovieDetails": "Данные фильма",
+  "Edit.Label.MovieRuntime": "Длительность (минуты)",
+  "Edit.Label.MovieOriginalLanguage": "Язык оригинала",
+  "Edit.Label.MovieLanguage": "Язык просмотра",
+  "Edit.Label.MovieCountry": "Страна производства",
+  "Edit.Label.MovieAgeRating": "Возрастной рейтинг",
   "Edit.Section.Publication": "Издание и публикация",
   "Edit.Section.Collections": "Серии, циклы и саги",
   "Edit.Section.Relations": "Связанные элементы",
@@ -248,6 +256,8 @@
   "RelationKind.Companion": "Сопутствующее произведение",
   "RelationKind.Other": "Другое",
   "Validation.BookDetailsType": "Книжные поля можно сохранять только для книги.",
+  "Validation.MovieDetailsType": "Поля фильма можно сохранять только для фильма.",
+  "Validation.MovieRuntimeInvalid": "Длительность должна быть от 1 до 1440 минут.",
   "Validation.PageCountInvalid": "Количество страниц должно быть больше нуля.",
   "Validation.EditionNumberInvalid": "Номер издания должен быть больше нуля.",
   "Validation.Isbn10Invalid": "ISBN-10 должен содержать 10 символов.",
@@ -320,5 +330,65 @@
   "PersonRelationKind.Mentor": "Наставник",
   "PersonRelationKind.Student": "Ученик",
   "PersonRelationKind.Collaborator": "Соавтор",
-  "PersonRelationKind.Other": "Другое"
+  "PersonRelationKind.Other": "Другое",
+  "Edit.Section.MoviePeople": "Люди и съёмочная группа",
+  "Edit.Section.PublicationCredits": "Издание и участники",
+  "Edit.Section.MovieStudios": "Студии и компании",
+  "Edit.Label.Directors": "Режиссёры",
+  "Edit.Label.Screenwriters": "Сценаристы",
+  "Edit.Label.Producers": "Продюсеры",
+  "Edit.Label.Cinematographers": "Операторы",
+  "Edit.Label.Composers": "Композиторы",
+  "Edit.Label.CastingDirectors": "Кастинг-директора",
+  "Edit.Label.ProductionDesigners": "Художники-постановщики",
+  "Edit.Label.Actors": "Актёрский состав",
+  "Edit.Label.VoiceActors": "Актёры озвучивания",
+  "Edit.Label.CharacterName": "Персонаж",
+  "Edit.Label.CreditedAs": "Имя в титрах",
+  "Edit.Placeholder.MovieStudio": "Студия или компания",
+  "Edit.Action.AddStudio": "Добавить студию",
+  "Edit.Contributor.Director": "Добавить режиссёра",
+  "Edit.Contributor.Screenwriter": "Добавить сценариста",
+  "Edit.Contributor.Producer": "Добавить продюсера",
+  "Edit.Contributor.Cinematographer": "Добавить оператора",
+  "Edit.Contributor.Composer": "Добавить композитора",
+  "Edit.Contributor.CastingDirector": "Добавить кастинг-директора",
+  "Edit.Contributor.ProductionDesigner": "Добавить художника-постановщика",
+  "Edit.Contributor.Actor": "Добавить актёра",
+  "Edit.Contributor.VoiceActor": "Добавить актёра озвучивания",
+  "StudioRole.ProductionCompany": "Производство",
+  "StudioRole.Distributor": "Дистрибуция",
+  "StudioRole.VisualEffects": "Визуальные эффекты",
+  "StudioRole.AnimationStudio": "Анимация",
+  "StudioRole.Broadcaster": "Вещатель",
+  "StudioRole.Other": "Другое"
+  ,"StudioRole.Developer": "Разработчик"
+  ,"StudioRole.Publisher": "Издатель"
+  ,"Edit.Section.EpisodicDetails": "Сезоны и эпизоды"
+  ,"Edit.Section.GraphicDetails": "Тома и публикация"
+  ,"Edit.Section.GameDetails": "Данные игры"
+  ,"Edit.Label.SeasonCount": "Сезоны"
+  ,"Edit.Label.EpisodeCount": "Эпизоды"
+  ,"Edit.Label.EpisodeRuntime": "Длительность эпизода (мин)"
+  ,"Edit.Label.Network": "Канал / сервис"
+  ,"Edit.Label.AiringStatus": "Статус выхода"
+  ,"Edit.Label.SourceMaterial": "Первоисточник"
+  ,"Edit.Label.VolumeCount": "Тома"
+  ,"Edit.Label.ChapterOrIssueCount": "Главы / выпуски"
+  ,"Edit.Label.ReadingDirection": "Направление чтения"
+  ,"Edit.Label.ColorEdition": "Полноцветное издание"
+  ,"Edit.Label.PublicationStatus": "Статус публикации"
+  ,"Edit.Label.Imprint": "Импринт"
+  ,"Edit.Label.GamePlatform": "Платформа"
+  ,"Edit.Label.MainStoryHours": "Основной сюжет (часы)"
+  ,"Edit.Label.CompletionistHours": "Полное прохождение (часы)"
+  ,"Edit.Label.GameMode": "Режим игры"
+  ,"Edit.Label.GameEngine": "Движок"
+  ,"Edit.Label.GameRegion": "Регион"
+  ,"Edit.Label.Developers": "Разработчики"
+  ,"Edit.Contributor.Developer": "Добавить разработчика"
+  ,"People.Works": "Работы и роли"
+  ,"Collections.Title": "Серии и вселенные"
+  ,"Collections.Empty": "Серии, циклы и вселенные пока не добавлены."
+  ,"Tags.Title": "Теги"
 }

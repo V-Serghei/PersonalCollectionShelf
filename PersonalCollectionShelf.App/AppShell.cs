@@ -16,6 +16,8 @@ public sealed class AppShell : Shell
     private readonly FlyoutItem _homeItem;
     private readonly FlyoutItem _libraryItem;
     private readonly FlyoutItem _statisticsItem;
+    private readonly FlyoutItem _collectionsItem;
+    private readonly FlyoutItem _tagsItem;
     private readonly FlyoutItem _settingsItem;
     private readonly List<(Border Container, Label Icon, Label Text)> _navigationButtons = [];
     private Label? _profileInitialLabel;
@@ -49,11 +51,15 @@ public sealed class AppShell : Shell
         _homeItem = CreateItem("Home", nameof(DashboardPage), () => _services.GetRequiredService<DashboardPage>());
         _libraryItem = CreateItem("Library", nameof(LibraryPage), () => _services.GetRequiredService<LibraryPage>());
         _statisticsItem = CreateItem("Statistics", nameof(StatisticsPage), () => _services.GetRequiredService<StatisticsPage>());
+        _collectionsItem = CreateItem("Collections", nameof(CollectionsPage), () => _services.GetRequiredService<CollectionsPage>());
+        _tagsItem = CreateItem("Tags", nameof(TagsPage), () => _services.GetRequiredService<TagsPage>());
         _settingsItem = CreateItem("Settings", nameof(SettingsPage), () => _services.GetRequiredService<SettingsPage>());
 
         Items.Add(_homeItem);
         Items.Add(_libraryItem);
         Items.Add(_statisticsItem);
+        Items.Add(_collectionsItem);
+        Items.Add(_tagsItem);
         Items.Add(_settingsItem);
 
         Routing.RegisterRoute(nameof(MediaDetailsPage), typeof(MediaDetailsPage));
@@ -142,10 +148,12 @@ public sealed class AppShell : Shell
             Spacing = 6
         };
 
-        navigation.Children.Add(CreateNavButton("", T("Shell.Home"), "//Home", true, symbolFont: true));
-        navigation.Children.Add(CreateNavButton("▤", T("Library.Title"), "//Library", false, symbolFont: false));
-        navigation.Children.Add(CreateNavButton("▥", T("Shell.Statistics"), "//Statistics", false, symbolFont: false));
-        navigation.Children.Add(CreateNavButton("", T("Settings.Title"), "//Settings", false, symbolFont: true));
+        navigation.Children.Add(CreateNavButton("⌂", T("Shell.Home"), "//Home", true));
+        navigation.Children.Add(CreateNavButton("▤", T("Library.Title"), "//Library", false));
+        navigation.Children.Add(CreateNavButton("▥", T("Shell.Statistics"), "//Statistics", false));
+        navigation.Children.Add(CreateNavButton("◎", T("Collections.Title"), "//Collections", false));
+        navigation.Children.Add(CreateNavButton("#", T("Tags.Title"), "//Tags", false));
+        navigation.Children.Add(CreateNavButton("⚙", T("Settings.Title"), "//Settings", false));
         navigation.Children.Add(new Label
         {
             Text = T("Shell.Categories"),
@@ -253,7 +261,7 @@ public sealed class AppShell : Shell
 
             var email = await authService.GetSignedInEmailAsync();
             var userId = await authService.GetCurrentUserIdAsync() ?? "local-user";
-            var itemCount = (await mediaItemService.GetLibraryAsync(userId)).Count;
+            var itemCount = await mediaItemService.GetLibraryItemCountAsync(userId);
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
@@ -280,7 +288,7 @@ public sealed class AppShell : Shell
         return _localizationService.GetString(key);
     }
 
-    private Border CreateNavButton(string icon, string label, string route, bool active, bool symbolFont)
+    private Border CreateNavButton(string icon, string label, string route, bool active)
     {
         var activeColor = PrimaryColor;
         var inactiveColor = SecondaryForegroundColor;
@@ -288,8 +296,7 @@ public sealed class AppShell : Shell
         var iconLabel = new Label
         {
             Text = icon,
-            FontFamily = symbolFont ? "Segoe MDL2 Assets" : null,
-            FontSize = symbolFont ? 15 : 13,
+            FontSize = 15,
             WidthRequest = 20,
             HorizontalTextAlignment = TextAlignment.Center,
             VerticalTextAlignment = TextAlignment.Center,
@@ -328,23 +335,26 @@ public sealed class AppShell : Shell
             })
         });
 
-        var hoverColor = HoverNavigationBackgroundColor;
-        var pointer = new PointerGestureRecognizer();
-        pointer.PointerEntered += (_, _) =>
+        if (!UsesCompactNavigation)
         {
-            if (container.BackgroundColor == Colors.Transparent)
+            var hoverColor = HoverNavigationBackgroundColor;
+            var pointer = new PointerGestureRecognizer();
+            pointer.PointerEntered += (_, _) =>
             {
-                container.BackgroundColor = hoverColor;
-            }
-        };
-        pointer.PointerExited += (_, _) =>
-        {
-            if (container.BackgroundColor == hoverColor)
+                if (container.BackgroundColor == Colors.Transparent)
+                {
+                    container.BackgroundColor = hoverColor;
+                }
+            };
+            pointer.PointerExited += (_, _) =>
             {
-                container.BackgroundColor = Colors.Transparent;
-            }
-        };
-        container.GestureRecognizers.Add(pointer);
+                if (container.BackgroundColor == hoverColor)
+                {
+                    container.BackgroundColor = Colors.Transparent;
+                }
+            };
+            container.GestureRecognizers.Add(pointer);
+        }
 
         _navigationButtons.Add((container, iconLabel, textLabel));
         return container;
@@ -393,10 +403,13 @@ public sealed class AppShell : Shell
             })
         });
 
-        var pointer = new PointerGestureRecognizer();
-        pointer.PointerEntered += (_, _) => row.Scale = 1.05;
-        pointer.PointerExited += (_, _) => row.Scale = 1.0;
-        row.GestureRecognizers.Add(pointer);
+        if (!UsesCompactNavigation)
+        {
+            var pointer = new PointerGestureRecognizer();
+            pointer.PointerEntered += (_, _) => row.Scale = 1.05;
+            pointer.PointerExited += (_, _) => row.Scale = 1.0;
+            row.GestureRecognizers.Add(pointer);
+        }
 
         return row;
     }
@@ -463,11 +476,11 @@ public sealed class AppShell : Shell
 
         if (CurrentPage is not null)
         {
-            Shell.SetNavBarIsVisible(CurrentPage, UsesCompactNavigation);
+            var usesOwnHeader = location.Contains(nameof(EditMediaItemPage), StringComparison.OrdinalIgnoreCase);
+            Shell.SetNavBarIsVisible(CurrentPage, UsesCompactNavigation && !usesOwnHeader);
         }
 
         CloseCompactFlyout();
-        _ = RefreshProfileAsync();
     }
 
     private void CloseCompactFlyout()

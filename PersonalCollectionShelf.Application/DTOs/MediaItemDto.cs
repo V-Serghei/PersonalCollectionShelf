@@ -46,7 +46,17 @@ public sealed record MediaItemDto
 
     public IReadOnlyList<MediaContributionDto> Contributions { get; init; } = [];
 
+    public IReadOnlyList<MediaStudioCreditDto> StudioCredits { get; init; } = [];
+
     public BookDetailsDto? BookDetails { get; init; }
+
+    public MovieDetailsDto? MovieDetails { get; init; }
+
+    public EpisodicDetailsInput? EpisodicDetails { get; init; }
+
+    public GraphicPublicationDetailsInput? GraphicPublicationDetails { get; init; }
+
+    public GameDetailsInput? GameDetails { get; init; }
 
     public CollectionMembershipDto? Collection { get; init; }
 

@@ -9,7 +9,9 @@ public sealed class PeopleManagementService(
     IPersonRepository people,
     IProfessionRepository professions,
     IPersonRelationRepository relations,
-    ITransactionRunner? transactionRunner = null) : IPeopleManagementService
+    ITransactionRunner? transactionRunner = null,
+    IMediaContributionRepository? contributions = null,
+    IMediaItemRepository? mediaItems = null) : IPeopleManagementService
 {
     public async Task<PersonDetailsDto?> GetAsync(string userId, Guid id, CancellationToken cancellationToken = default)
     {
@@ -105,6 +107,20 @@ public sealed class PeopleManagementService(
             }
         }
 
+        var works = new List<PersonWorkDto>();
+        if (contributions is not null && mediaItems is not null)
+        {
+            foreach (var contribution in await contributions.GetForPersonAsync(person.Id, person.UserId, cancellationToken))
+            {
+                var mediaItem = await mediaItems.GetByIdAsync(contribution.MediaItemId, person.UserId, cancellationToken);
+                if (mediaItem is not null)
+                {
+                    works.Add(new PersonWorkDto(mediaItem.Id, mediaItem.Title, mediaItem.MediaType,
+                        contribution.Role, contribution.Details, contribution.CreditedAs));
+                }
+            }
+        }
+
         return new PersonDetailsDto
         {
             Id = person.Id,
@@ -125,7 +141,8 @@ public sealed class PeopleManagementService(
             Description = person.Description,
             Notes = person.Notes,
             Professions = professionNames,
-            Relations = relationDtos
+            Relations = relationDtos,
+            Works = works.OrderBy(value => value.Title).ToList()
         };
     }
 

@@ -27,9 +27,14 @@ MediaItem ────< MediaContribution >──── Person ────< Per
     │                                      └─ photo, years, tagline, bio
     ├────< MediaItemTag >──── Tag
     ├────< MediaRelation >──── MediaItem        (sequel/adaptation/... graph)
+    ├────< MediaStudioCredit >──── Studio       (production/distribution/VFX/...)
     ├────< MediaCollectionEntry >──── MediaCollection ── ParentCollectionId (tree)
     ├──── BookDetails (1:1, only when MediaType = Book)
-    └──── (future) MovieDetails / GameDetails / AnimeDetails ...
+    ├──── MovieDetails (1:1, only when MediaType = Movie)
+    ├──── EpisodicDetails (1:1, Series / Anime)
+    ├──── GraphicPublicationDetails (1:1, Manga / Comic)
+    ├──── GameDetails (1:1, Game)
+    └──── (future) GameDetails / AnimeDetails ...
 ```
 
 ## Entities
@@ -92,9 +97,30 @@ Companion, Other. Stored one-directional; inverse is derived (Sequel ⇄ Prequel
 - Authors and translators are contributions, not columns here.
 - Series membership is a collection entry, not a column here.
 
+### MovieDetails (implemented, 1:1 with MediaItem where MediaType = Movie)
+- `MediaItemId` (PK/FK), `RuntimeMinutes`, `OriginalLanguage`, `Language`,
+  `CountryOfOrigin`, and `AgeRating`.
+- Directors, screenwriters, producers, cinematographers, composers, and actors are
+  `MediaContribution` rows. Actor `Details` stores the character and `CreditedAs` stores the
+  billing name.
+- Studios are `MediaStudioCredit` rows with a role: ProductionCompany, Distributor,
+  VisualEffects, AnimationStudio, Broadcaster, or Other. The legacy `StudioId` keeps the first
+  production company for backward compatibility.
+- Genres use shared `Tag` rows with `Kind=Genre`; franchises use `MediaCollection`; sequels,
+  adaptations, remakes, and other links use `MediaRelation`.
+
 ### Studio (extended later)
 Optional: `FoundedYear`, `Country`, `Description`, `LogoPath`, soft delete + timestamps.
 Used as publisher for books, studio for movies/anime, developer for games.
+
+### Other type details (implemented)
+- `EpisodicDetails`: seasons, episodes, episode runtime, network/service, airing status,
+  source material, and original language for Series and Anime.
+- `GraphicPublicationDetails`: volumes, chapters/issues, reading direction, color flag,
+  publication status, imprint, and original language for Manga and Comic.
+- `GameDetails`: platform, main/completionist hours, game mode, engine, and region.
+- All of these reuse tags/genres, ordered collection membership (series, cycles, universes),
+  media relations, people contributions, and studio credits rather than string lists.
 
 ## Book add flow (the reference implementation — polish this first)
 
@@ -128,6 +154,7 @@ Used as publisher for books, studio for movies/anime, developer for games.
    star+decimal rating, book details, series picker). Details page shows the new data.
 3. **P3 (People UI):** person page (photo, years, bio, relations, their works across the library).
 4. **P4:** migrate cast/creator/studio legacy fields fully onto contributions; remove dead columns.
-5. **P5+:** per-type details for Movie/Game/Anime/Manga, collection tree UI, relation graphs,
+5. **P5 (started):** MovieDetails persistence and phone-ready movie form implemented. Continue with
+   Game/Anime/Manga details, collection tree UI, relation graphs,
    include everything in Firestore sync (each new table syncs like media items, soft deletes
    included).

@@ -7,6 +7,8 @@ public interface IMediaItemRepository
 {
     Task<IReadOnlyList<MediaItem>> GetAllAsync(string userId, CancellationToken cancellationToken = default);
 
+    Task<int> CountAsync(string userId, CancellationToken cancellationToken = default);
+
     Task<MediaItem?> GetByIdAsync(Guid id, string userId, CancellationToken cancellationToken = default);
 
     Task<MediaItem> AddAsync(MediaItem mediaItem, CancellationToken cancellationToken = default);

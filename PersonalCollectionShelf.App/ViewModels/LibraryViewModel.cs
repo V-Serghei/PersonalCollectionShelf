@@ -17,7 +17,9 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
+    private IReadOnlyList<MediaItemDto> _allItems = [];
     private IReadOnlyList<MediaItemDto> _visibleItems = [];
+    private CancellationTokenSource? _searchDelayCancellation;
     private bool _suppressFilterReload;
     private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewModePreferenceKey, "grid") != "list";
 
@@ -92,6 +94,16 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             if (option is not null)
             {
                 SelectedMediaTypeFilter = option;
+            }
+        }
+
+        if (query.TryGetValue("status", out var rawStatus) &&
+            Enum.TryParse<MediaStatus>(rawStatus?.ToString(), true, out var status))
+        {
+            var option = StatusFilters.FirstOrDefault(candidate => candidate.Value == status);
+            if (option is not null)
+            {
+                SelectedStatusFilter = option;
             }
         }
     }
@@ -299,7 +311,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         if (!_suppressFilterReload)
         {
-            _ = LoadAsync();
+            ApplyCurrentFilters();
         }
     }
 
@@ -307,7 +319,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         if (!_suppressFilterReload)
         {
-            _ = LoadAsync();
+            ApplyCurrentFilters();
         }
     }
 
@@ -315,7 +327,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         if (!_suppressFilterReload)
         {
-            _ = LoadAsync();
+            ApplyCurrentFilters();
         }
     }
 
@@ -323,21 +335,18 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         if (!_suppressFilterReload)
         {
-            _ = LoadAsync();
+            ApplyCurrentFilters();
         }
     }
 
     private void OnSearchTermChanged(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            _ = LoadAsync();
-        }
+        ScheduleSearchRefresh(string.IsNullOrWhiteSpace(value) ? TimeSpan.Zero : TimeSpan.FromMilliseconds(250));
     }
 
     private void OnActiveQuickFilterChanged(LibraryQuickFilter value)
     {
-        _ = LoadAsync();
+        ApplyCurrentFilters();
         OnPropertyChanged(nameof(QuickFilterAllText));
         OnPropertyChanged(nameof(QuickFilterFavoritesText));
         OnPropertyChanged(nameof(QuickFilterMissingCategoryText));
@@ -373,6 +382,54 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     }
 
     [RelayCommand]
+    private async Task OpenCompletedAsync()
+    {
+        await OpenLibraryFilterAsync("status=Completed", "LibraryViewModel.OpenCompletedAsync");
+    }
+
+    [RelayCommand]
+    private async Task OpenInProgressAsync()
+    {
+        await OpenLibraryFilterAsync("status=InProgress", "LibraryViewModel.OpenInProgressAsync");
+    }
+
+    [RelayCommand]
+    private async Task OpenPlannedAsync()
+    {
+        await OpenLibraryFilterAsync("status=Planned", "LibraryViewModel.OpenPlannedAsync");
+    }
+
+    [RelayCommand]
+    private async Task OpenCategoryAsync(CategorySummaryViewModel? category)
+    {
+        if (category is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await Shell.Current.GoToAsync($"//Library?mediaType={category.MediaType}");
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, $"LibraryViewModel.OpenCategoryAsync type={category.MediaType}");
+        }
+    }
+
+    private static async Task OpenLibraryFilterAsync(string query, string context)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync($"//Library?{query}");
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, context);
+        }
+    }
+
+    [RelayCommand]
     private void SelectMediaTypeFilter(LocalizedOption<MediaType?>? option)
     {
         if (option is not null)
@@ -394,20 +451,9 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             IsBusy = true;
             var userId = await GetCurrentUserIdAsync();
             var library = await _mediaItemService.GetLibraryAsync(userId);
+            _allItems = library;
             ReloadDynamicFilterOptions(library);
-
-            var items = await _mediaItemService.SearchMediaItemsAsync(new MediaItemSearchCriteria
-            {
-                UserId = userId,
-                SearchTerm = SearchTerm,
-                MediaType = SelectedMediaTypeFilter?.Value,
-                Status = SelectedStatusFilter?.Value,
-                Category = SelectedCategoryFilter?.Value,
-                Tag = SelectedTagFilter?.Value
-            });
-
-            _visibleItems = ApplyQuickFilter(items).ToList();
-            PopulateMediaItems(_visibleItems);
+            ApplyCurrentFilters();
         }
         finally
         {
@@ -420,7 +466,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         try
         {
-            await Shell.Current.GoToAsync(nameof(EditMediaItemPage));
+            await AppNavigation.OpenEditMediaItemAsync();
         }
         catch (Exception exception)
         {
@@ -438,7 +484,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
         try
         {
-            await Shell.Current.GoToAsync($"{nameof(MediaDetailsPage)}?id={item.Id}");
+            await AppNavigation.OpenMediaDetailsAsync(item.Id);
         }
         catch (Exception exception)
         {
@@ -722,6 +768,73 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             _ => items
         };
     }
+
+    private void ApplyCurrentFilters()
+    {
+        IEnumerable<MediaItemDto> items = _allItems;
+        var searchTerm = SearchTerm.Trim();
+
+        if (searchTerm.Length > 0)
+        {
+            items = items.Where(item =>
+                Contains(item.Title, searchTerm) ||
+                Contains(item.OriginalTitle, searchTerm) ||
+                Contains(item.Description, searchTerm) ||
+                Contains(item.Category, searchTerm) ||
+                Contains(item.Tags, searchTerm) ||
+                Contains(item.SerialNumber, searchTerm) ||
+                Contains(item.Notes, searchTerm));
+        }
+
+        if (SelectedMediaTypeFilter?.Value is { } mediaType)
+        {
+            items = items.Where(item => item.MediaType == mediaType);
+        }
+
+        if (SelectedStatusFilter?.Value is { } status)
+        {
+            items = items.Where(item => item.Status == status);
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedCategoryFilter?.Value))
+        {
+            items = items.Where(item =>
+                string.Equals(item.Category, SelectedCategoryFilter.Value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedTagFilter?.Value))
+        {
+            items = items.Where(item => SplitTags(item.Tags)
+                .Any(tag => string.Equals(tag, SelectedTagFilter.Value, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        _visibleItems = ApplyQuickFilter(items).ToList();
+        PopulateMediaItems(_visibleItems);
+    }
+
+    private async void ScheduleSearchRefresh(TimeSpan delay)
+    {
+        _searchDelayCancellation?.Cancel();
+        _searchDelayCancellation?.Dispose();
+        _searchDelayCancellation = new CancellationTokenSource();
+        var cancellationToken = _searchDelayCancellation.Token;
+
+        try
+        {
+            if (delay > TimeSpan.Zero)
+            {
+                await Task.Delay(delay, cancellationToken);
+            }
+
+            await MainThread.InvokeOnMainThreadAsync(ApplyCurrentFilters);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private static bool Contains(string? source, string value) =>
+        source?.Contains(value, StringComparison.OrdinalIgnoreCase) == true;
 
     private string GetQuickFilterText(LibraryQuickFilter filter, string key)
     {

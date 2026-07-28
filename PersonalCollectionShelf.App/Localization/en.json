@@ -71,6 +71,7 @@
   "Details.PublisherLabel": "Publisher",
   "Details.SerialNumberLabel": "ISBN / serial number",
   "Details.CastLabel": "Actors",
+  "Details.MinutesFormat": "{0} min",
   "Details.StartDateLabel": "Start date",
   "Details.FinishDateLabel": "Finish date",
   "Details.ReleaseYearLabel": "Release year",
@@ -104,6 +105,7 @@
   "Edit.Label.Creator.Generic": "Creator",
   "Edit.Placeholder.Creator": "Optional",
   "Edit.Label.Publisher": "Publisher",
+  "Edit.Label.Studio": "Studio / production company",
   "Edit.Placeholder.Publisher": "Optional",
   "Edit.Label.SerialNumber": "ISBN / serial number",
   "Edit.Placeholder.SerialNumber": "Optional",
@@ -207,6 +209,12 @@
   "Edit.Label.Genres": "Genres",
   "Edit.Placeholder.Genres": "Type a genre and press Enter",
   "Edit.Section.BookDetails": "Book details",
+  "Edit.Section.MovieDetails": "Movie details",
+  "Edit.Label.MovieRuntime": "Runtime (minutes)",
+  "Edit.Label.MovieOriginalLanguage": "Original language",
+  "Edit.Label.MovieLanguage": "Viewing language",
+  "Edit.Label.MovieCountry": "Country of origin",
+  "Edit.Label.MovieAgeRating": "Age rating",
   "Edit.Section.Publication": "Edition and publication",
   "Edit.Section.Collections": "Series, cycles and sagas",
   "Edit.Section.Relations": "Related items",
@@ -248,6 +256,8 @@
   "RelationKind.Companion": "Companion",
   "RelationKind.Other": "Other",
   "Validation.BookDetailsType": "Book details can only be saved for a book.",
+  "Validation.MovieDetailsType": "Movie details can only be saved for a movie.",
+  "Validation.MovieRuntimeInvalid": "Runtime must be between 1 and 1440 minutes.",
   "Validation.PageCountInvalid": "Page count must be greater than zero.",
   "Validation.EditionNumberInvalid": "Edition number must be greater than zero.",
   "Validation.Isbn10Invalid": "ISBN-10 must contain 10 characters.",
@@ -320,5 +330,65 @@
   "PersonRelationKind.Mentor": "Mentor",
   "PersonRelationKind.Student": "Student",
   "PersonRelationKind.Collaborator": "Collaborator",
-  "PersonRelationKind.Other": "Other"
+  "PersonRelationKind.Other": "Other",
+  "Edit.Section.MoviePeople": "People and credits",
+  "Edit.Section.PublicationCredits": "Publication and contributors",
+  "Edit.Section.MovieStudios": "Studios and companies",
+  "Edit.Label.Directors": "Directors",
+  "Edit.Label.Screenwriters": "Screenwriters",
+  "Edit.Label.Producers": "Producers",
+  "Edit.Label.Cinematographers": "Cinematography",
+  "Edit.Label.Composers": "Music",
+  "Edit.Label.CastingDirectors": "Casting directors",
+  "Edit.Label.ProductionDesigners": "Production designers",
+  "Edit.Label.Actors": "Cast",
+  "Edit.Label.VoiceActors": "Voice cast",
+  "Edit.Label.CharacterName": "Character",
+  "Edit.Label.CreditedAs": "Credited as",
+  "Edit.Placeholder.MovieStudio": "Studio or company",
+  "Edit.Action.AddStudio": "Add studio",
+  "Edit.Contributor.Director": "Add director",
+  "Edit.Contributor.Screenwriter": "Add screenwriter",
+  "Edit.Contributor.Producer": "Add producer",
+  "Edit.Contributor.Cinematographer": "Add cinematographer",
+  "Edit.Contributor.Composer": "Add composer",
+  "Edit.Contributor.CastingDirector": "Add casting director",
+  "Edit.Contributor.ProductionDesigner": "Add production designer",
+  "Edit.Contributor.Actor": "Add actor",
+  "Edit.Contributor.VoiceActor": "Add voice actor",
+  "StudioRole.ProductionCompany": "Production",
+  "StudioRole.Distributor": "Distribution",
+  "StudioRole.VisualEffects": "Visual effects",
+  "StudioRole.AnimationStudio": "Animation",
+  "StudioRole.Broadcaster": "Broadcaster",
+  "StudioRole.Other": "Other"
+  ,"StudioRole.Developer": "Developer"
+  ,"StudioRole.Publisher": "Publisher"
+  ,"Edit.Section.EpisodicDetails": "Series and episodes"
+  ,"Edit.Section.GraphicDetails": "Volumes and publication"
+  ,"Edit.Section.GameDetails": "Game details"
+  ,"Edit.Label.SeasonCount": "Seasons"
+  ,"Edit.Label.EpisodeCount": "Episodes"
+  ,"Edit.Label.EpisodeRuntime": "Episode runtime (min)"
+  ,"Edit.Label.Network": "Network / service"
+  ,"Edit.Label.AiringStatus": "Airing status"
+  ,"Edit.Label.SourceMaterial": "Source material"
+  ,"Edit.Label.VolumeCount": "Volumes"
+  ,"Edit.Label.ChapterOrIssueCount": "Chapters / issues"
+  ,"Edit.Label.ReadingDirection": "Reading direction"
+  ,"Edit.Label.ColorEdition": "Full color"
+  ,"Edit.Label.PublicationStatus": "Publication status"
+  ,"Edit.Label.Imprint": "Imprint"
+  ,"Edit.Label.GamePlatform": "Platform"
+  ,"Edit.Label.MainStoryHours": "Main story (hours)"
+  ,"Edit.Label.CompletionistHours": "Completionist (hours)"
+  ,"Edit.Label.GameMode": "Game mode"
+  ,"Edit.Label.GameEngine": "Engine"
+  ,"Edit.Label.GameRegion": "Region"
+  ,"Edit.Label.Developers": "Developers"
+  ,"Edit.Contributor.Developer": "Add developer"
+  ,"People.Works": "Works and roles"
+  ,"Collections.Title": "Series and universes"
+  ,"Collections.Empty": "No series, cycles, or universes yet."
+  ,"Tags.Title": "Tags"
 }

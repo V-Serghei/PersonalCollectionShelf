@@ -28,6 +28,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IStudioService, StudioService>();
         builder.Services.AddSingleton<ITagService, TagService>();
         builder.Services.AddSingleton<IMediaItemService, MediaItemService>();
+        builder.Services.AddSingleton<ICollectionExplorerService, CollectionExplorerService>();
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
 
         builder.Services.AddSingleton<AppShell>();
@@ -37,6 +38,8 @@ public static class MauiProgram
         builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddTransient<PeopleViewModel>();
         builder.Services.AddTransient<CategoryManagementViewModel>();
+        builder.Services.AddTransient<CollectionsViewModel>();
+        builder.Services.AddTransient<TagsViewModel>();
         builder.Services.AddTransient<SignInViewModel>();
         builder.Services.AddTransient<SignInPage>();
         builder.Services.AddTransient<DashboardPage>();
@@ -47,6 +50,8 @@ public static class MauiProgram
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<PeoplePage>();
         builder.Services.AddTransient<CategoryManagementPage>();
+        builder.Services.AddTransient<CollectionsPage>();
+        builder.Services.AddTransient<TagsPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

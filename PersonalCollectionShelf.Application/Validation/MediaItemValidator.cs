@@ -10,6 +10,7 @@ public static class MediaItemValidator
         var result = new ValidationResult();
         ValidateShared(request.UserId, request.Title, request.Rating, request.ProgressCurrent, request.ProgressTotal, request.ReleaseYear, result);
         ValidateBook(request.MediaType, request.BookDetails, result);
+        ValidateMovie(request.MediaType, request.MovieDetails, result);
         return result;
     }
 
@@ -24,6 +25,7 @@ public static class MediaItemValidator
 
         ValidateShared(request.UserId, request.Title, request.Rating, request.ProgressCurrent, request.ProgressTotal, request.ReleaseYear, result);
         ValidateBook(request.MediaType, request.BookDetails, result);
+        ValidateMovie(request.MediaType, request.MovieDetails, result);
         return result;
     }
 
@@ -114,6 +116,24 @@ public static class MediaItemValidator
         if (year is < 1 or > 2200)
         {
             result.Add("Validation.BookYearRange", fieldName);
+        }
+    }
+
+    private static void ValidateMovie(MediaType mediaType, MovieDetailsInput? movie, ValidationResult result)
+    {
+        if (movie is null)
+        {
+            return;
+        }
+
+        if (mediaType != MediaType.Movie)
+        {
+            result.Add("Validation.MovieDetailsType", nameof(movie));
+        }
+
+        if (movie.RuntimeMinutes is < 1 or > 1440)
+        {
+            result.Add("Validation.MovieRuntimeInvalid", nameof(movie.RuntimeMinutes));
         }
     }
 

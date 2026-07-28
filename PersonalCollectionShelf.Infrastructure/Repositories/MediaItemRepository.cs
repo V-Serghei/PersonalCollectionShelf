@@ -20,6 +20,16 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
         return records.Select(ToDomain).ToList();
     }
 
+    public async Task<int> CountAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+
+        return await databaseService.Connection
+            .Table<MediaItemRecord>()
+            .Where(record => record.UserId == userId && record.DeletedAt == null)
+            .CountAsync();
+    }
+
     public async Task<MediaItem?> GetByIdAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
         await databaseService.InitializeAsync(cancellationToken);

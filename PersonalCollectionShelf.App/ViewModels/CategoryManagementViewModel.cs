@@ -132,7 +132,7 @@ public partial class CategoryManagementViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private Task GoBackAsync() => Shell.Current.GoToAsync("..");
+    private Task GoBackAsync() => AppNavigation.CloseAsync();
 
     private void InitializeOptions()
     {

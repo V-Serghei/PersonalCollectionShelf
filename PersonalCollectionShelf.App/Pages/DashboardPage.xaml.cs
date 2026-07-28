@@ -30,7 +30,7 @@ public partial class DashboardPage : ContentPage
             return;
         }
 
-        var usesCompactLayout = width < 600;
+        var usesCompactLayout = DeviceInfo.Current.Idiom == DeviceIdiom.Phone || width < 600;
         if (_usesCompactLayout == usesCompactLayout)
         {
             return;

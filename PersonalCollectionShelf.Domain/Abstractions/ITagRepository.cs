@@ -9,6 +9,11 @@ public interface ITagRepository
 
     Task<IReadOnlyList<Tag>> GetForItemAsync(Guid mediaItemId, string userId, TagKind? kind = null, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<Tag>>> GetForItemsAsync(
+        IReadOnlyCollection<Guid> mediaItemIds,
+        string userId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Tag>> SearchAsync(string userId, string? searchTerm, TagKind kind, int limit = 20, CancellationToken cancellationToken = default);
 
     Task<Tag> GetOrCreateAsync(string userId, string name, TagKind kind, CancellationToken cancellationToken = default);

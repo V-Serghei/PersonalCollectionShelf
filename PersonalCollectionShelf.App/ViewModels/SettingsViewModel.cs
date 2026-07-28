@@ -386,7 +386,7 @@ public partial class SettingsViewModel : BaseViewModel
     {
         try
         {
-            await Shell.Current.GoToAsync(nameof(EditMediaItemPage));
+            await AppNavigation.OpenEditMediaItemAsync();
         }
         catch (Exception exception)
         {
@@ -395,10 +395,10 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private Task OpenPeopleAsync() => Shell.Current.GoToAsync(nameof(PeoplePage));
+    private Task OpenPeopleAsync() => AppNavigation.OpenPeopleAsync();
 
     [RelayCommand]
-    private Task OpenCategoriesAsync() => Shell.Current.GoToAsync(nameof(CategoryManagementPage));
+    private Task OpenCategoriesAsync() => AppNavigation.OpenCategoriesAsync();
 
     public string LibraryDataSectionTitle => T("Settings.LibraryData.Title");
     public string PeopleEditorTitle => T("Settings.People.Title");
@@ -509,7 +509,12 @@ public partial class SettingsViewModel : BaseViewModel
                 Details = value.Details,
                 CreditedAs = value.CreditedAs
             }).ToList(),
+            StudioCredits = item.StudioCredits.Select(value => new StudioCreditInput { StudioId = value.StudioId, Name = value.StudioName, Role = value.Role, SortOrder = value.SortOrder }).ToList(),
             BookDetails = ToBookDetailsInput(item.BookDetails),
+            MovieDetails = item.MovieDetails is null ? null : new MovieDetailsInput { RuntimeMinutes = item.MovieDetails.RuntimeMinutes, OriginalLanguage = item.MovieDetails.OriginalLanguage, Language = item.MovieDetails.Language, CountryOfOrigin = item.MovieDetails.CountryOfOrigin, AgeRating = item.MovieDetails.AgeRating },
+            EpisodicDetails = item.EpisodicDetails,
+            GraphicPublicationDetails = item.GraphicPublicationDetails,
+            GameDetails = item.GameDetails,
             Collection = item.Collection is null ? null : new CollectionMembershipInput
             {
                 Name = item.Collection.Name,
@@ -560,7 +565,12 @@ public partial class SettingsViewModel : BaseViewModel
                 Details = value.Details,
                 CreditedAs = value.CreditedAs
             }).ToList(),
+            StudioCredits = item.StudioCredits.Select(value => new StudioCreditInput { StudioId = value.StudioId, Name = value.StudioName, Role = value.Role, SortOrder = value.SortOrder }).ToList(),
             BookDetails = ToBookDetailsInput(item.BookDetails),
+            MovieDetails = item.MovieDetails is null ? null : new MovieDetailsInput { RuntimeMinutes = item.MovieDetails.RuntimeMinutes, OriginalLanguage = item.MovieDetails.OriginalLanguage, Language = item.MovieDetails.Language, CountryOfOrigin = item.MovieDetails.CountryOfOrigin, AgeRating = item.MovieDetails.AgeRating },
+            EpisodicDetails = item.EpisodicDetails,
+            GraphicPublicationDetails = item.GraphicPublicationDetails,
+            GameDetails = item.GameDetails,
             Collection = item.Collection is null ? null : new CollectionMembershipInput
             {
                 Name = item.Collection.Name,

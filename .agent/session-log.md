@@ -61,3 +61,21 @@
 
 - Added phone-responsive navigation: the desktop sidebar remains locked on larger devices, while phones use the native Shell flyout with a navigation bar and automatically close the drawer after selection.
 - Made the Dashboard responsive by removing its fixed 920px width, allowing the search header to fill available space, stacking summary cards into a 2x2 phone grid, and reducing category cards to one column on narrow screens.
+- Completed a phone-layout pass across Dashboard, Library, Statistics, Settings, media details, media editing, sign-in, people management, and category management.
+- Fixed localized Picker options rendering their generated record representation instead of their display text.
+- Added first-class MovieDetails persistence, validation, edit fields, and detail presentation for runtime, original/viewing languages, country, and age rating. Directors, studios, and actors continue to use the shared person/studio contribution graph.
+- Built, installed, and visually checked the responsive Dashboard on a Samsung Android phone; made the edit form's compact layout also key off the phone idiom because some devices report allocated width in physical pixels.
+- Replaced Windows-only Segoe MDL2 glyphs and placeholder question marks with cross-platform symbols, enlarged touch targets, made dashboard summary/category/favorite cards actionable, and removed the dead Settings search field.
+- Fixed Android form input by using resize-on-keyboard plus focus-aware scrolling, and verified text entry stays visible above the Samsung keyboard.
+- Worked around a verified MAUI Shell Android fragment failure by routing editor/detail/management pages through modal navigation on Android phones; verified Add Item, Picker selection, Movie fields, Cancel, and repeat Add Item taps on device.
+- Made library loading lightweight: one media query plus batched tag links, in-memory filtering/debounced search, and a direct count query for the flyout profile instead of fully hydrating every item multiple times.
+- Expanded movie creation into a structured graph: separate person credits for directors, screenwriters, producers, cinematographers, composers, and actors; actor character and billing metadata; many-to-many studio credits with production, distribution, VFX, animation, and broadcast roles; plus movie genres, franchises, and related-work links in the phone form and detail page.
+- Added SQLite persistence and legacy movie-studio migration for `MediaStudioCredit`. Per the user's request, these latest changes were not launched or test-run locally.
+- Extended the common graph UI to Series and Anime (crew, actors/voice actors, studios, genres,
+  franchises, relations) and to Manga/Comic (authors, translators, illustrators, editors, genres,
+  cycles/universes, relations). Added persisted episodic, graphic-publication, and game detail tables.
+- Added game developer selection through the shared person picker, game studio roles, a person's
+  reverse work/role list, and a dedicated series/cycles/universes explorer page.
+- Added a dedicated tag explorer that groups library items by tag and opens their detail pages.
+- Strengthened Android keyboard handling by attaching focus scrolling to dynamically created form
+  inputs and repeating the scroll after IME resize animation. Changes remain intentionally unrun.

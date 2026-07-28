@@ -15,7 +15,10 @@ public sealed class MediaItemService : IMediaItemService
     private readonly IStudioService _studios;
     private readonly ITagRepository? _tags;
     private readonly IMediaContributionRepository? _contributions;
+    private readonly IMediaStudioCreditRepository? _studioCredits;
+    private readonly IMediaTypeDetailsRepository? _typeDetails;
     private readonly IBookDetailsRepository? _bookDetails;
+    private readonly IMovieDetailsRepository? _movieDetails;
     private readonly IMediaCollectionRepository? _collections;
     private readonly IMediaRelationRepository? _relations;
     private readonly IMediaCategoryRepository? _categories;
@@ -25,7 +28,7 @@ public sealed class MediaItemService : IMediaItemService
         IMediaItemRepository mediaItems,
         IPersonService people,
         IStudioService studios)
-        : this(mediaItems, people, studios, null, null, null, null, null, null, null)
+        : this(mediaItems, people, studios, null, null, null, null, null, null, null, null, null, null)
     {
     }
 
@@ -39,14 +42,20 @@ public sealed class MediaItemService : IMediaItemService
         IMediaCollectionRepository? collections,
         IMediaRelationRepository? relations,
         IMediaCategoryRepository? categories = null,
-        ITransactionRunner? transactionRunner = null)
+        ITransactionRunner? transactionRunner = null,
+        IMovieDetailsRepository? movieDetails = null,
+        IMediaStudioCreditRepository? studioCredits = null,
+        IMediaTypeDetailsRepository? typeDetails = null)
     {
         _mediaItems = mediaItems;
         _people = people;
         _studios = studios;
         _tags = tags;
         _contributions = contributions;
+        _studioCredits = studioCredits;
+        _typeDetails = typeDetails;
         _bookDetails = bookDetails;
+        _movieDetails = movieDetails;
         _collections = collections;
         _relations = relations;
         _categories = categories;
@@ -56,8 +65,28 @@ public sealed class MediaItemService : IMediaItemService
     public async Task<IReadOnlyList<MediaItemDto>> GetLibraryAsync(string userId, CancellationToken cancellationToken = default)
     {
         var items = await _mediaItems.GetAllAsync(userId, cancellationToken);
-        return await ToDtosAsync(items, cancellationToken);
+        if (_tags is null)
+        {
+            return items.Select(item => ToLibraryDto(item, SplitTags(item.Tags), [])).ToList();
+        }
+
+        var tagsByItem = await _tags.GetForItemsAsync(
+            items.Select(item => item.Id).ToList(),
+            userId,
+            cancellationToken);
+
+        return items.Select(item =>
+        {
+            var itemTags = tagsByItem.GetValueOrDefault(item.Id) ?? [];
+            return ToLibraryDto(
+                item,
+                itemTags.Where(tag => tag.Kind == TagKind.Tag).Select(tag => tag.Name).ToList(),
+                itemTags.Where(tag => tag.Kind == TagKind.Genre).Select(tag => tag.Name).ToList());
+        }).ToList();
     }
+
+    public Task<int> GetLibraryItemCountAsync(string userId, CancellationToken cancellationToken = default) =>
+        _mediaItems.CountAsync(userId, cancellationToken);
 
     public async Task<MediaItemDto?> GetMediaItemAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
@@ -85,7 +114,10 @@ public sealed class MediaItemService : IMediaItemService
         var now = DateTime.UtcNow;
         var userId = request.UserId.Trim();
         var creatorId = await ResolvePersonIdAsync(userId, request.Creator, cancellationToken);
-        var studioId = await ResolveStudioIdAsync(userId, request.Publisher ?? request.BookDetails?.Publisher, cancellationToken);
+        var studioId = await ResolveStudioIdAsync(
+            userId,
+            ResolvePrimaryStudioName(request.Publisher ?? request.BookDetails?.Publisher, request.StudioCredits),
+            cancellationToken);
         var mediaItem = new MediaItem
         {
             Id = Guid.NewGuid(),
@@ -161,7 +193,10 @@ public sealed class MediaItemService : IMediaItemService
         existing.CategoryId = await ResolveCategoryIdAsync(request.MediaCategoryId, userId, request.MediaType, cancellationToken);
         existing.Tags = _tags is null ? NormalizeTags(request.Tags) : null;
         existing.CreatorId = await ResolvePersonIdAsync(userId, request.Creator, cancellationToken);
-        existing.StudioId = await ResolveStudioIdAsync(userId, request.Publisher ?? request.BookDetails?.Publisher, cancellationToken);
+        existing.StudioId = await ResolveStudioIdAsync(
+            userId,
+            ResolvePrimaryStudioName(request.Publisher ?? request.BookDetails?.Publisher, request.StudioCredits),
+            cancellationToken);
         existing.SerialNumber = Normalize(request.SerialNumber);
         existing.MediaType = request.MediaType;
         existing.Status = request.Status;
@@ -223,7 +258,12 @@ public sealed class MediaItemService : IMediaItemService
             request.Creator,
             request.Cast,
             request.Contributions,
+            request.StudioCredits,
             request.BookDetails,
+            request.MovieDetails,
+            request.EpisodicDetails,
+            request.GraphicPublicationDetails,
+            request.GameDetails,
             request.Collection,
             request.Relations,
             cancellationToken);
@@ -239,7 +279,12 @@ public sealed class MediaItemService : IMediaItemService
             request.Creator,
             request.Cast,
             request.Contributions,
+            request.StudioCredits,
             request.BookDetails,
+            request.MovieDetails,
+            request.EpisodicDetails,
+            request.GraphicPublicationDetails,
+            request.GameDetails,
             request.Collection,
             request.Relations,
             cancellationToken);
@@ -253,7 +298,12 @@ public sealed class MediaItemService : IMediaItemService
         string? legacyCreator,
         IReadOnlyList<string>? legacyCast,
         IReadOnlyList<PersonCreditInput>? contributionInputs,
+        IReadOnlyList<StudioCreditInput>? studioCreditInputs,
         BookDetailsInput? bookInput,
+        MovieDetailsInput? movieInput,
+        EpisodicDetailsInput? episodicInput,
+        GraphicPublicationDetailsInput? graphicInput,
+        GameDetailsInput? gameInput,
         CollectionMembershipInput? collectionInput,
         IReadOnlyList<MediaRelationInput>? relationInputs,
         CancellationToken cancellationToken)
@@ -273,6 +323,12 @@ public sealed class MediaItemService : IMediaItemService
         {
             var castIds = await ResolvePersonIdsAsync(item.UserId, legacyCast, cancellationToken);
             await _mediaItems.ReplaceCastAsync(item.Id, castIds, cancellationToken);
+        }
+
+        if (_studioCredits is not null)
+        {
+            var credits = await ResolveStudioCreditsAsync(item, studioCreditInputs, cancellationToken);
+            await _studioCredits.ReplaceForItemAsync(item.Id, item.UserId, credits, cancellationToken);
         }
 
         if (_bookDetails is not null && item.MediaType == MediaType.Book && (bookInput is not null || item.StudioId.HasValue))
@@ -301,6 +357,68 @@ public sealed class MediaItemService : IMediaItemService
                 AgeRating = Normalize(bookInput?.AgeRating),
                 CreatedAt = existing?.CreatedAt ?? now,
                 UpdatedAt = now
+            }, cancellationToken);
+        }
+
+        if (_movieDetails is not null && item.MediaType == MediaType.Movie && movieInput is not null)
+        {
+            var existing = await _movieDetails.GetAsync(item.Id, item.UserId, cancellationToken);
+            var now = DateTime.UtcNow;
+            await _movieDetails.UpsertAsync(new MovieDetails
+            {
+                MediaItemId = item.Id,
+                UserId = item.UserId,
+                RuntimeMinutes = movieInput.RuntimeMinutes,
+                OriginalLanguage = Normalize(movieInput.OriginalLanguage),
+                Language = Normalize(movieInput.Language),
+                CountryOfOrigin = Normalize(movieInput.CountryOfOrigin),
+                AgeRating = Normalize(movieInput.AgeRating),
+                CreatedAt = existing?.CreatedAt ?? now,
+                UpdatedAt = now
+            }, cancellationToken);
+        }
+
+        if (_typeDetails is not null && item.MediaType is MediaType.Series or MediaType.Anime && episodicInput is not null)
+        {
+            var existing = await _typeDetails.GetEpisodicAsync(item.Id, item.UserId, cancellationToken);
+            var now = DateTime.UtcNow;
+            await _typeDetails.UpsertEpisodicAsync(new EpisodicDetails
+            {
+                MediaItemId = item.Id, UserId = item.UserId,
+                SeasonCount = episodicInput.SeasonCount, EpisodeCount = episodicInput.EpisodeCount,
+                EpisodeRuntimeMinutes = episodicInput.EpisodeRuntimeMinutes,
+                Network = Normalize(episodicInput.Network), AiringStatus = Normalize(episodicInput.AiringStatus),
+                SourceMaterial = Normalize(episodicInput.SourceMaterial),
+                OriginalLanguage = Normalize(episodicInput.OriginalLanguage),
+                CreatedAt = existing?.CreatedAt ?? now, UpdatedAt = now
+            }, cancellationToken);
+        }
+
+        if (_typeDetails is not null && item.MediaType is MediaType.Manga or MediaType.Comic && graphicInput is not null)
+        {
+            var existing = await _typeDetails.GetGraphicPublicationAsync(item.Id, item.UserId, cancellationToken);
+            var now = DateTime.UtcNow;
+            await _typeDetails.UpsertGraphicPublicationAsync(new GraphicPublicationDetails
+            {
+                MediaItemId = item.Id, UserId = item.UserId,
+                VolumeCount = graphicInput.VolumeCount, ChapterOrIssueCount = graphicInput.ChapterOrIssueCount,
+                ReadingDirection = Normalize(graphicInput.ReadingDirection), IsColor = graphicInput.IsColor,
+                PublicationStatus = Normalize(graphicInput.PublicationStatus), Imprint = Normalize(graphicInput.Imprint),
+                OriginalLanguage = Normalize(graphicInput.OriginalLanguage),
+                CreatedAt = existing?.CreatedAt ?? now, UpdatedAt = now
+            }, cancellationToken);
+        }
+
+        if (_typeDetails is not null && item.MediaType == MediaType.Game && gameInput is not null)
+        {
+            var existing = await _typeDetails.GetGameAsync(item.Id, item.UserId, cancellationToken);
+            var now = DateTime.UtcNow;
+            await _typeDetails.UpsertGameAsync(new GameDetails
+            {
+                MediaItemId = item.Id, UserId = item.UserId, Platform = Normalize(gameInput.Platform),
+                MainStoryHours = gameInput.MainStoryHours, CompletionistHours = gameInput.CompletionistHours,
+                GameMode = Normalize(gameInput.GameMode), Engine = Normalize(gameInput.Engine),
+                Region = Normalize(gameInput.Region), CreatedAt = existing?.CreatedAt ?? now, UpdatedAt = now
             }, cancellationToken);
         }
 
@@ -432,6 +550,43 @@ public sealed class MediaItemService : IMediaItemService
         return result;
     }
 
+    private async Task<IReadOnlyCollection<MediaStudioCredit>> ResolveStudioCreditsAsync(
+        MediaItem item,
+        IReadOnlyList<StudioCreditInput>? inputs,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var result = new List<MediaStudioCredit>();
+        foreach (var input in inputs ?? [])
+        {
+            Guid? studioId = null;
+            if (input.StudioId.HasValue)
+            {
+                studioId = (await _studios.GetByIdAsync(item.UserId, input.StudioId.Value, cancellationToken))?.Id;
+            }
+
+            studioId ??= await ResolveStudioIdAsync(item.UserId, input.Name, cancellationToken);
+            if (!studioId.HasValue)
+            {
+                continue;
+            }
+
+            result.Add(new MediaStudioCredit
+            {
+                Id = Guid.NewGuid(),
+                UserId = item.UserId,
+                MediaItemId = item.Id,
+                StudioId = studioId.Value,
+                Role = input.Role,
+                SortOrder = Math.Max(0, input.SortOrder),
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+        }
+
+        return result;
+    }
+
     private async Task<IReadOnlyList<Guid>> ResolvePersonIdsAsync(string userId, IReadOnlyList<string>? names, CancellationToken cancellationToken)
     {
         var ids = new List<Guid>();
@@ -489,6 +644,40 @@ public sealed class MediaItemService : IMediaItemService
         return result;
     }
 
+    private static MediaItemDto ToLibraryDto(
+        MediaItem item,
+        IReadOnlyList<string> tagNames,
+        IReadOnlyList<string> genres) => new()
+    {
+        Id = item.Id,
+        UserId = item.UserId,
+        Title = item.Title,
+        OriginalTitle = item.OriginalTitle,
+        Description = item.Description,
+        Category = item.Category,
+        MediaCategoryId = item.CategoryId,
+        Tags = tagNames.Count == 0 ? null : string.Join(", ", tagNames),
+        TagNames = tagNames,
+        Genres = genres,
+        CreatorId = item.CreatorId,
+        StudioId = item.StudioId,
+        SerialNumber = item.SerialNumber,
+        MediaType = item.MediaType,
+        Status = item.Status,
+        Rating = item.Rating,
+        ProgressCurrent = item.ProgressCurrent,
+        ProgressTotal = item.ProgressTotal,
+        StartDate = item.StartDate,
+        FinishDate = item.FinishDate,
+        ReleaseYear = item.ReleaseYear,
+        CoverUrl = item.CoverUrl,
+        Notes = item.Notes,
+        CreatedAt = item.CreatedAt,
+        UpdatedAt = item.UpdatedAt,
+        DeletedAt = item.DeletedAt,
+        IsFavorite = item.IsFavorite
+    };
+
     private async Task<MediaItemDto> ToDtoAsync(MediaItem item, CancellationToken cancellationToken)
     {
         var tagNames = _tags is null
@@ -517,6 +706,24 @@ public sealed class MediaItemService : IMediaItemService
                 value.Details,
                 value.CreditedAs))
             .ToList();
+
+        var studioCreditEntities = _studioCredits is null
+            ? []
+            : await _studioCredits.GetForItemAsync(item.Id, item.UserId, cancellationToken);
+        var studioCreditDtos = new List<MediaStudioCreditDto>();
+        foreach (var credit in studioCreditEntities)
+        {
+            var studio = await _studios.GetByIdAsync(item.UserId, credit.StudioId, cancellationToken);
+            if (studio is not null)
+            {
+                studioCreditDtos.Add(new MediaStudioCreditDto(
+                    credit.Id,
+                    credit.StudioId,
+                    studio.Name,
+                    credit.Role,
+                    credit.SortOrder));
+            }
+        }
 
         string? creatorName = null;
         if (item.CreatorId.HasValue)
@@ -576,6 +783,68 @@ public sealed class MediaItemService : IMediaItemService
             }
         }
 
+        MovieDetailsDto? movieDto = null;
+        if (_movieDetails is not null && item.MediaType == MediaType.Movie)
+        {
+            var details = await _movieDetails.GetAsync(item.Id, item.UserId, cancellationToken);
+            if (details is not null)
+            {
+                movieDto = new MovieDetailsDto
+                {
+                    RuntimeMinutes = details.RuntimeMinutes,
+                    OriginalLanguage = details.OriginalLanguage,
+                    Language = details.Language,
+                    CountryOfOrigin = details.CountryOfOrigin,
+                    AgeRating = details.AgeRating
+                };
+            }
+        }
+
+        EpisodicDetailsInput? episodicDto = null;
+        GraphicPublicationDetailsInput? graphicDto = null;
+        GameDetailsInput? gameDto = null;
+        if (_typeDetails is not null && item.MediaType is MediaType.Series or MediaType.Anime)
+        {
+            var value = await _typeDetails.GetEpisodicAsync(item.Id, item.UserId, cancellationToken);
+            if (value is not null)
+            {
+                episodicDto = new EpisodicDetailsInput
+                {
+                    SeasonCount = value.SeasonCount, EpisodeCount = value.EpisodeCount,
+                    EpisodeRuntimeMinutes = value.EpisodeRuntimeMinutes, Network = value.Network,
+                    AiringStatus = value.AiringStatus, SourceMaterial = value.SourceMaterial,
+                    OriginalLanguage = value.OriginalLanguage
+                };
+            }
+        }
+        else if (_typeDetails is not null && item.MediaType is MediaType.Manga or MediaType.Comic)
+        {
+            var value = await _typeDetails.GetGraphicPublicationAsync(item.Id, item.UserId, cancellationToken);
+            if (value is not null)
+            {
+                graphicDto = new GraphicPublicationDetailsInput
+                {
+                    VolumeCount = value.VolumeCount, ChapterOrIssueCount = value.ChapterOrIssueCount,
+                    ReadingDirection = value.ReadingDirection, IsColor = value.IsColor,
+                    PublicationStatus = value.PublicationStatus, Imprint = value.Imprint,
+                    OriginalLanguage = value.OriginalLanguage
+                };
+            }
+        }
+        else if (_typeDetails is not null && item.MediaType == MediaType.Game)
+        {
+            var value = await _typeDetails.GetGameAsync(item.Id, item.UserId, cancellationToken);
+            if (value is not null)
+            {
+                gameDto = new GameDetailsInput
+                {
+                    Platform = value.Platform, MainStoryHours = value.MainStoryHours,
+                    CompletionistHours = value.CompletionistHours, GameMode = value.GameMode,
+                    Engine = value.Engine, Region = value.Region
+                };
+            }
+        }
+
         CollectionMembershipDto? collectionDto = null;
         if (_collections is not null)
         {
@@ -631,7 +900,12 @@ public sealed class MediaItemService : IMediaItemService
             SerialNumber = item.SerialNumber,
             Cast = castNames,
             Contributions = contributionDtos,
+            StudioCredits = studioCreditDtos,
             BookDetails = bookDto,
+            MovieDetails = movieDto,
+            EpisodicDetails = episodicDto,
+            GraphicPublicationDetails = graphicDto,
+            GameDetails = gameDto,
             Collection = collectionDto,
             Relations = relationDtos,
             MediaType = item.MediaType,
@@ -658,6 +932,17 @@ public sealed class MediaItemService : IMediaItemService
         MediaType.Game => ContributionRole.Developer,
         _ => ContributionRole.Other
     };
+
+    private static string? ResolvePrimaryStudioName(
+        string? legacyName,
+        IReadOnlyList<StudioCreditInput>? studioCredits)
+    {
+        var productionCompany = studioCredits?
+            .Where(value => value.Role == StudioRole.ProductionCompany)
+            .OrderBy(value => value.SortOrder)
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value.Name));
+        return productionCompany?.Name ?? legacyName;
+    }
 
     private static void ThrowIfInvalid(ValidationResult result)
     {

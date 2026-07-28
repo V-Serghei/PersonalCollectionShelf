@@ -13,5 +13,9 @@ public enum ContributionRole
     Artist = 9,
     Developer = 10,
     VoiceActor = 11,
-    Other = 12
+    Other = 12,
+    Producer = 13,
+    Cinematographer = 14,
+    CastingDirector = 15,
+    ProductionDesigner = 16
 }

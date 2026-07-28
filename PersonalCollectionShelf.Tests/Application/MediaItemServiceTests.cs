@@ -287,6 +287,11 @@ public sealed class MediaItemServiceTests
             return Task.FromResult<IReadOnlyList<MediaItem>>(_items.Where(item => item.UserId == userId && !item.IsDeleted).ToList());
         }
 
+        public Task<int> CountAsync(string userId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_items.Count(item => item.UserId == userId && !item.IsDeleted));
+        }
+
         public Task<MediaItem?> GetByIdAsync(Guid id, string userId, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_items.FirstOrDefault(item => item.Id == id && item.UserId == userId && !item.IsDeleted));

@@ -8,7 +8,7 @@
 - [x] English and Russian localization
 - [x] SQLite persistence
 - [x] Windows support
-- [ ] Android support (target builds are opt-in; UI has not been verified on a device/emulator since the July 6+ redesign)
+- [x] Android core flow (build, navigation, dashboard, create form, keyboard focus, movie fields, and cancel flow verified on a Samsung device)
 
 ## Delivered Beyond MVP
 
@@ -19,6 +19,9 @@
 - Library sorting
 - Dark/light theming with dynamic Windows title bar and accent colors
 - Creator, Studio, and Cast modeled as real entities
+- Phone-responsive layouts across the primary navigation, forms, detail, management, and account screens
+- Type-specific movie details (runtime, languages, country, age rating) with SQLite persistence
+- Touch-friendly cross-platform controls and lightweight library loading
 
 ## Next Versions
 
@@ -40,6 +43,6 @@
 
 ## Release Checklist (MVP)
 
-- Verify Android build and UI on emulator/device
+- Complete final visual verification of all responsive Android screens on a device
 - Bump `ApplicationDisplayVersion` and `ApplicationVersion` in `PersonalCollectionShelf.App.csproj`
 - Recheck SQLitePCLRaw advisory (latest is still 2.1.11 as of 2026-07-19; no patched release yet)

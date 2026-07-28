@@ -189,6 +189,48 @@ public sealed class BookDetailsRepository(LocalDatabaseService databaseService) 
     private static Guid? ParseGuid(string? value) => Guid.TryParse(value, out var parsed) ? parsed : null;
 }
 
+public sealed class MovieDetailsRepository(LocalDatabaseService databaseService) : IMovieDetailsRepository
+{
+    public async Task<MovieDetails?> GetAsync(Guid mediaItemId, string userId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        var record = await databaseService.Connection.FindAsync<MovieDetailsRecord>(mediaItemId.ToString());
+        return record is null || record.UserId != userId ? null : ToDomain(record);
+    }
+
+    public async Task UpsertAsync(MovieDetails details, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        await databaseService.Connection.InsertOrReplaceAsync(ToRecord(details));
+    }
+
+    private static MovieDetails ToDomain(MovieDetailsRecord record) => new()
+    {
+        MediaItemId = Guid.Parse(record.MediaItemId),
+        UserId = record.UserId,
+        RuntimeMinutes = record.RuntimeMinutes,
+        OriginalLanguage = record.OriginalLanguage,
+        Language = record.Language,
+        CountryOfOrigin = record.CountryOfOrigin,
+        AgeRating = record.AgeRating,
+        CreatedAt = record.CreatedAt,
+        UpdatedAt = record.UpdatedAt
+    };
+
+    private static MovieDetailsRecord ToRecord(MovieDetails details) => new()
+    {
+        MediaItemId = details.MediaItemId.ToString(),
+        UserId = details.UserId,
+        RuntimeMinutes = details.RuntimeMinutes,
+        OriginalLanguage = details.OriginalLanguage,
+        Language = details.Language,
+        CountryOfOrigin = details.CountryOfOrigin,
+        AgeRating = details.AgeRating,
+        CreatedAt = details.CreatedAt,
+        UpdatedAt = details.UpdatedAt
+    };
+}
+
 public sealed class TagRepository(LocalDatabaseService databaseService) : ITagRepository
 {
     public async Task<IReadOnlyList<Tag>> GetAllAsync(string userId, TagKind? kind = null, CancellationToken cancellationToken = default)
@@ -226,6 +268,48 @@ public sealed class TagRepository(LocalDatabaseService databaseService) : ITagRe
             .OrderBy(record => record.Name)
             .Select(ToDomain)
             .ToList();
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<Tag>>> GetForItemsAsync(
+        IReadOnlyCollection<Guid> mediaItemIds,
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (mediaItemIds.Count == 0)
+        {
+            return new Dictionary<Guid, IReadOnlyList<Tag>>();
+        }
+
+        await databaseService.InitializeAsync(cancellationToken);
+        var itemIds = mediaItemIds.Select(id => id.ToString()).ToHashSet(StringComparer.Ordinal);
+        var links = (await databaseService.Connection.Table<MediaItemTagRecord>()
+                .Where(record => record.UserId == userId)
+                .ToListAsync())
+            .Where(record => itemIds.Contains(record.MediaItemId))
+            .ToList();
+
+        if (links.Count == 0)
+        {
+            return new Dictionary<Guid, IReadOnlyList<Tag>>();
+        }
+
+        var tagIds = links.Select(link => link.TagId).ToHashSet(StringComparer.Ordinal);
+        var tagsById = (await databaseService.Connection.Table<TagRecord>()
+                .Where(record => record.UserId == userId && record.DeletedAt == null)
+                .ToListAsync())
+            .Where(record => tagIds.Contains(record.Id))
+            .ToDictionary(record => record.Id, ToDomain, StringComparer.Ordinal);
+
+        return links
+            .Where(link => tagsById.ContainsKey(link.TagId) && Guid.TryParse(link.MediaItemId, out _))
+            .GroupBy(link => Guid.Parse(link.MediaItemId))
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<Tag>)group
+                    .Select(link => tagsById[link.TagId])
+                    .DistinctBy(tag => tag.Id)
+                    .OrderBy(tag => tag.Name)
+                    .ToList());
     }
 
     public async Task<IReadOnlyList<Tag>> SearchAsync(string userId, string? searchTerm, TagKind kind, int limit = 20, CancellationToken cancellationToken = default)
@@ -390,6 +474,74 @@ public sealed class MediaContributionRepository(LocalDatabaseService databaseSer
         SortOrder = value.SortOrder,
         Details = value.Details,
         CreditedAs = value.CreditedAs,
+        CreatedAt = value.CreatedAt,
+        UpdatedAt = value.UpdatedAt
+    };
+}
+
+public sealed class MediaStudioCreditRepository(LocalDatabaseService databaseService) : IMediaStudioCreditRepository
+{
+    public async Task<IReadOnlyList<MediaStudioCredit>> GetForItemAsync(
+        Guid mediaItemId,
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        var itemId = mediaItemId.ToString();
+        var records = await databaseService.Connection.Table<MediaStudioCreditRecord>()
+            .Where(record => record.UserId == userId && record.MediaItemId == itemId)
+            .ToListAsync();
+        return records
+            .OrderBy(record => record.Role)
+            .ThenBy(record => record.SortOrder)
+            .Select(ToDomain)
+            .ToList();
+    }
+
+    public async Task ReplaceForItemAsync(
+        Guid mediaItemId,
+        string userId,
+        IReadOnlyCollection<MediaStudioCredit> credits,
+        CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        var itemId = mediaItemId.ToString();
+        var existing = await databaseService.Connection.Table<MediaStudioCreditRecord>()
+            .Where(record => record.UserId == userId && record.MediaItemId == itemId)
+            .ToListAsync();
+        foreach (var record in existing)
+        {
+            await databaseService.Connection.DeleteAsync(record);
+        }
+
+        foreach (var credit in credits
+                     .GroupBy(value => new { value.StudioId, value.Role })
+                     .Select(group => group.OrderBy(value => value.SortOrder).First()))
+        {
+            await databaseService.Connection.InsertAsync(ToRecord(credit));
+        }
+    }
+
+    private static MediaStudioCredit ToDomain(MediaStudioCreditRecord record) => new()
+    {
+        Id = Guid.Parse(record.Id),
+        UserId = record.UserId,
+        MediaItemId = Guid.Parse(record.MediaItemId),
+        StudioId = Guid.Parse(record.StudioId),
+        Role = (StudioRole)record.Role,
+        SortOrder = record.SortOrder,
+        CreatedAt = record.CreatedAt,
+        UpdatedAt = record.UpdatedAt
+    };
+
+    private static MediaStudioCreditRecord ToRecord(MediaStudioCredit value) => new()
+    {
+        Id = value.Id.ToString(),
+        UserId = value.UserId,
+        MediaItemId = value.MediaItemId.ToString(),
+        StudioId = value.StudioId.ToString(),
+        Role = (int)value.Role,
+        SortOrder = value.SortOrder,
         CreatedAt = value.CreatedAt,
         UpdatedAt = value.UpdatedAt
     };

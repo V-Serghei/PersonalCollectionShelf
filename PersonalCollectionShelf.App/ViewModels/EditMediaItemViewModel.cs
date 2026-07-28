@@ -43,6 +43,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
         _authService = authService;
         ReloadOptions();
         InitializeBookFields();
+        InitializeMovieFields();
         ResetFields();
     }
 
@@ -155,13 +156,24 @@ public partial class EditMediaItemViewModel : BaseViewModel
             if (SetProperty(ref _selectedMediaType, value))
             {
                 OnPropertyChanged(nameof(CreatorLabel));
+                OnPropertyChanged(nameof(PublisherLabel));
                 OnPropertyChanged(nameof(ShowCastField));
                 OnPropertyChanged(nameof(ShowBookFields));
+                OnPropertyChanged(nameof(ShowPublicationFields));
+                OnPropertyChanged(nameof(PublicationDetailsSectionTitle));
+                OnPropertyChanged(nameof(ShowMovieFields));
+                OnPropertyChanged(nameof(ShowScreenProductionFields));
+                OnPropertyChanged(nameof(ShowEpisodicFields));
+                OnPropertyChanged(nameof(ShowGraphicPublicationFields));
+                OnPropertyChanged(nameof(ShowGameFields));
+                OnPropertyChanged(nameof(ShowLegacyCreditFields));
             }
         }
     }
 
-    public bool ShowCastField => SelectedMediaType?.Value is MediaType.Movie or MediaType.Series;
+    public bool ShowCastField => SelectedMediaType?.Value == MediaType.Series;
+
+    public bool ShowLegacyCreditFields => !ShowScreenProductionFields;
 
     public LocalizedOption<MediaStatus>? SelectedStatus
     {
@@ -324,7 +336,9 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public string CreatorPlaceholder => T("Edit.Placeholder.Creator");
 
-    public string PublisherLabel => T("Edit.Label.Publisher");
+    public string PublisherLabel => SelectedMediaType?.Value is MediaType.Movie or MediaType.Series or MediaType.Anime
+        ? T("Edit.Label.Studio")
+        : T("Edit.Label.Publisher");
 
     public string PublisherPlaceholder => T("Edit.Placeholder.Publisher");
 
@@ -391,41 +405,56 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public async Task LoadForEditAsync(Guid itemId)
     {
-        MediaItemId = itemId;
-        ErrorMessage = string.Empty;
-
-        var userId = await GetCurrentUserIdAsync();
-        var item = await _mediaItemService.GetMediaItemAsync(itemId, userId);
-        if (item is null)
+        if (IsBusy)
         {
-            ErrorMessage = T("Edit.Error.NotFound");
             return;
         }
 
-        ItemTitle = item.Title;
-        OriginalTitle = item.OriginalTitle ?? string.Empty;
-        Description = item.Description ?? string.Empty;
-        Category = item.Category ?? string.Empty;
-        _mediaCategoryId = item.MediaCategoryId;
-        Creator = item.Creator ?? string.Empty;
-        Publisher = item.Publisher ?? string.Empty;
-        SerialNumber = item.SerialNumber ?? string.Empty;
-        SetTagChips(item.TagNames.Count > 0 ? item.TagNames : null);
-        SetCastChips(item.Cast);
-        SelectedMediaType = MediaTypes.First(option => option.Value == item.MediaType);
-        SelectedStatus = Statuses.First(option => option.Value == item.Status);
-        Rating = item.Rating?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
-        ProgressCurrent = item.ProgressCurrent.ToString(CultureInfo.InvariantCulture);
-        ProgressTotal = item.ProgressTotal?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
-        StartDate = item.StartDate ?? DateTime.Today;
-        HasStartDate = item.StartDate.HasValue;
-        FinishDate = item.FinishDate ?? DateTime.Today;
-        HasFinishDate = item.FinishDate.HasValue;
-        ReleaseYear = item.ReleaseYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
-        CoverUrl = item.CoverUrl ?? string.Empty;
-        Notes = item.Notes ?? string.Empty;
-        IsFavorite = item.IsFavorite;
-        LoadBookFields(item);
+        IsBusy = true;
+        MediaItemId = itemId;
+        ErrorMessage = string.Empty;
+
+        try
+        {
+            var userId = await GetCurrentUserIdAsync();
+            var item = await _mediaItemService.GetMediaItemAsync(itemId, userId);
+            if (item is null)
+            {
+                ErrorMessage = T("Edit.Error.NotFound");
+                return;
+            }
+
+            ItemTitle = item.Title;
+            OriginalTitle = item.OriginalTitle ?? string.Empty;
+            Description = item.Description ?? string.Empty;
+            Category = item.Category ?? string.Empty;
+            _mediaCategoryId = item.MediaCategoryId;
+            Creator = item.Creator ?? string.Empty;
+            Publisher = item.Publisher ?? string.Empty;
+            SerialNumber = item.SerialNumber ?? string.Empty;
+            SetTagChips(item.TagNames.Count > 0 ? item.TagNames : null);
+            SetCastChips(item.Cast);
+            SelectedMediaType = MediaTypes.First(option => option.Value == item.MediaType);
+            SelectedStatus = Statuses.First(option => option.Value == item.Status);
+            Rating = item.Rating?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+            ProgressCurrent = item.ProgressCurrent.ToString(CultureInfo.InvariantCulture);
+            ProgressTotal = item.ProgressTotal?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+            StartDate = item.StartDate ?? DateTime.Today;
+            HasStartDate = item.StartDate.HasValue;
+            FinishDate = item.FinishDate ?? DateTime.Today;
+            HasFinishDate = item.FinishDate.HasValue;
+            ReleaseYear = item.ReleaseYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+            CoverUrl = item.CoverUrl ?? string.Empty;
+            Notes = item.Notes ?? string.Empty;
+            IsFavorite = item.IsFavorite;
+            LoadBookFields(item);
+            LoadMovieFields(item);
+            LoadExtendedTypeFields(item);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     protected override void RefreshLocalizedProperties()
@@ -433,23 +462,32 @@ public partial class EditMediaItemViewModel : BaseViewModel
         base.RefreshLocalizedProperties();
         ReloadOptions();
         ReloadBookOptions();
+        ReloadMovieOptions();
     }
 
     [RelayCommand]
     private async Task SaveAsync()
     {
+        if (IsBusy)
+        {
+            return;
+        }
+
         ErrorMessage = string.Empty;
 
         if (!TryParseOptionalDecimal(Rating, out var parsedRating) ||
             !TryParseRequiredInt(ProgressCurrent, 0, out var parsedProgressCurrent) ||
-            !TryParseOptionalInt(ProgressTotal, out var parsedProgressTotal) ||
-            !TryParseOptionalInt(ReleaseYear, out var parsedReleaseYear) ||
-            !TryBuildBookInputs(out var bookDetails, out var collection))
+             !TryParseOptionalInt(ProgressTotal, out var parsedProgressTotal) ||
+             !TryParseOptionalInt(ReleaseYear, out var parsedReleaseYear) ||
+             !TryBuildBookInputs(out var bookDetails, out var collection) ||
+             !TryBuildMovieInput(out var movieDetails) ||
+             !TryBuildExtendedTypeInputs(out var episodicDetails, out var graphicDetails, out var gameDetails))
         {
             ErrorMessage = T("Validation.NumberInvalid");
             return;
         }
 
+        IsBusy = true;
         try
         {
             var userId = await GetCurrentUserIdAsync();
@@ -473,7 +511,12 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     SerialNumber = SerialNumber,
                     Cast = BuildCastList(),
                     Contributions = BuildContributions(),
+                    StudioCredits = BuildStudioCredits(),
                     BookDetails = bookDetails,
+                    MovieDetails = movieDetails,
+                    EpisodicDetails = episodicDetails,
+                    GraphicPublicationDetails = graphicDetails,
+                    GameDetails = gameDetails,
                     Collection = collection,
                     Relations = BuildRelations(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
@@ -507,7 +550,12 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     SerialNumber = SerialNumber,
                     Cast = BuildCastList(),
                     Contributions = BuildContributions(),
+                    StudioCredits = BuildStudioCredits(),
                     BookDetails = bookDetails,
+                    MovieDetails = movieDetails,
+                    EpisodicDetails = episodicDetails,
+                    GraphicPublicationDetails = graphicDetails,
+                    GameDetails = gameDetails,
                     Collection = collection,
                     Relations = BuildRelations(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
@@ -533,6 +581,10 @@ public partial class EditMediaItemViewModel : BaseViewModel
         catch (InvalidOperationException)
         {
             ErrorMessage = T("Edit.Error.NotFound");
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
@@ -838,6 +890,8 @@ public partial class EditMediaItemViewModel : BaseViewModel
         IsFavorite = false;
         ErrorMessage = string.Empty;
         ResetBookFields();
+        ResetMovieFields();
+        ResetExtendedTypeFields();
     }
 
     private static bool TryParseOptionalInt(string value, out int? result)
@@ -894,7 +948,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
     {
         try
         {
-            await Shell.Current.GoToAsync("..");
+            await AppNavigation.CloseAsync();
         }
         catch (Exception exception)
         {

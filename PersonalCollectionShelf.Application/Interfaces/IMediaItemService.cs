@@ -6,6 +6,8 @@ public interface IMediaItemService
 {
     Task<IReadOnlyList<MediaItemDto>> GetLibraryAsync(string userId, CancellationToken cancellationToken = default);
 
+    Task<int> GetLibraryItemCountAsync(string userId, CancellationToken cancellationToken = default);
+
     Task<MediaItemDto?> GetMediaItemAsync(Guid id, string userId, CancellationToken cancellationToken = default);
 
     Task<MediaItemDto> CreateMediaItemAsync(CreateMediaItemRequest request, CancellationToken cancellationToken = default);

@@ -56,6 +56,7 @@ public partial class PeopleViewModel : BaseViewModel
     public ObservableCollection<PersonDto> RelatedPeople { get; } = [];
     public ObservableCollection<string> Professions { get; } = [];
     public ObservableCollection<PersonRelationDto> Relations { get; } = [];
+    public ObservableCollection<PersonWorkDto> Works { get; } = [];
     public ObservableCollection<LocalizedOption<PersonRelationKind>> RelationKinds { get; } = [];
 
     public string PageTitle => T("People.Title");
@@ -65,6 +66,7 @@ public partial class PeopleViewModel : BaseViewModel
     public string ProfileSectionTitle => T("People.Profile");
     public string ProfessionsSectionTitle => T("People.Professions");
     public string RelationsSectionTitle => T("People.Relations");
+    public string WorksSectionTitle => T("People.Works");
     public string AddText => T("Common.Add");
     public string EmptyText => T("People.Empty");
     public string NameLabel => T("People.Name");
@@ -224,7 +226,10 @@ public partial class PeopleViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private Task GoBackAsync() => Shell.Current.GoToAsync("..");
+    private Task OpenWorkAsync(PersonWorkDto work) => AppNavigation.OpenMediaDetailsAsync(work.MediaItemId);
+
+    [RelayCommand]
+    private Task GoBackAsync() => AppNavigation.CloseAsync();
 
     private async Task LoadPersonAsync(Guid id)
     {
@@ -251,6 +256,7 @@ public partial class PeopleViewModel : BaseViewModel
         Notes = details.Notes ?? string.Empty;
         Replace(Professions, details.Professions);
         Replace(Relations, details.Relations);
+        Replace(Works, details.Works);
         RefreshRelatedPeople();
     }
 
@@ -262,6 +268,7 @@ public partial class PeopleViewModel : BaseViewModel
         SelectedRelatedPerson = null;
         Professions.Clear();
         Relations.Clear();
+        Works.Clear();
         RefreshRelatedPeople();
     }
 

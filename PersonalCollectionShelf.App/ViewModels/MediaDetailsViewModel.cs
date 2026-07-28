@@ -76,9 +76,13 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string TagsLabel => T("Details.TagsLabel");
 
-    public string CreatorLabel => T("Details.CreatorLabel");
+    public string CreatorLabel => Item?.MediaType is MediaType.Movie or MediaType.Series
+        ? T("Edit.Label.Creator.Director")
+        : T("Details.CreatorLabel");
 
-    public string PublisherLabel => T("Details.PublisherLabel");
+    public string PublisherLabel => Item?.MediaType is MediaType.Movie or MediaType.Series or MediaType.Anime
+        ? T("Edit.Label.Studio")
+        : T("Details.PublisherLabel");
 
     public string SerialNumberLabel => T("Details.SerialNumberLabel");
 
@@ -88,7 +92,27 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public bool ShowBookDetails => Item?.MediaType == MediaType.Book;
 
+    public bool ShowMovieDetails => Item?.MediaType == MediaType.Movie;
+
+    public bool ShowScreenProductionDetails => Item?.MediaType is MediaType.Movie or MediaType.Series or MediaType.Anime;
+
+    public bool ShowEpisodicDetails => Item?.MediaType is MediaType.Series or MediaType.Anime;
+
+    public bool ShowGraphicPublicationDetails => Item?.MediaType is MediaType.Manga or MediaType.Comic;
+
+    public bool ShowGameDetails => Item?.MediaType == MediaType.Game;
+
     public string BookDetailsSectionTitle => T("Edit.Section.BookDetails");
+
+    public string MovieDetailsSectionTitle => T("Edit.Section.MovieDetails");
+
+    public string ScreenProductionSectionTitle => Item?.MediaType == MediaType.Movie ? MovieDetailsSectionTitle : T("Edit.Section.MoviePeople");
+
+    public string EpisodicDetailsSectionTitle => T("Edit.Section.EpisodicDetails");
+
+    public string GraphicDetailsSectionTitle => T("Edit.Section.GraphicDetails");
+
+    public string GameDetailsSectionTitle => T("Edit.Section.GameDetails");
 
     public string AuthorsLabel => T("Edit.Label.Authors");
 
@@ -111,6 +135,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string CreatedAtLabel => T("Details.CreatedAtLabel");
 
     public string UpdatedAtLabel => T("Details.UpdatedAtLabel");
+
+    public string BackButtonText => T("Common.Back");
 
     public string EditButtonText => T("Details.EditButton");
 
@@ -145,6 +171,78 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string AuthorsValue => JoinContributors(ContributionRole.Author);
 
     public string TranslatorsValue => JoinContributors(ContributionRole.Translator);
+
+    public string DirectorsLabel => T("Edit.Label.Directors");
+
+    public string ScreenwritersLabel => T("Edit.Label.Screenwriters");
+
+    public string ProducersLabel => T("Edit.Label.Producers");
+
+    public string CinematographersLabel => T("Edit.Label.Cinematographers");
+
+    public string ComposersLabel => T("Edit.Label.Composers");
+
+    public string CastingDirectorsLabel => T("Edit.Label.CastingDirectors");
+
+    public string ProductionDesignersLabel => T("Edit.Label.ProductionDesigners");
+
+    public string ActorsLabel => T("Edit.Label.Actors");
+
+    public string MovieStudiosLabel => T("Edit.Section.MovieStudios");
+
+    public string DirectorsValue => JoinContributors(ContributionRole.Director);
+
+    public string ScreenwritersValue => JoinContributors(ContributionRole.Screenwriter);
+
+    public string ProducersValue => JoinContributors(ContributionRole.Producer);
+
+    public string CinematographersValue => JoinContributors(ContributionRole.Cinematographer);
+
+    public string ComposersValue => JoinContributors(ContributionRole.Composer);
+
+    public string CastingDirectorsValue => JoinContributors(ContributionRole.CastingDirector);
+
+    public string ProductionDesignersValue => JoinContributors(ContributionRole.ProductionDesigner);
+
+    public string ActorsValue
+    {
+        get
+        {
+            var actors = Item?.Contributions
+                .Where(value => value.Role is ContributionRole.Actor or ContributionRole.VoiceActor)
+                .OrderBy(value => value.SortOrder)
+                .Select(value =>
+                {
+                    var character = string.IsNullOrWhiteSpace(value.Details) ? null : value.Details;
+                    var creditedAs = string.IsNullOrWhiteSpace(value.CreditedAs) ||
+                                     string.Equals(value.CreditedAs, value.PersonName, StringComparison.OrdinalIgnoreCase)
+                        ? null
+                        : value.CreditedAs;
+                    return character is null && creditedAs is null
+                        ? value.PersonName
+                        : creditedAs is null
+                            ? $"{value.PersonName} — {character}"
+                            : character is null
+                                ? $"{value.PersonName} ({creditedAs})"
+                                : $"{value.PersonName} — {character} ({creditedAs})";
+                })
+                .ToList();
+            return actors is null || actors.Count == 0 ? T("Common.NotSet") : string.Join(Environment.NewLine, actors);
+        }
+    }
+
+    public string MovieStudiosValue
+    {
+        get
+        {
+            var studios = Item?.StudioCredits
+                .OrderBy(value => value.Role)
+                .ThenBy(value => value.SortOrder)
+                .Select(value => $"{value.StudioName} — {T($"StudioRole.{value.Role}")}")
+                .ToList();
+            return studios is null || studios.Count == 0 ? T("Common.NotSet") : string.Join(Environment.NewLine, studios);
+        }
+    }
 
     public string GenresValue => Item is null || Item.Genres.Count == 0 ? T("Common.NotSet") : string.Join(", ", Item.Genres);
 
@@ -182,6 +280,51 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string RelationsValue => Item is null || Item.Relations.Count == 0
         ? T("Common.NotSet")
         : string.Join(", ", Item.Relations.Select(value => value.RelatedItemTitle));
+
+    public string MovieMetadataValue
+    {
+        get
+        {
+            var movie = Item?.MovieDetails;
+            if (movie is null)
+            {
+                return T("Common.NotSet");
+            }
+
+            var values = new[]
+            {
+                movie.RuntimeMinutes.HasValue ? string.Format(T("Details.MinutesFormat"), movie.RuntimeMinutes.Value) : null,
+                movie.CountryOfOrigin,
+                movie.OriginalLanguage,
+                movie.Language,
+                movie.AgeRating
+            }.Where(value => !string.IsNullOrWhiteSpace(value));
+            var result = string.Join(" · ", values);
+            return result.Length == 0 ? T("Common.NotSet") : result;
+        }
+    }
+
+    public string ExtendedTypeMetadataValue
+    {
+        get
+        {
+            if (Item?.EpisodicDetails is { } episodic)
+            {
+                return JoinSetValues(episodic.SeasonCount, episodic.EpisodeCount, episodic.EpisodeRuntimeMinutes, episodic.Network, episodic.AiringStatus, episodic.SourceMaterial, episodic.OriginalLanguage);
+            }
+            if (Item?.GraphicPublicationDetails is { } graphic)
+            {
+                return JoinSetValues(graphic.VolumeCount, graphic.ChapterOrIssueCount, null, graphic.ReadingDirection, graphic.PublicationStatus, graphic.Imprint, graphic.OriginalLanguage);
+            }
+            if (Item?.GameDetails is { } game)
+            {
+                var values = new[] { game.Platform, game.MainStoryHours?.ToString(CultureInfo.InvariantCulture), game.CompletionistHours?.ToString(CultureInfo.InvariantCulture), game.GameMode, game.Engine, game.Region };
+                var result = string.Join(" · ", values.Where(value => !string.IsNullOrWhiteSpace(value)));
+                return result.Length == 0 ? T("Common.NotSet") : result;
+            }
+            return T("Common.NotSet");
+        }
+    }
 
     public string TypeValue => Item is null ? T("Common.NotSet") : T($"MediaType.{Item.MediaType}");
 
@@ -286,6 +429,19 @@ public partial class MediaDetailsViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private async Task BackAsync()
+    {
+        try
+        {
+            await AppNavigation.CloseAsync();
+        }
+        catch (Exception exception)
+        {
+            await CrashReporter.ReportAsync(exception, "MediaDetailsViewModel.BackAsync");
+        }
+    }
+
+    [RelayCommand]
     private async Task EditAsync()
     {
         if (Item is null)
@@ -295,7 +451,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
         try
         {
-            await Shell.Current.GoToAsync($"{nameof(EditMediaItemPage)}?id={Item.Id}");
+            await AppNavigation.OpenEditMediaItemAsync(Item.Id);
         }
         catch (Exception exception)
         {
@@ -345,7 +501,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
         await _mediaItemService.DeleteMediaItemAsync(Item.Id, userId);
         try
         {
-            await Shell.Current.GoToAsync("..");
+            await AppNavigation.CloseAsync();
         }
         catch (Exception exception)
         {
@@ -361,15 +517,34 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(CategoryValue));
         OnPropertyChanged(nameof(TagsValue));
         OnPropertyChanged(nameof(CreatorValue));
+        OnPropertyChanged(nameof(CreatorLabel));
         OnPropertyChanged(nameof(PublisherValue));
+        OnPropertyChanged(nameof(PublisherLabel));
         OnPropertyChanged(nameof(SerialNumberValue));
         OnPropertyChanged(nameof(CastValue));
         OnPropertyChanged(nameof(ShowCast));
         OnPropertyChanged(nameof(ShowBookDetails));
+        OnPropertyChanged(nameof(ShowMovieDetails));
+        OnPropertyChanged(nameof(ShowScreenProductionDetails));
+        OnPropertyChanged(nameof(ScreenProductionSectionTitle));
+        OnPropertyChanged(nameof(ShowEpisodicDetails));
+        OnPropertyChanged(nameof(ShowGraphicPublicationDetails));
+        OnPropertyChanged(nameof(ShowGameDetails));
         OnPropertyChanged(nameof(AuthorsValue));
         OnPropertyChanged(nameof(TranslatorsValue));
+        OnPropertyChanged(nameof(DirectorsValue));
+        OnPropertyChanged(nameof(ScreenwritersValue));
+        OnPropertyChanged(nameof(ProducersValue));
+        OnPropertyChanged(nameof(CinematographersValue));
+        OnPropertyChanged(nameof(ComposersValue));
+        OnPropertyChanged(nameof(CastingDirectorsValue));
+        OnPropertyChanged(nameof(ProductionDesignersValue));
+        OnPropertyChanged(nameof(ActorsValue));
+        OnPropertyChanged(nameof(MovieStudiosValue));
         OnPropertyChanged(nameof(GenresValue));
         OnPropertyChanged(nameof(BookMetadataValue));
+        OnPropertyChanged(nameof(MovieMetadataValue));
+        OnPropertyChanged(nameof(ExtendedTypeMetadataValue));
         OnPropertyChanged(nameof(CollectionValue));
         OnPropertyChanged(nameof(RelationsValue));
         OnPropertyChanged(nameof(TypeValue));
@@ -441,6 +616,13 @@ public partial class MediaDetailsViewModel : BaseViewModel
                 Details = value.Details,
                 CreditedAs = value.CreditedAs
             }).ToList(),
+            StudioCredits = item.StudioCredits.Select(value => new StudioCreditInput
+            {
+                StudioId = value.StudioId,
+                Name = value.StudioName,
+                Role = value.Role,
+                SortOrder = value.SortOrder
+            }).ToList(),
             BookDetails = item.BookDetails is null ? null : new BookDetailsInput
             {
                 Subtitle = item.BookDetails.Subtitle,
@@ -460,6 +642,17 @@ public partial class MediaDetailsViewModel : BaseViewModel
                 CountryOfOrigin = item.BookDetails.CountryOfOrigin,
                 AgeRating = item.BookDetails.AgeRating
             },
+            MovieDetails = item.MovieDetails is null ? null : new MovieDetailsInput
+            {
+                RuntimeMinutes = item.MovieDetails.RuntimeMinutes,
+                OriginalLanguage = item.MovieDetails.OriginalLanguage,
+                Language = item.MovieDetails.Language,
+                CountryOfOrigin = item.MovieDetails.CountryOfOrigin,
+                AgeRating = item.MovieDetails.AgeRating
+            },
+            EpisodicDetails = item.EpisodicDetails,
+            GraphicPublicationDetails = item.GraphicPublicationDetails,
+            GameDetails = item.GameDetails,
             Collection = item.Collection is null ? null : new CollectionMembershipInput
             {
                 CollectionId = item.Collection.CollectionId,
@@ -489,5 +682,15 @@ public partial class MediaDetailsViewModel : BaseViewModel
             Notes = item.Notes,
             IsFavorite = isFavorite
         };
+    }
+
+    private string JoinSetValues(int? first, int? second, int? third, params string?[] textValues)
+    {
+        var values = new List<string>();
+        if (first.HasValue) values.Add(first.Value.ToString(CultureInfo.InvariantCulture));
+        if (second.HasValue) values.Add(second.Value.ToString(CultureInfo.InvariantCulture));
+        if (third.HasValue) values.Add(third.Value.ToString(CultureInfo.InvariantCulture));
+        values.AddRange(textValues.Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value!));
+        return values.Count == 0 ? T("Common.NotSet") : string.Join(" · ", values);
     }
 }

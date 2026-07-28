@@ -11,14 +11,14 @@
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False">
     <Grid RowDefinitions="64,*" BackgroundColor="{DynamicResource PageBackground}">
-        <Grid Padding="24,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-            <Button Command="{Binding GoBackCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding BackText}" />
-            <Label Grid.Column="1" FontAttributes="Bold" FontFamily="Cambria" FontSize="28" Text="{Binding PageTitle}" VerticalTextAlignment="Center" />
-            <Button Grid.Column="2" Command="{Binding NewCategoryCommand}" Text="{Binding NewText}" />
+        <Grid x:Name="HeaderGrid" Padding="24,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+            <Button x:Name="BackButton" Command="{Binding GoBackCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding BackText}" />
+            <Label x:Name="HeaderTitle" Grid.Column="1" FontAttributes="Bold" FontFamily="Cambria" FontSize="28" Text="{Binding PageTitle}" VerticalTextAlignment="Center" />
+            <Button x:Name="NewCategoryButton" Grid.Column="2" Command="{Binding NewCategoryCommand}" Text="{Binding NewText}" />
         </Grid>
 
-        <Grid Grid.Row="1" Padding="24,8,24,24" ColumnDefinitions="280,*" ColumnSpacing="18">
-            <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+        <Grid x:Name="WorkspaceGrid" Grid.Row="1" Padding="24,8,24,24" ColumnDefinitions="280,*" ColumnSpacing="18">
+            <Border x:Name="CategoryListCard" Padding="0" Style="{StaticResource CardBorderStyle}">
                 <CollectionView ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay}" SelectionMode="Single">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="dto:MediaCategoryDetailsDto">
@@ -27,26 +27,26 @@
                                     <Label FontAttributes="Bold" Text="{Binding Name}" />
                                     <Label FontSize="11" Text="{Binding Key}" TextColor="{DynamicResource MutedForeground}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1" FontFamily="Segoe MDL2 Assets" IsVisible="{Binding IsSystem}" Text="&#xE72E;" TextColor="{DynamicResource MutedForeground}" />
+                                <Label Grid.Column="1" IsVisible="{Binding IsSystem}" Text="◆" TextColor="{DynamicResource MutedForeground}" />
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
             </Border>
 
-            <ScrollView Grid.Column="1">
+            <ScrollView x:Name="CategoryEditorScroll" Grid.Column="1">
                 <VerticalStackLayout Spacing="16">
                     <Border Padding="20" Style="{StaticResource CardBorderStyle}">
-                        <Grid ColumnDefinitions="*,260" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="8">
-                            <VerticalStackLayout>
+                        <Grid x:Name="CategoryIdentityGrid" ColumnDefinitions="*,260" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="8">
+                            <VerticalStackLayout x:Name="CategoryNameField">
                                 <Label Text="{Binding NameLabel}" />
                                 <Entry IsEnabled="{Binding CanEdit}" Text="{Binding Name}" />
                             </VerticalStackLayout>
-                            <VerticalStackLayout Grid.Column="1">
+                            <VerticalStackLayout x:Name="CategoryBaseTypeField" Grid.Column="1">
                                 <Label Text="{Binding BaseTypeLabel}" />
                                 <Picker IsEnabled="{Binding CanEdit}" ItemsSource="{Binding BaseTypes}" SelectedItem="{Binding SelectedBaseType}" />
                             </VerticalStackLayout>
-                            <Label Grid.Row="1" Grid.ColumnSpan="2" IsVisible="{Binding IsSystemCategory}" Text="{Binding ReadOnlyText}" TextColor="{DynamicResource MutedForeground}" />
+                            <Label x:Name="SystemCategoryNotice" Grid.Row="1" Grid.ColumnSpan="2" IsVisible="{Binding IsSystemCategory}" Text="{Binding ReadOnlyText}" TextColor="{DynamicResource MutedForeground}" />
                         </Grid>
                     </Border>
 
@@ -56,22 +56,18 @@
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FieldsTitle}" />
                                 <Button Grid.Column="1" Command="{Binding AddFieldCommand}" IsEnabled="{Binding CanEdit}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding AddFieldText}" />
                             </Grid>
-                            <Grid Padding="0,0,42,0" ColumnDefinitions="1.1*,1.5*,170,90" ColumnSpacing="8">
-                                <Label Text="{Binding KeyLabel}" />
-                                <Label Grid.Column="1" Text="{Binding LabelLabel}" />
-                                <Label Grid.Column="2" Text="{Binding TypeLabel}" />
-                                <Label Grid.Column="3" Text="{Binding RequiredLabel}" />
-                            </Grid>
                             <VerticalStackLayout BindableLayout.ItemsSource="{Binding Fields}" Spacing="8">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate x:DataType="viewModels:CategoryFieldEditor">
-                                        <Grid ColumnDefinitions="1.1*,1.5*,170,90,34" ColumnSpacing="8">
-                                            <Entry IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" Text="{Binding Key}" />
-                                            <Entry Grid.Column="1" IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" Text="{Binding Label}" />
-                                            <Picker Grid.Column="2" IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" ItemsSource="{Binding Types}" SelectedItem="{Binding SelectedType}" />
-                                            <Switch Grid.Column="3" IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" IsToggled="{Binding IsRequired}" />
-                                            <Button Grid.Column="4" Command="{Binding Source={x:Reference Root}, Path=ViewModel.RemoveFieldCommand, x:DataType={x:Type pages:CategoryManagementPage}}" CommandParameter="{Binding .}" IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" Style="{StaticResource LinkButtonStyle}" Text="×" />
-                                        </Grid>
+                                        <Border Padding="12" Style="{StaticResource MutedBorderStyle}">
+                                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                                                <Entry IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" Placeholder="{Binding Source={x:Reference Root}, Path=ViewModel.KeyLabel, x:DataType={x:Type pages:CategoryManagementPage}}" Text="{Binding Key}" />
+                                                <Button Grid.Column="1" Command="{Binding Source={x:Reference Root}, Path=ViewModel.RemoveFieldCommand, x:DataType={x:Type pages:CategoryManagementPage}}" CommandParameter="{Binding .}" IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" Style="{StaticResource LinkButtonStyle}" Text="&#x2715;" />
+                                                <Entry Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" Placeholder="{Binding Source={x:Reference Root}, Path=ViewModel.LabelLabel, x:DataType={x:Type pages:CategoryManagementPage}}" Text="{Binding Label}" />
+                                                <Picker Grid.Row="2" IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" ItemsSource="{Binding Types}" SelectedItem="{Binding SelectedType}" Title="{Binding Source={x:Reference Root}, Path=ViewModel.TypeLabel, x:DataType={x:Type pages:CategoryManagementPage}}" />
+                                                <Switch Grid.Row="2" Grid.Column="1" IsEnabled="{Binding Source={x:Reference Root}, Path=ViewModel.CanEdit, x:DataType={x:Type pages:CategoryManagementPage}}" IsToggled="{Binding IsRequired}" />
+                                            </Grid>
+                                        </Border>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
                             </VerticalStackLayout>

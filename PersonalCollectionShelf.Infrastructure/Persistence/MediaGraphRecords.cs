@@ -57,6 +57,71 @@ public sealed class BookDetailsRecord
     public DateTime UpdatedAt { get; set; }
 }
 
+[Table("MovieDetails")]
+public sealed class MovieDetailsRecord
+{
+    [PrimaryKey]
+    public string MediaItemId { get; set; } = string.Empty;
+
+    [Indexed]
+    public string UserId { get; set; } = string.Empty;
+
+    public int? RuntimeMinutes { get; set; }
+    public string? OriginalLanguage { get; set; }
+    public string? Language { get; set; }
+    public string? CountryOfOrigin { get; set; }
+    public string? AgeRating { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+[Table("EpisodicDetails")]
+public sealed class EpisodicDetailsRecord
+{
+    [PrimaryKey] public string MediaItemId { get; set; } = string.Empty;
+    [Indexed] public string UserId { get; set; } = string.Empty;
+    public int? SeasonCount { get; set; }
+    public int? EpisodeCount { get; set; }
+    public int? EpisodeRuntimeMinutes { get; set; }
+    public string? Network { get; set; }
+    public string? AiringStatus { get; set; }
+    public string? SourceMaterial { get; set; }
+    public string? OriginalLanguage { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+[Table("GraphicPublicationDetails")]
+public sealed class GraphicPublicationDetailsRecord
+{
+    [PrimaryKey] public string MediaItemId { get; set; } = string.Empty;
+    [Indexed] public string UserId { get; set; } = string.Empty;
+    public int? VolumeCount { get; set; }
+    public int? ChapterOrIssueCount { get; set; }
+    public string? ReadingDirection { get; set; }
+    public bool? IsColor { get; set; }
+    public string? PublicationStatus { get; set; }
+    public string? Imprint { get; set; }
+    public string? OriginalLanguage { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+[Table("GameDetails")]
+public sealed class GameDetailsRecord
+{
+    [PrimaryKey] public string MediaItemId { get; set; } = string.Empty;
+    [Indexed] public string UserId { get; set; } = string.Empty;
+    public string? Platform { get; set; }
+    public decimal? MainStoryHours { get; set; }
+    public decimal? CompletionistHours { get; set; }
+    public string? GameMode { get; set; }
+    public string? Engine { get; set; }
+    public string? Region { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
 [Table("Tags")]
 public sealed class TagRecord
 {
@@ -116,6 +181,29 @@ public sealed class MediaContributionRecord
     public int SortOrder { get; set; }
     public string? Details { get; set; }
     public string? CreditedAs { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+[Table("MediaStudioCredits")]
+public sealed class MediaStudioCreditRecord
+{
+    [PrimaryKey]
+    public string Id { get; set; } = string.Empty;
+
+    [Indexed]
+    public string UserId { get; set; } = string.Empty;
+
+    [Indexed]
+    public string MediaItemId { get; set; } = string.Empty;
+
+    [Indexed]
+    public string StudioId { get; set; } = string.Empty;
+
+    [Indexed]
+    public int Role { get; set; }
+
+    public int SortOrder { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

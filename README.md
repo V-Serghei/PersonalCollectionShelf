@@ -7,6 +7,8 @@ Offline-first cross-platform personal collection tracker with cloud sync for mov
 - Track movies, series, books, manga, comics, games, anime, and other media.
 - Store the library locally with SQLite for offline-first use.
 - Add, edit, delete, search, and filter media items.
+- Use touch-friendly Android forms with keyboard-aware focus and responsive controls.
+- Load library summaries and filters without repeatedly hydrating every detail graph.
 - Track status, progress, rating, notes, dates, favorites, and release year.
 - Use English and Russian localization from the first version.
 - Prepare account and synchronization boundaries for Firebase Auth and Firestore.
@@ -38,14 +40,15 @@ Dependencies flow inward: App depends on Application and Infrastructure, Infrast
 
 ## Roadmap
 
-MVP (done on Windows; Android verification pending):
+MVP:
 
 - Local media library
 - Add, edit, and delete media items
 - Search, smart filters, and sorting
 - English and Russian localization
 - SQLite persistence
-- Windows support (Android target builds but is not yet verified on a device)
+- Windows support
+- Android core flow verified on a physical Samsung device
 
 Already delivered beyond MVP:
 
@@ -54,6 +57,12 @@ Already delivered beyond MVP:
 - Cover images
 - Tags and categories
 - Dark/light theming
+- Responsive phone layouts with an overlay navigation drawer
+- Type-specific book and movie metadata
+- Structured movie credits, actor characters, multi-studio roles, genres, franchises, and related works
+- Type-specific series/anime episode data, manga/comic publication data, and game platform/playtime data
+- Browsable people-to-work role links and a dedicated series/cycles/universes explorer
+- Dedicated tag explorer with direct navigation to linked items
 
 Next versions:
 

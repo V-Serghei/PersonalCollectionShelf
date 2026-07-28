@@ -7,7 +7,19 @@ using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.App.ViewModels;
 
-public sealed record ContributorChipViewModel(Guid PersonId, string Name, ContributionRole Role);
+public sealed class ContributorChipViewModel(
+    Guid personId,
+    string name,
+    ContributionRole role,
+    string? details = null,
+    string? creditedAs = null)
+{
+    public Guid PersonId { get; } = personId;
+    public string Name { get; } = name;
+    public ContributionRole Role { get; } = role;
+    public string Details { get; set; } = details ?? string.Empty;
+    public string CreditedAs { get; set; } = creditedAs ?? string.Empty;
+}
 
 public sealed record RatingStarViewModel(int Value, string Glyph);
 
@@ -47,6 +59,16 @@ public partial class EditMediaItemViewModel
     public ObservableCollection<ContributorChipViewModel> Translators { get; } = [];
     public ObservableCollection<ContributorChipViewModel> Illustrators { get; } = [];
     public ObservableCollection<ContributorChipViewModel> Editors { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> Directors { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> Screenwriters { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> Producers { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> Cinematographers { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> Composers { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> CastingDirectors { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> ProductionDesigners { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> Actors { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> VoiceActors { get; } = [];
+    public ObservableCollection<ContributorChipViewModel> GameDevelopers { get; } = [];
     public ObservableCollection<PersonDto> PersonSearchResults { get; } = [];
     public ObservableCollection<string> GenreChips { get; } = [];
     public ObservableCollection<RatingStarViewModel> RatingStars { get; } = [];
@@ -57,6 +79,8 @@ public partial class EditMediaItemViewModel
     public ObservableCollection<RelatedItemChipViewModel> RelatedItems { get; } = [];
 
     public bool ShowBookFields => SelectedMediaType?.Value == MediaType.Book;
+
+    public bool ShowPublicationFields => SelectedMediaType?.Value is MediaType.Book or MediaType.Manga or MediaType.Comic;
 
     public string NewGenreText { get => _newGenreText; set => SetProperty(ref _newGenreText, value); }
     public bool IsPersonPickerOpen { get => _isPersonPickerOpen; set => SetProperty(ref _isPersonPickerOpen, value); }
@@ -114,6 +138,7 @@ public partial class EditMediaItemViewModel
     public string GenresLabel => T("Edit.Label.Genres");
     public string GenresPlaceholder => T("Edit.Placeholder.Genres");
     public string BookDetailsSectionTitle => T("Edit.Section.BookDetails");
+    public string PublicationDetailsSectionTitle => ShowBookFields ? BookDetailsSectionTitle : T("Edit.Section.PublicationCredits");
     public string PublicationSectionTitle => T("Edit.Section.Publication");
     public string CollectionsSectionTitle => T("Edit.Section.Collections");
     public string RelationsSectionTitle => T("Edit.Section.Relations");
@@ -383,6 +408,16 @@ public partial class EditMediaItemViewModel
         ContributionRole.Translator => Translators,
         ContributionRole.Illustrator => Illustrators,
         ContributionRole.Editor => Editors,
+        ContributionRole.Director => Directors,
+        ContributionRole.Screenwriter => Screenwriters,
+        ContributionRole.Producer => Producers,
+        ContributionRole.Cinematographer => Cinematographers,
+        ContributionRole.Composer => Composers,
+        ContributionRole.CastingDirector => CastingDirectors,
+        ContributionRole.ProductionDesigner => ProductionDesigners,
+        ContributionRole.Actor => Actors,
+        ContributionRole.VoiceActor => VoiceActors,
+        ContributionRole.Developer => GameDevelopers,
         _ => Authors
     };
 
@@ -404,11 +439,29 @@ public partial class EditMediaItemViewModel
 
     private IReadOnlyList<PersonCreditInput> BuildContributions()
     {
-        return Authors.Select((value, index) => ToInput(value, index))
+        var bookCredits = Authors.Select((value, index) => ToInput(value, index))
             .Concat(Translators.Select((value, index) => ToInput(value, index)))
             .Concat(Illustrators.Select((value, index) => ToInput(value, index)))
             .Concat(Editors.Select((value, index) => ToInput(value, index)))
             .ToList();
+        var movieCredits = Directors.Select((value, index) => ToInput(value, index))
+            .Concat(Screenwriters.Select((value, index) => ToInput(value, index)))
+            .Concat(Producers.Select((value, index) => ToInput(value, index)))
+            .Concat(Cinematographers.Select((value, index) => ToInput(value, index)))
+            .Concat(Composers.Select((value, index) => ToInput(value, index)))
+            .Concat(CastingDirectors.Select((value, index) => ToInput(value, index)))
+            .Concat(ProductionDesigners.Select((value, index) => ToInput(value, index)))
+            .Concat(Actors.Select((value, index) => ToInput(value, index)))
+            .Concat(VoiceActors.Select((value, index) => ToInput(value, index)))
+            .ToList();
+
+        var gameCredits = GameDevelopers.Select((value, index) => ToInput(value, index))
+            .Concat(Screenwriters.Select((value, index) => ToInput(value, index)))
+            .Concat(Composers.Select((value, index) => ToInput(value, index)))
+            .Concat(VoiceActors.Select((value, index) => ToInput(value, index)))
+            .ToList();
+
+        return ShowGameFields ? gameCredits : ShowScreenProductionFields ? movieCredits : bookCredits;
     }
 
     private static PersonCreditInput ToInput(ContributorChipViewModel value, int index) => new()
@@ -416,7 +469,9 @@ public partial class EditMediaItemViewModel
         PersonId = value.PersonId,
         Name = value.Name,
         Role = value.Role,
-        SortOrder = index
+        SortOrder = index,
+        Details = value.Details,
+        CreditedAs = value.CreditedAs
     };
 
     private IReadOnlyList<MediaRelationInput> BuildRelations() => RelatedItems.Select(value => new MediaRelationInput
@@ -429,40 +484,47 @@ public partial class EditMediaItemViewModel
     {
         details = null;
         collection = null;
-        if (!ShowBookFields)
+        if (!ShowPublicationFields && !ShowScreenProductionFields && !ShowGameFields)
         {
             return true;
         }
 
-        if (!TryParseOptionalInt(EditionNumber, out var editionNumber) ||
-            !TryParseOptionalInt(EditionYear, out var editionYear) ||
-            !TryParseOptionalInt(OriginalPublicationYear, out var originalPublicationYear) ||
-            !TryParseOptionalInt(TranslationYear, out var translationYear) ||
-            !TryParseOptionalInt(PageCount, out var pageCount) ||
-            !TryParseOptionalDouble(CollectionPosition, out var collectionPosition))
+        if (!TryParseOptionalDouble(CollectionPosition, out var collectionPosition))
         {
             return false;
         }
 
-        details = new BookDetailsInput
+        if (ShowBookFields)
         {
-            Subtitle = Subtitle,
-            Publisher = Publisher,
-            Edition = Edition,
-            EditionNumber = editionNumber,
-            EditionYear = editionYear,
-            OriginalPublicationYear = originalPublicationYear,
-            TranslationYear = translationYear,
-            OriginalLanguage = OriginalLanguage,
-            Language = BookLanguage,
-            PageCount = pageCount,
-            Isbn10 = Isbn10,
-            Isbn13 = Isbn13,
-            Format = SelectedBookFormat?.Value,
-            Binding = Binding,
-            CountryOfOrigin = CountryOfOrigin,
-            AgeRating = AgeRating
-        };
+            if (!TryParseOptionalInt(EditionNumber, out var editionNumber) ||
+                !TryParseOptionalInt(EditionYear, out var editionYear) ||
+                !TryParseOptionalInt(OriginalPublicationYear, out var originalPublicationYear) ||
+                !TryParseOptionalInt(TranslationYear, out var translationYear) ||
+                !TryParseOptionalInt(PageCount, out var pageCount))
+            {
+                return false;
+            }
+
+            details = new BookDetailsInput
+            {
+                Subtitle = Subtitle,
+                Publisher = Publisher,
+                Edition = Edition,
+                EditionNumber = editionNumber,
+                EditionYear = editionYear,
+                OriginalPublicationYear = originalPublicationYear,
+                TranslationYear = translationYear,
+                OriginalLanguage = OriginalLanguage,
+                Language = BookLanguage,
+                PageCount = pageCount,
+                Isbn10 = Isbn10,
+                Isbn13 = Isbn13,
+                Format = SelectedBookFormat?.Value,
+                Binding = Binding,
+                CountryOfOrigin = CountryOfOrigin,
+                AgeRating = AgeRating
+            };
+        }
 
         if (!string.IsNullOrWhiteSpace(CollectionName))
         {
@@ -483,6 +545,16 @@ public partial class EditMediaItemViewModel
         Translators.Clear();
         Illustrators.Clear();
         Editors.Clear();
+        Directors.Clear();
+        Screenwriters.Clear();
+        Producers.Clear();
+        Cinematographers.Clear();
+        Composers.Clear();
+        CastingDirectors.Clear();
+        ProductionDesigners.Clear();
+        Actors.Clear();
+        VoiceActors.Clear();
+        GameDevelopers.Clear();
         foreach (var contribution in item.Contributions)
         {
             if (contribution.Role is ContributionRole.Author or ContributionRole.Translator or ContributionRole.Illustrator or ContributionRole.Editor)

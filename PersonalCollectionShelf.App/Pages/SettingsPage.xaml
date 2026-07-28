@@ -10,31 +10,23 @@
     Title="{Binding PageTitle}">
     <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
         <Grid
+            x:Name="TopBar"
             Grid.Row="0"
             Padding="18,7"
             BackgroundColor="{DynamicResource PageBackground}"
-            ColumnDefinitions="310,Auto,*"
+            ColumnDefinitions="*,Auto"
             ColumnSpacing="10">
-            <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
-                    <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." />
-                    <Border Grid.Column="2" Padding="6,2" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
-                        <Label FontSize="10" Text="⌘K" TextColor="{DynamicResource MutedForeground}" />
-                    </Border>
-                </Grid>
-            </Border>
             <Button Grid.Column="1" Command="{Binding CreateMediaItemCommand}" Text="+  Add Item" />
         </Grid>
 
         <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
             <VerticalStackLayout
+                x:Name="SettingsContent"
                 BackgroundColor="{DynamicResource PageBackground}"
                 Padding="0,24,0,30"
-                HorizontalOptions="Center"
+                HorizontalOptions="Fill"
                 MaximumWidthRequest="584"
-                Spacing="24"
-                WidthRequest="584">
+                Spacing="24">
                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
 
                 <VerticalStackLayout Spacing="8">
@@ -58,32 +50,32 @@
                                     <Label FontSize="12" Text="Personalize your highlight color" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
                                 <HorizontalStackLayout Grid.Column="1" Spacing="7" VerticalOptions="Center">
-                                    <Border BackgroundColor="#9D7FF4" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                    <Border BackgroundColor="#9D7FF4" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#9D7FF4" />
                                         </Border.GestureRecognizers>
                                     </Border>
-                                    <Border BackgroundColor="#60A5FA" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                    <Border BackgroundColor="#60A5FA" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#60A5FA" />
                                         </Border.GestureRecognizers>
                                     </Border>
-                                    <Border BackgroundColor="#4ADE80" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                    <Border BackgroundColor="#4ADE80" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#4ADE80" />
                                         </Border.GestureRecognizers>
                                     </Border>
-                                    <Border BackgroundColor="#FBBF24" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                    <Border BackgroundColor="#FBBF24" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#FBBF24" />
                                         </Border.GestureRecognizers>
                                     </Border>
-                                    <Border BackgroundColor="#F07CB8" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                    <Border BackgroundColor="#F07CB8" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#F07CB8" />
                                         </Border.GestureRecognizers>
                                     </Border>
-                                    <Border BackgroundColor="#E07C54" HeightRequest="20" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="20">
+                                    <Border BackgroundColor="#E07C54" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#E07C54" />
                                         </Border.GestureRecognizers>
@@ -132,7 +124,7 @@
                         <VerticalStackLayout Spacing="0">
                             <Grid Padding="16" ColumnDefinitions="44,*,Auto" ColumnSpacing="12" IsVisible="{Binding IsSignedIn}">
                                 <Border BackgroundColor="#269D7FF4" HeightRequest="40" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40">
-                                    <Label FontFamily="Segoe MDL2 Assets" FontSize="17" HorizontalTextAlignment="Center" Text="&#xE77B;" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                                    <Label FontSize="17" HorizontalTextAlignment="Center" Text="●" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
                                 </Border>
                                 <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSignedInLabel}" />
@@ -191,7 +183,7 @@
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ExportButtonText}" />
                                     <Label FontSize="12" Text="{Binding ExportDescriptionText}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Button Grid.Column="1" Command="{Binding ExportCommand}" Style="{StaticResource LinkButtonStyle}" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" />
+                                <Button Grid.Column="1" Command="{Binding ExportCommand}" Style="{StaticResource LinkButtonStyle}" Text="›" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
@@ -199,7 +191,7 @@
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ImportButtonText}" />
                                     <Label FontSize="12" Text="{Binding ImportDescriptionText}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Button Grid.Column="1" Command="{Binding ImportCommand}" Style="{StaticResource LinkButtonStyle}" FontFamily="Segoe MDL2 Assets" Text="&#xE76C;" />
+                                <Button Grid.Column="1" Command="{Binding ImportCommand}" Style="{StaticResource LinkButtonStyle}" Text="›" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto" Opacity="0.55">

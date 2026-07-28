@@ -23,7 +23,16 @@ public sealed record PersonDetailsDto
     public string? Notes { get; init; }
     public IReadOnlyList<string> Professions { get; init; } = [];
     public IReadOnlyList<PersonRelationDto> Relations { get; init; } = [];
+    public IReadOnlyList<PersonWorkDto> Works { get; init; } = [];
 }
+
+public sealed record PersonWorkDto(
+    Guid MediaItemId,
+    string Title,
+    MediaType MediaType,
+    ContributionRole Role,
+    string? Details,
+    string? CreditedAs);
 
 public sealed record SavePersonRequest
 {

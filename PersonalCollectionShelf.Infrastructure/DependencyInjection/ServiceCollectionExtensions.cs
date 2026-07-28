@@ -24,8 +24,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IStudioRepository, StudioRepository>();
         services.AddSingleton<IMediaCategoryRepository, MediaCategoryRepository>();
         services.AddSingleton<IBookDetailsRepository, BookDetailsRepository>();
+        services.AddSingleton<IMovieDetailsRepository, MovieDetailsRepository>();
+        services.AddSingleton<IMediaTypeDetailsRepository, MediaTypeDetailsRepository>();
         services.AddSingleton<ITagRepository, TagRepository>();
         services.AddSingleton<IMediaContributionRepository, MediaContributionRepository>();
+        services.AddSingleton<IMediaStudioCreditRepository, MediaStudioCreditRepository>();
         services.AddSingleton<IMediaCollectionRepository, MediaCollectionRepository>();
         services.AddSingleton<IMediaRelationRepository, MediaRelationRepository>();
         services.AddSingleton(firebaseOptions ?? FirebaseOptions.Disabled);

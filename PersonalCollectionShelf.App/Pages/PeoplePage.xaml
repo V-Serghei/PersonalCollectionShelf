@@ -11,14 +11,14 @@
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False">
     <Grid RowDefinitions="64,*" BackgroundColor="{DynamicResource PageBackground}">
-        <Grid Padding="24,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-            <Button Command="{Binding GoBackCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding BackText}" />
-            <Label Grid.Column="1" FontAttributes="Bold" FontFamily="Cambria" FontSize="28" Text="{Binding PageTitle}" VerticalTextAlignment="Center" />
-            <Button Grid.Column="2" Command="{Binding NewPersonCommand}" Text="{Binding NewPersonText}" />
+        <Grid x:Name="HeaderGrid" Padding="24,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+            <Button x:Name="BackButton" Command="{Binding GoBackCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding BackText}" />
+            <Label x:Name="HeaderTitle" Grid.Column="1" FontAttributes="Bold" FontFamily="Cambria" FontSize="28" Text="{Binding PageTitle}" VerticalTextAlignment="Center" />
+            <Button x:Name="NewPersonButton" Grid.Column="2" Command="{Binding NewPersonCommand}" Text="{Binding NewPersonText}" />
         </Grid>
 
-        <Grid Grid.Row="1" Padding="24,8,24,24" ColumnDefinitions="280,*" ColumnSpacing="18">
-            <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+        <Grid x:Name="WorkspaceGrid" Grid.Row="1" Padding="24,8,24,24" ColumnDefinitions="280,*" ColumnSpacing="18">
+            <Border x:Name="PeopleListCard" Padding="0" Style="{StaticResource CardBorderStyle}">
                 <Grid RowDefinitions="Auto,*">
                     <Label Padding="16,14" FontAttributes="Bold" Text="{Binding PageTitle}" />
                     <CollectionView Grid.Row="1" ItemsSource="{Binding People}" SelectedItem="{Binding SelectedPerson, Mode=TwoWay}" SelectionMode="Single">
@@ -37,7 +37,7 @@
                 </Grid>
             </Border>
 
-            <ScrollView Grid.Column="1">
+            <ScrollView x:Name="PersonEditorScroll" Grid.Column="1">
                 <VerticalStackLayout Spacing="16">
                     <Border Padding="20" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="12">
@@ -63,8 +63,8 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-                        <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                    <Grid x:Name="AssociationsGrid" ColumnDefinitions="*,*" ColumnSpacing="16">
+                        <Border x:Name="ProfessionsCard" Padding="20" Style="{StaticResource CardBorderStyle}">
                             <VerticalStackLayout Spacing="12">
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProfessionsSectionTitle}" />
                                 <FlexLayout BindableLayout.ItemsSource="{Binding Professions}" Direction="Row" Wrap="Wrap">
@@ -86,7 +86,7 @@
                             </VerticalStackLayout>
                         </Border>
 
-                        <Border Grid.Column="1" Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <Border x:Name="RelationsCard" Grid.Column="1" Padding="20" Style="{StaticResource CardBorderStyle}">
                             <VerticalStackLayout Spacing="10">
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RelationsSectionTitle}" />
                                 <CollectionView ItemsSource="{Binding Relations}" MaximumHeightRequest="190" SelectionMode="None">
@@ -109,6 +109,21 @@
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
+
+                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding WorksSectionTitle}" />
+                            <CollectionView ItemsSource="{Binding Works}" SelectionMode="None">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:PersonWorkDto">
+                                        <Button Command="{Binding Source={x:Reference Root}, Path=ViewModel.OpenWorkCommand, x:DataType={x:Type pages:PeoplePage}}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}">
+                                            <Button.Text><MultiBinding StringFormat="{}{0} · {1}"><Binding Path="Title" /><Binding Path="Role" /></MultiBinding></Button.Text>
+                                        </Button>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Border>
 
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                         <Label Text="{Binding StatusMessage}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />

@@ -8,6 +8,8 @@ namespace PersonalCollectionShelf.App.Pages;
 
 public partial class StatisticsPage : ContentPage
 {
+    private bool? _usesCompactLayout;
+
     public StatisticsPage()
         : this(App.Services.GetRequiredService<LibraryViewModel>())
     {
@@ -40,6 +42,64 @@ public partial class StatisticsPage : ContentPage
             MonthlyChart.Invalidate();
             DonutChart.Invalidate();
             BarChart.Invalidate();
+        }
+    }
+
+    protected override void OnSizeAllocated(double width, double height)
+    {
+        base.OnSizeAllocated(width, height);
+
+        if (width <= 0)
+        {
+            return;
+        }
+
+        var usesCompactLayout = DeviceInfo.Current.Idiom == DeviceIdiom.Phone || width < 700;
+        if (_usesCompactLayout == usesCompactLayout)
+        {
+            return;
+        }
+
+        _usesCompactLayout = usesCompactLayout;
+        TopBar.ColumnDefinitions.Clear();
+        TopBar.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        TopBar.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        TopBar.Padding = usesCompactLayout ? new Thickness(12, 7) : new Thickness(18, 7);
+        StatisticsContent.Padding = usesCompactLayout
+            ? new Thickness(14, 18, 14, 30)
+            : new Thickness(0, 24, 0, 30);
+        StatisticsContent.Spacing = usesCompactLayout ? 18 : 28;
+
+        ConfigureStackingGrid(SummaryGrid, [RatingCard, CompletionCard, CollectionCard], usesCompactLayout);
+        ConfigureStackingGrid(BreakdownGrid, [CategoryChartCard, StatusChartCard], usesCompactLayout);
+    }
+
+    private static void ConfigureStackingGrid(Grid grid, IReadOnlyList<View> children, bool usesCompactLayout)
+    {
+        grid.ColumnDefinitions.Clear();
+        grid.RowDefinitions.Clear();
+        grid.ColumnSpacing = usesCompactLayout ? 0 : 14;
+        grid.RowSpacing = usesCompactLayout ? 12 : 0;
+
+        if (usesCompactLayout)
+        {
+            grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            for (var index = 0; index < children.Count; index++)
+            {
+                grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                Grid.SetColumn(children[index], 0);
+                Grid.SetRow(children[index], index);
+            }
+        }
+        else
+        {
+            for (var index = 0; index < children.Count; index++)
+            {
+                grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                Grid.SetColumn(children[index], index);
+                Grid.SetRow(children[index], 0);
+            }
+            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
         }
     }
 

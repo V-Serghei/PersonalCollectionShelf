@@ -40,7 +40,17 @@ public sealed record UpdateMediaItemRequest
 
     public IReadOnlyList<PersonCreditInput>? Contributions { get; init; }
 
+    public IReadOnlyList<StudioCreditInput>? StudioCredits { get; init; }
+
     public BookDetailsInput? BookDetails { get; init; }
+
+    public MovieDetailsInput? MovieDetails { get; init; }
+
+    public EpisodicDetailsInput? EpisodicDetails { get; init; }
+
+    public GraphicPublicationDetailsInput? GraphicPublicationDetails { get; init; }
+
+    public GameDetailsInput? GameDetails { get; init; }
 
     public CollectionMembershipInput? Collection { get; init; }
 

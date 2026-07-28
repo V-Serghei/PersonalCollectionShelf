@@ -8,13 +8,14 @@
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <Grid BackgroundColor="{DynamicResource PageBackground}">
+    <Grid Padding="14" BackgroundColor="{DynamicResource PageBackground}">
         <Border
-            HorizontalOptions="Center"
+            HorizontalOptions="Fill"
+            MaximumWidthRequest="420"
             Padding="24"
             Style="{StaticResource CardBorderStyle}"
             VerticalOptions="Center"
-            WidthRequest="420">
+            WidthRequest="-1">
             <VerticalStackLayout Spacing="14">
                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding PageTitle}" />
                 <Label FontSize="12" Text="{Binding Description}" TextColor="{DynamicResource MutedForeground}" />
@@ -26,9 +27,8 @@
                     <Button
                         Grid.Column="1"
                         Command="{Binding TogglePasswordVisibilityCommand}"
-                        FontFamily="Segoe MDL2 Assets"
                         Style="{StaticResource SecondaryButtonStyle}"
-                        Text="&#xE7B3;"
+                        Text="◉"
                         VerticalOptions="Center" />
                 </Grid>
 

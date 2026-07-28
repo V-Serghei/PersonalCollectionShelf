@@ -10,10 +10,17 @@
     Title="{Binding PageTitle}">
     <ScrollView>
         <VerticalStackLayout
+            x:Name="DetailsContent"
             Padding="24"
             Spacing="18"
             HorizontalOptions="Center"
             MaximumWidthRequest="1120">
+
+            <Button
+                Command="{Binding BackCommand}"
+                HorizontalOptions="Start"
+                Style="{StaticResource SecondaryButtonStyle}"
+                Text="{Binding BackButtonText}" />
 
             <Border
                 Padding="12"
@@ -25,9 +32,10 @@
             </Border>
 
             <!-- Hero: cover, identity and visible actions -->
-            <Border Padding="22" Style="{StaticResource CardBorderStyle}">
-                <Grid ColumnDefinitions="180,*" ColumnSpacing="26">
+            <Border x:Name="HeroCard" Padding="22" Style="{StaticResource CardBorderStyle}">
+                <Grid x:Name="HeroGrid" ColumnDefinitions="180,*" ColumnSpacing="26">
                     <Border
+                        x:Name="HeroCover"
                         Grid.Column="0"
                         BackgroundColor="{DynamicResource Muted}"
                         HeightRequest="264"
@@ -47,7 +55,7 @@
                         </Grid>
                     </Border>
 
-                    <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" RowSpacing="18">
+                    <Grid x:Name="HeroInfo" Grid.Column="1" RowDefinitions="Auto,*,Auto" RowSpacing="18">
                         <VerticalStackLayout Spacing="9">
                             <Label Style="{StaticResource PageTitleLabelStyle}" Text="{Binding PageTitle}" />
                             <Label FontSize="15" Text="{Binding OriginalTitleValue}" TextColor="{DynamicResource MutedForeground}" />
@@ -81,24 +89,24 @@
             </Border>
 
             <!-- At-a-glance metrics -->
-            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
-                <Border Padding="16" Style="{StaticResource CardBorderStyle}">
+            <Grid x:Name="MetricsGrid" ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                <Border x:Name="RatingMetric" Padding="16" Style="{StaticResource CardBorderStyle}">
                     <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RatingLabel}" /><Label FontAttributes="Bold" FontSize="24" Text="{Binding RatingValue}" TextColor="{StaticResource Warning}" /></VerticalStackLayout>
                 </Border>
-                <Border Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}">
+                <Border x:Name="ProgressMetric" Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}">
                     <VerticalStackLayout Spacing="7"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProgressLabel}" /><Label FontAttributes="Bold" FontSize="16" Text="{Binding ProgressValue}" /><ProgressBar IsVisible="{Binding HasProgressBar}" Progress="{Binding ProgressPercent}" ProgressColor="{StaticResource Info}" /></VerticalStackLayout>
                 </Border>
-                <Border Grid.Column="2" Padding="16" Style="{StaticResource CardBorderStyle}">
+                <Border x:Name="FavoriteMetric" Grid.Column="2" Padding="16" Style="{StaticResource CardBorderStyle}">
                     <Grid ColumnDefinitions="*,Auto"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FavoriteLabel}" /><Label FontAttributes="Bold" FontSize="16" Text="{Binding FavoriteValue}" /></VerticalStackLayout><Button Grid.Column="1" Command="{Binding ToggleFavoriteCommand}" FontSize="28" Padding="8,0" Style="{StaticResource LinkButtonStyle}" Text="{Binding FavoriteIcon}" TextColor="#F07CB8" /></Grid>
                 </Border>
-                <Border Grid.Column="3" Padding="16" Style="{StaticResource CardBorderStyle}">
+                <Border x:Name="YearMetric" Grid.Column="3" Padding="16" Style="{StaticResource CardBorderStyle}">
                     <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ReleaseYearLabel}" /><Label FontAttributes="Bold" FontSize="20" Text="{Binding ReleaseYearValue}" /></VerticalStackLayout>
                 </Border>
             </Grid>
 
             <!-- Grouped content instead of one long property list -->
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
-                <VerticalStackLayout Spacing="18">
+            <Grid x:Name="DetailsColumnsGrid" ColumnDefinitions="*,*" ColumnSpacing="18">
+                <VerticalStackLayout x:Name="DetailsLeftColumn" Spacing="18">
                     <Border Padding="20" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="16">
                             <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding DetailsSectionTitle}" />
@@ -118,7 +126,7 @@
                     </Border>
                 </VerticalStackLayout>
 
-                <VerticalStackLayout Grid.Column="1" Spacing="18">
+                <VerticalStackLayout x:Name="DetailsRightColumn" Grid.Column="1" Spacing="18">
                     <Border Padding="20" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="16">
                             <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ProgressLabel}" />
@@ -147,6 +155,29 @@
                     </Grid>
                 </VerticalStackLayout>
             </Border>
+
+            <Border IsVisible="{Binding ShowScreenProductionDetails}" Padding="20" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ScreenProductionSectionTitle}" />
+                    <Border IsVisible="{Binding ShowMovieDetails}" Padding="14" Style="{StaticResource MutedBorderStyle}">
+                        <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding MovieDetailsSectionTitle}" /><Label Text="{Binding MovieMetadataValue}" /></VerticalStackLayout>
+                    </Border>
+                    <Grid x:Name="MovieCreditsGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+                        <Border x:Name="MovieDirectorsCard" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding DirectorsLabel}" /><Label FontAttributes="Bold" Text="{Binding DirectorsValue}" /></VerticalStackLayout></Border>
+                        <Border x:Name="MovieScreenwritersCard" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ScreenwritersLabel}" /><Label Text="{Binding ScreenwritersValue}" /></VerticalStackLayout></Border>
+                        <Border x:Name="MovieProducersCard" Grid.Row="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProducersLabel}" /><Label Text="{Binding ProducersValue}" /></VerticalStackLayout></Border>
+                        <Border x:Name="MovieCinematographersCard" Grid.Row="1" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CinematographersLabel}" /><Label Text="{Binding CinematographersValue}" /></VerticalStackLayout></Border>
+                        <Border x:Name="MovieComposersCard" Grid.Row="2" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ComposersLabel}" /><Label Text="{Binding ComposersValue}" /></VerticalStackLayout></Border>
+                        <Border x:Name="MovieStudiosCard" Grid.Row="2" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding MovieStudiosLabel}" /><Label Text="{Binding MovieStudiosValue}" /></VerticalStackLayout></Border>
+                        <Border x:Name="MovieCastingDirectorsCard" Grid.Row="3" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CastingDirectorsLabel}" /><Label Text="{Binding CastingDirectorsValue}" /></VerticalStackLayout></Border>
+                        <Border x:Name="MovieProductionDesignersCard" Grid.Row="3" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProductionDesignersLabel}" /><Label Text="{Binding ProductionDesignersValue}" /></VerticalStackLayout></Border>
+                        <Border x:Name="MovieActorsCard" Grid.Row="4" Grid.ColumnSpan="2" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ActorsLabel}" /><Label Text="{Binding ActorsValue}" /></VerticalStackLayout></Border>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+            <Border IsVisible="{Binding ShowEpisodicDetails}" Padding="20" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="12"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding EpisodicDetailsSectionTitle}" /><Label Text="{Binding ExtendedTypeMetadataValue}" /></VerticalStackLayout></Border>
+            <Border IsVisible="{Binding ShowGraphicPublicationDetails}" Padding="20" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="12"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding GraphicDetailsSectionTitle}" /><Label Text="{Binding ExtendedTypeMetadataValue}" /></VerticalStackLayout></Border>
+            <Border IsVisible="{Binding ShowGameDetails}" Padding="20" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="12"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding GameDetailsSectionTitle}" /><Label Text="{Binding ExtendedTypeMetadataValue}" /></VerticalStackLayout></Border>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

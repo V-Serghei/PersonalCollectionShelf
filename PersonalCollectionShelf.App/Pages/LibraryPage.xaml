@@ -12,6 +12,7 @@
     Title="{Binding PageTitle}">
     <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
         <Grid
+            x:Name="TopBar"
             Grid.Row="0"
             Padding="18,7"
             BackgroundColor="{DynamicResource PageBackground}"
@@ -19,10 +20,10 @@
             ColumnSpacing="10">
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                    <Label FontFamily="Segoe MDL2 Assets" FontSize="15" Text="&#xE721;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                    <Label FontSize="15" Text="⌕" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
                     <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." Text="{Binding SearchTerm}" />
-                    <Border Grid.Column="2" Padding="6,2" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
-                        <Label FontSize="10" Text="⌘K" TextColor="{DynamicResource MutedForeground}" />
+                    <Border Grid.Column="2" IsVisible="{OnIdiom Phone=False, Default=True}" Padding="6,2" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
+                        <Label FontSize="10" Text="Ctrl K" TextColor="{DynamicResource MutedForeground}" />
                     </Border>
                 </Grid>
             </Border>
@@ -30,13 +31,13 @@
         </Grid>
 
         <Grid
+            x:Name="LibraryContent"
             Grid.Row="1"
             Padding="0,24,0,0"
-            HorizontalOptions="Center"
+            HorizontalOptions="Fill"
             MaximumWidthRequest="920"
             RowDefinitions="Auto,Auto,Auto,Auto,*"
-            RowSpacing="16"
-            WidthRequest="920">
+            RowSpacing="16">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
                 <Border Grid.Column="1" Padding="6" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 16">
@@ -61,17 +62,20 @@
                 </Border>
             </Grid>
 
-            <Grid Grid.Row="1" ColumnDefinitions="*,130,170" ColumnSpacing="10">
+            <Grid x:Name="FilterGrid" Grid.Row="1" ColumnDefinitions="*,130,170" ColumnSpacing="10">
                 <SearchBar
+                    x:Name="LibrarySearch"
                     Grid.Column="0"
                     Placeholder="Search your library..."
                     SearchCommand="{Binding LoadCommand}"
                     Text="{Binding SearchTerm}" />
                 <Picker
+                    x:Name="StatusPicker"
                     Grid.Column="1"
                     ItemsSource="{Binding StatusFilters}"
                     SelectedItem="{Binding SelectedStatusFilter}" />
                 <Picker
+                    x:Name="SortPicker"
                     Grid.Column="2"
                     ItemsSource="{Binding SortOptions}"
                     SelectedItem="{Binding SelectedSortOption}" />
@@ -123,7 +127,7 @@
                             VerticalItemSpacing="16" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.EmptyView>
-                        <Border Margin="0,50,0,0" Padding="28" Style="{StaticResource CardBorderStyle}" WidthRequest="340">
+                        <Border Margin="0,50,0,0" Padding="28" HorizontalOptions="Fill" MaximumWidthRequest="340" Style="{StaticResource CardBorderStyle}">
                             <Label HorizontalTextAlignment="Center" Text="{Binding Source={RelativeSource AncestorType={x:Type pages:LibraryPage}}, Path=ViewModel.EmptyLibraryText, x:DataType={x:Type pages:LibraryPage}}" />
                         </Border>
                     </CollectionView.EmptyView>
@@ -176,7 +180,7 @@
                         <LinearItemsLayout ItemSpacing="8" Orientation="Vertical" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.EmptyView>
-                        <Border Margin="0,50,0,0" Padding="28" Style="{StaticResource CardBorderStyle}" WidthRequest="340">
+                        <Border Margin="0,50,0,0" Padding="28" HorizontalOptions="Fill" MaximumWidthRequest="340" Style="{StaticResource CardBorderStyle}">
                             <Label HorizontalTextAlignment="Center" Text="{Binding Source={RelativeSource AncestorType={x:Type pages:LibraryPage}}, Path=ViewModel.EmptyLibraryText, x:DataType={x:Type pages:LibraryPage}}" />
                         </Border>
                     </CollectionView.EmptyView>

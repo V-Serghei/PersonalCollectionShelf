@@ -57,9 +57,14 @@ public sealed class LocalDatabaseService
             await Connection.CreateTableAsync<MediaItemCastMemberRecord>();
             await Connection.CreateTableAsync<MediaCategoryRecord>();
             await Connection.CreateTableAsync<BookDetailsRecord>();
+            await Connection.CreateTableAsync<MovieDetailsRecord>();
+            await Connection.CreateTableAsync<EpisodicDetailsRecord>();
+            await Connection.CreateTableAsync<GraphicPublicationDetailsRecord>();
+            await Connection.CreateTableAsync<GameDetailsRecord>();
             await Connection.CreateTableAsync<TagRecord>();
             await Connection.CreateTableAsync<MediaItemTagRecord>();
             await Connection.CreateTableAsync<MediaContributionRecord>();
+            await Connection.CreateTableAsync<MediaStudioCreditRecord>();
             await Connection.CreateTableAsync<CreditRoleRecord>();
             await Connection.CreateTableAsync<MediaCollectionRecord>();
             await Connection.CreateTableAsync<MediaCollectionEntryRecord>();
@@ -85,11 +90,35 @@ public sealed class LocalDatabaseService
         var tags = await Connection.Table<TagRecord>().ToListAsync();
         var itemTags = await Connection.Table<MediaItemTagRecord>().ToListAsync();
         var contributions = await Connection.Table<MediaContributionRecord>().ToListAsync();
+        var studioCredits = await Connection.Table<MediaStudioCreditRecord>().ToListAsync();
 
         foreach (var contribution in contributions.Where(value => string.IsNullOrWhiteSpace(value.CreditRoleId)))
         {
             contribution.CreditRoleId = SystemEntityIds.CreditRole((ContributionRole)contribution.Role).ToString();
             await Connection.UpdateAsync(contribution);
+        }
+
+        foreach (var movie in mediaItems.Where(value =>
+                     value.MediaType == (int)MediaType.Movie &&
+                     !string.IsNullOrWhiteSpace(value.StudioId) &&
+                     !studioCredits.Any(credit =>
+                         credit.MediaItemId == value.Id &&
+                         credit.StudioId == value.StudioId)))
+        {
+            var now = DateTime.UtcNow;
+            var credit = new MediaStudioCreditRecord
+            {
+                Id = Guid.NewGuid().ToString(),
+                UserId = movie.UserId,
+                MediaItemId = movie.Id,
+                StudioId = movie.StudioId!,
+                Role = (int)StudioRole.ProductionCompany,
+                SortOrder = 0,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            await Connection.InsertAsync(credit);
+            studioCredits.Add(credit);
         }
 
         foreach (var item in mediaItems)

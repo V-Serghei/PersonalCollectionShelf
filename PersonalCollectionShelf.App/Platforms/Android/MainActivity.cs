@@ -1,11 +1,13 @@
 using Android.App;
 using Android.Content.PM;
+using Android.Views;
 
 namespace PersonalCollectionShelf.App;
 
 [Activity(
     Theme = "@style/Maui.SplashTheme",
     MainLauncher = true,
+    WindowSoftInputMode = SoftInput.AdjustResize,
     ConfigurationChanges = ConfigChanges.ScreenSize
         | ConfigChanges.Orientation
         | ConfigChanges.UiMode
