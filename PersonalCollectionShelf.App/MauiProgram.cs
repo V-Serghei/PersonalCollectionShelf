@@ -40,6 +40,7 @@ public static class MauiProgram
         builder.Services.AddTransient<CategoryManagementViewModel>();
         builder.Services.AddTransient<CollectionsViewModel>();
         builder.Services.AddTransient<TagsViewModel>();
+        builder.Services.AddTransient<TagDetailsViewModel>();
         builder.Services.AddTransient<ProfileViewModel>();
         builder.Services.AddTransient<SignInViewModel>();
         builder.Services.AddTransient<SignInPage>();
@@ -53,6 +54,7 @@ public static class MauiProgram
         builder.Services.AddTransient<CategoryManagementPage>();
         builder.Services.AddTransient<CollectionsPage>();
         builder.Services.AddTransient<TagsPage>();
+        builder.Services.AddTransient<TagDetailsPage>();
         builder.Services.AddTransient<ProfilePage>();
 
 #if DEBUG

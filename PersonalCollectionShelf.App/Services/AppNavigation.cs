@@ -38,6 +38,9 @@ internal static class AppNavigation
 
     public static Task OpenPeopleAsync() => Shell.Current.GoToAsync("//People");
 
+    public static Task OpenTagAsync(string tagName) =>
+        Shell.Current.GoToAsync($"{nameof(TagDetailsPage)}?tag={Uri.EscapeDataString(tagName)}");
+
     public static Task OpenCategoriesAsync() =>
         OpenUtilityPageAsync(
             () => App.Services.GetRequiredService<CategoryManagementPage>(),
