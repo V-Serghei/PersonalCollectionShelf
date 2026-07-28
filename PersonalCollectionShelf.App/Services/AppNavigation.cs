@@ -36,10 +36,7 @@ internal static class AppNavigation
         await page.LoadNavigationTargetAsync();
     }
 
-    public static Task OpenPeopleAsync() =>
-        OpenUtilityPageAsync(
-            () => App.Services.GetRequiredService<PeoplePage>(),
-            nameof(PeoplePage));
+    public static Task OpenPeopleAsync() => Shell.Current.GoToAsync("//People");
 
     public static Task OpenCategoriesAsync() =>
         OpenUtilityPageAsync(

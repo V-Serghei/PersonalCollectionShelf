@@ -17,9 +17,22 @@ public partial class LibraryPage : ContentPage
     {
         InitializeComponent();
         BindingContext = viewModel;
+        viewModel.PropertyChanged += HandleViewModelPropertyChanged;
     }
 
     public LibraryViewModel ViewModel => (LibraryViewModel)BindingContext;
+
+    private async void HandleSearchClicked(object? sender, EventArgs e)
+    {
+        ViewModel.ToggleSearchCommand.Execute(null);
+        if (ViewModel.IsSearchVisible) { await Task.Delay(50); TopSearchEntry.Focus(); }
+    }
+
+    private void HandleViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(LibraryViewModel.SelectedMediaTypeFilter) || ViewModel.SelectedMediaTypeFilter is null) return;
+        Dispatcher.Dispatch(() => MediaTypeFilterList.ScrollTo(ViewModel.SelectedMediaTypeFilter, position: ScrollToPosition.Center, animate: true));
+    }
 
     protected override void OnSizeAllocated(double width, double height)
     {
@@ -44,6 +57,7 @@ public partial class LibraryPage : ContentPage
     {
         TopBar.ColumnDefinitions.Clear();
         TopBar.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        TopBar.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
         TopBar.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
         TopBar.Padding = usesCompactLayout ? new Thickness(12, 7) : new Thickness(18, 7);
 

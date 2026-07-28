@@ -390,5 +390,13 @@
   ,"People.Works": "Работы и роли"
   ,"Collections.Title": "Серии и вселенные"
   ,"Collections.Empty": "Серии, циклы и вселенные пока не добавлены."
+  ,"Collections.SearchPlaceholder": "Поиск серий, вселенных и произведений"
   ,"Tags.Title": "Теги"
+  ,"Tags.Empty": "Подходящие теги не найдены."
+  ,"Tags.SearchPlaceholder": "Поиск тегов и связанных произведений"
+  ,"Profile.Title": "Профиль"
+  ,"Profile.Account": "Аккаунт и библиотека"
+  ,"Profile.OpenSettings": "Настройки аккаунта"
+  ,"Profile.OpenPeople": "Люди и участники"
+  ,"People.SearchPlaceholder": "Поиск людей"
 }

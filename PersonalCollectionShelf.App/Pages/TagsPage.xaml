@@ -1,4 +1,35 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="PersonalCollectionShelf.App.Pages.TagsPage" x:Name="Root" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application" xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages" xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels" x:DataType="viewModels:TagsViewModel" BackgroundColor="{DynamicResource PageBackground}">
-    <ScrollView><VerticalStackLayout Padding="18" Spacing="16"><Label FontAttributes="Bold" FontFamily="Cambria" FontSize="28" Text="{Binding PageTitle}" /><VerticalStackLayout BindableLayout.ItemsSource="{Binding Tags}" Spacing="14"><BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:TagGroupViewModel"><Border Padding="16" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="10"><Label FontAttributes="Bold" FontSize="18" Text="{Binding Name}" /><FlexLayout BindableLayout.ItemsSource="{Binding Items}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:MediaItemDto"><Button Command="{Binding Source={x:Reference Root}, Path=ViewModel.OpenItemCommand, x:DataType={x:Type pages:TagsPage}}" CommandParameter="{Binding .}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding Title}" /></DataTemplate></BindableLayout.ItemTemplate></FlexLayout></VerticalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout></VerticalStackLayout></ScrollView>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.TagsPage"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:TagsViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+    <Grid Padding="18" RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto">
+            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
+            <Button Grid.Column="1" Clicked="HandleSearchClicked" Style="{StaticResource IconToggleButtonStyle}" Text="⌕" />
+        </Grid>
+        <SearchBar x:Name="TagSearch" Grid.Row="1" IsVisible="{Binding IsSearchVisible}" Placeholder="{Binding SearchPlaceholder}" Text="{Binding SearchText}" />
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Tags}" SelectionMode="None">
+            <CollectionView.EmptyView><Label Margin="0,36" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="viewModels:TagGroupViewModel">
+                    <Border Margin="0,0,0,12" Padding="16" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto"><Label FontAttributes="Bold" FontSize="18" Text="{Binding Name}" /><Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 10"><Label FontSize="11" Text="{Binding Items.Count}" /></Border></Grid>
+                            <FlexLayout BindableLayout.ItemsSource="{Binding Items}" Direction="Row" Wrap="Wrap">
+                                <BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:MediaItemDto"><Button Margin="0,0,7,7" Command="{Binding Source={x:Reference Root}, Path=ViewModel.OpenItemCommand, x:DataType={x:Type pages:TagsPage}}" CommandParameter="{Binding .}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding Title}" /></DataTemplate></BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>

@@ -63,6 +63,8 @@ Already delivered beyond MVP:
 - Type-specific series/anime episode data, manga/comic publication data, and game platform/playtime data
 - Browsable people-to-work role links and a dedicated series/cycles/universes explorer
 - Dedicated tag explorer with direct navigation to linked items
+- Compact expandable search across Library, People, Tags, and Series/Universes, plus route-aware sidebar and category highlighting
+- Dedicated local/account profile page accessible from the sidebar footer
 
 Next versions:
 

@@ -84,3 +84,9 @@
   so description, notes, save actions, and picker actions can scroll fully above overlay keyboards.
 - Changed keyboard-aware focus scrolling to run exactly once per newly focused input. Manual
   scrolling is no longer overridden while the same field remains selected.
+- Reworked navigation state to use Shell routes instead of obsolete fixed menu indexes; added
+  independently highlighted category rows and automatic scrolling to the selected library type.
+- Redesigned Tags and Series/Universes as searchable card lists. Library, People, Tags, and
+  Series/Universes now expose search from a compact button and collapse it when not needed.
+- Added People to the primary sidebar and a clickable profile footer backed by a dedicated profile
+  page with account/library summary and links to contributors and account settings.

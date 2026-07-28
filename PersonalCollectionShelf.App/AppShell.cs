@@ -19,7 +19,10 @@ public sealed class AppShell : Shell
     private readonly FlyoutItem _collectionsItem;
     private readonly FlyoutItem _tagsItem;
     private readonly FlyoutItem _settingsItem;
-    private readonly List<(Border Container, Label Icon, Label Text)> _navigationButtons = [];
+    private readonly FlyoutItem _peopleItem;
+    private readonly FlyoutItem _profileItem;
+    private readonly List<(string Route, Border Container, Label Icon, Label Text)> _navigationButtons = [];
+    private readonly List<(MediaType Type, Border Container, Label Text)> _categoryButtons = [];
     private Label? _profileInitialLabel;
     private Label? _profileNameLabel;
     private Label? _profileDetailLabel;
@@ -53,6 +56,8 @@ public sealed class AppShell : Shell
         _statisticsItem = CreateItem("Statistics", nameof(StatisticsPage), () => _services.GetRequiredService<StatisticsPage>());
         _collectionsItem = CreateItem("Collections", nameof(CollectionsPage), () => _services.GetRequiredService<CollectionsPage>());
         _tagsItem = CreateItem("Tags", nameof(TagsPage), () => _services.GetRequiredService<TagsPage>());
+        _peopleItem = CreateItem("People", nameof(PeoplePage), () => _services.GetRequiredService<PeoplePage>());
+        _profileItem = CreateItem("Profile", nameof(ProfilePage), () => _services.GetRequiredService<ProfilePage>());
         _settingsItem = CreateItem("Settings", nameof(SettingsPage), () => _services.GetRequiredService<SettingsPage>());
 
         Items.Add(_homeItem);
@@ -60,11 +65,12 @@ public sealed class AppShell : Shell
         Items.Add(_statisticsItem);
         Items.Add(_collectionsItem);
         Items.Add(_tagsItem);
+        Items.Add(_peopleItem);
+        Items.Add(_profileItem);
         Items.Add(_settingsItem);
 
         Routing.RegisterRoute(nameof(MediaDetailsPage), typeof(MediaDetailsPage));
         Routing.RegisterRoute(nameof(EditMediaItemPage), typeof(EditMediaItemPage));
-        Routing.RegisterRoute(nameof(PeoplePage), typeof(PeoplePage));
         Routing.RegisterRoute(nameof(CategoryManagementPage), typeof(CategoryManagementPage));
 
         FlyoutContentTemplate = new DataTemplate(BuildFlyoutContent);
@@ -94,6 +100,7 @@ public sealed class AppShell : Shell
     private View BuildFlyoutContent()
     {
         _navigationButtons.Clear();
+        _categoryButtons.Clear();
 
         var root = new Grid
         {
@@ -149,10 +156,11 @@ public sealed class AppShell : Shell
         };
 
         navigation.Children.Add(CreateNavButton("⌂", T("Shell.Home"), "//Home", true));
-        navigation.Children.Add(CreateNavButton("▤", T("Library.Title"), "//Library", false));
+        navigation.Children.Add(CreateNavButton("▤", T("Library.Title"), "//Library?reset=true", false));
         navigation.Children.Add(CreateNavButton("▥", T("Shell.Statistics"), "//Statistics", false));
         navigation.Children.Add(CreateNavButton("◎", T("Collections.Title"), "//Collections", false));
         navigation.Children.Add(CreateNavButton("#", T("Tags.Title"), "//Tags", false));
+        navigation.Children.Add(CreateNavButton("♟", T("People.Title"), "//People", false));
         navigation.Children.Add(CreateNavButton("⚙", T("Settings.Title"), "//Settings", false));
         navigation.Children.Add(new Label
         {
@@ -221,26 +229,36 @@ public sealed class AppShell : Shell
                         }
                     }
                 },
-                new HorizontalStackLayout
+                new Border
                 {
-                    Spacing = 8,
-                    Children =
+                    Padding = new Thickness(4, 6),
+                    StrokeThickness = 0,
+                    BackgroundColor = Colors.Transparent,
+                    Content = new HorizontalStackLayout
                     {
-                        new Border
+                        Spacing = 8,
+                        Children =
                         {
-                            BackgroundColor = BorderColor,
-                            HeightRequest = 28,
-                            StrokeThickness = 0,
-                            StrokeShape = new RoundRectangle { CornerRadius = 14 },
-                            WidthRequest = 28,
-                            Content = _profileInitialLabel
-                        },
-                        new VerticalStackLayout
-                        {
-                            Spacing = 1,
-                            MaximumWidthRequest = 140,
-                            Children = { _profileNameLabel, _profileDetailLabel }
+                            new Border
+                            {
+                                BackgroundColor = BorderColor,
+                                HeightRequest = 28,
+                                StrokeThickness = 0,
+                                StrokeShape = new RoundRectangle { CornerRadius = 14 },
+                                WidthRequest = 28,
+                                Content = _profileInitialLabel
+                            },
+                            new VerticalStackLayout
+                            {
+                                Spacing = 1,
+                                MaximumWidthRequest = 140,
+                                Children = { _profileNameLabel, _profileDetailLabel }
+                            }
                         }
+                    },
+                    GestureRecognizers =
+                    {
+                        new TapGestureRecognizer { Command = new Command(async () => { await GoToAsync("//Profile"); CloseCompactFlyout(); }) }
                     }
                 }
             }
@@ -356,33 +374,39 @@ public sealed class AppShell : Shell
             container.GestureRecognizers.Add(pointer);
         }
 
-        _navigationButtons.Add((container, iconLabel, textLabel));
+        _navigationButtons.Add((route.TrimStart('/').Split('?')[0], container, iconLabel, textLabel));
         return container;
     }
 
     private View CreateCategoryLabel(MediaType mediaType, string color)
     {
-        var row = new HorizontalStackLayout
+        var text = new Label
         {
-            Spacing = 10,
-            Padding = new Thickness(6, 7),
-            Children =
+            Text = T($"MediaType.{mediaType}"),
+            FontSize = 14,
+            TextColor = Color.FromArgb(color),
+            VerticalTextAlignment = TextAlignment.Center
+        };
+        var row = new Border
+        {
+            Padding = new Thickness(8, 7),
+            StrokeThickness = 0,
+            StrokeShape = new RoundRectangle { CornerRadius = 14 },
+            Content = new HorizontalStackLayout
             {
-                new Border
+                Spacing = 10,
+                Children =
                 {
-                    WidthRequest = 10,
-                    HeightRequest = 10,
-                    BackgroundColor = Color.FromArgb(color),
-                    StrokeThickness = 0,
-                    StrokeShape = new RoundRectangle { CornerRadius = 3 },
-                    VerticalOptions = LayoutOptions.Center
-                },
-                new Label
-                {
-                    Text = T($"MediaType.{mediaType}"),
-                    FontSize = 14,
-                    TextColor = Color.FromArgb(color),
-                    VerticalTextAlignment = TextAlignment.Center
+                    new Border
+                    {
+                        WidthRequest = 10,
+                        HeightRequest = 10,
+                        BackgroundColor = Color.FromArgb(color),
+                        StrokeThickness = 0,
+                        StrokeShape = new RoundRectangle { CornerRadius = 3 },
+                        VerticalOptions = LayoutOptions.Center
+                    },
+                    text
                 }
             }
         };
@@ -393,6 +417,7 @@ public sealed class AppShell : Shell
             {
                 try
                 {
+                    SetActiveCategory(mediaType);
                     await GoToAsync($"//Library?mediaType={mediaType}");
                     CloseCompactFlyout();
                 }
@@ -406,17 +431,18 @@ public sealed class AppShell : Shell
         if (!UsesCompactNavigation)
         {
             var pointer = new PointerGestureRecognizer();
-            pointer.PointerEntered += (_, _) => row.Scale = 1.05;
+            pointer.PointerEntered += (_, _) => row.Scale = 1.03;
             pointer.PointerExited += (_, _) => row.Scale = 1.0;
             row.GestureRecognizers.Add(pointer);
         }
 
+        _categoryButtons.Add((mediaType, row, text));
         return row;
     }
 
     private void SetActiveButton(Border activeContainer, Label activeIcon, Label activeText)
     {
-        foreach (var (container, icon, text) in _navigationButtons)
+        foreach (var (_, container, icon, text) in _navigationButtons)
         {
             var isActive = ReferenceEquals(container, activeContainer);
             var color = isActive ? PrimaryColor : SecondaryForegroundColor;
@@ -425,6 +451,18 @@ public sealed class AppShell : Shell
             text.TextColor = color;
         }
     }
+
+    private void SetActiveCategory(MediaType? activeType)
+    {
+        foreach (var (type, container, text) in _categoryButtons)
+        {
+            var isActive = type == activeType;
+            container.BackgroundColor = isActive ? ActiveNavigationBackgroundColor : Colors.Transparent;
+            text.FontAttributes = isActive ? FontAttributes.Bold : FontAttributes.None;
+        }
+    }
+
+    public void SetLibraryCategoryFilter(MediaType? mediaType) => SetActiveCategory(mediaType);
 
     private Color AppBackgroundColor => Color.FromArgb(_appearanceService.IsDarkTheme ? "#201C2D" : "#F7F4FF");
 
@@ -463,16 +501,25 @@ public sealed class AppShell : Shell
     private void HandleNavigated(object? sender, ShellNavigatedEventArgs e)
     {
         var location = e.Current.Location.OriginalString;
-        var index = location.Contains("Library", StringComparison.OrdinalIgnoreCase) ? 1
-            : location.Contains("Statistics", StringComparison.OrdinalIgnoreCase) ? 2
-            : location.Contains("Settings", StringComparison.OrdinalIgnoreCase) ? 3
-            : 0;
-
-        if (index >= 0 && index < _navigationButtons.Count)
+        var active = _navigationButtons.FirstOrDefault(entry =>
+            location.Contains(entry.Route, StringComparison.OrdinalIgnoreCase));
+        if (active.Container is not null)
         {
-            var entry = _navigationButtons[index];
-            SetActiveButton(entry.Container, entry.Icon, entry.Text);
+            SetActiveButton(active.Container, active.Icon, active.Text);
         }
+        else
+        {
+            foreach (var (_, container, icon, text) in _navigationButtons)
+            {
+                container.BackgroundColor = Colors.Transparent;
+                icon.TextColor = SecondaryForegroundColor;
+                text.TextColor = SecondaryForegroundColor;
+            }
+        }
+
+        var activeCategory = Enum.GetValues<MediaType>().FirstOrDefault(type =>
+            location.Contains($"mediaType={type}", StringComparison.OrdinalIgnoreCase));
+        SetActiveCategory(location.Contains("mediaType=", StringComparison.OrdinalIgnoreCase) ? activeCategory : null);
 
         if (CurrentPage is not null)
         {
@@ -514,6 +561,10 @@ public sealed class AppShell : Shell
         _homeItem.Title = T("Shell.Home");
         _libraryItem.Title = T("Library.Title");
         _statisticsItem.Title = T("Shell.Statistics");
+        _collectionsItem.Title = T("Collections.Title");
+        _tagsItem.Title = T("Tags.Title");
+        _peopleItem.Title = T("People.Title");
+        _profileItem.Title = T("Profile.Title");
         _settingsItem.Title = T("Settings.Title");
     }
 }

@@ -1,4 +1,33 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="PersonalCollectionShelf.App.Pages.CollectionsPage" x:Name="Root" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application" xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages" xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels" x:DataType="viewModels:CollectionsViewModel" BackgroundColor="{DynamicResource PageBackground}">
-    <ScrollView><VerticalStackLayout Padding="18" Spacing="16"><Label FontAttributes="Bold" FontFamily="Cambria" FontSize="28" Text="{Binding PageTitle}" /><VerticalStackLayout BindableLayout.ItemsSource="{Binding Collections}" Spacing="14"><BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:CollectionExplorerDto"><Border Padding="16" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="10"><Label FontAttributes="Bold" FontSize="18" Text="{Binding Name}" /><Label FontSize="12" Text="{Binding Kind}" TextColor="{DynamicResource MutedForeground}" /><VerticalStackLayout BindableLayout.ItemsSource="{Binding Items}" Spacing="7"><BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:CollectionItemDto"><Button Command="{Binding Source={x:Reference Root}, Path=ViewModel.OpenItemCommand, x:DataType={x:Type pages:CollectionsPage}}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}"><Button.Text><MultiBinding StringFormat="{}{0}  {1}"><Binding Path="Position" /><Binding Path="Title" /></MultiBinding></Button.Text></Button></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout></VerticalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout></VerticalStackLayout></ScrollView>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.CollectionsPage"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:CollectionsViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+    <Grid Padding="18" RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto">
+            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
+            <Button Grid.Column="1" Clicked="HandleSearchClicked" Style="{StaticResource IconToggleButtonStyle}" Text="⌕" />
+        </Grid>
+        <SearchBar x:Name="CollectionSearch" Grid.Row="1" IsVisible="{Binding IsSearchVisible}" Placeholder="{Binding SearchPlaceholder}" Text="{Binding SearchText}" />
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Collections}" SelectionMode="None">
+            <CollectionView.EmptyView><Label Margin="0,36" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:CollectionExplorerDto">
+                    <Border Margin="0,0,0,12" Padding="16" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto"><Label FontAttributes="Bold" FontSize="18" Text="{Binding Name}" /><Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 10"><Label FontSize="11" Text="{Binding Kind}" /></Border></Grid>
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Items}" Spacing="7"><BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:CollectionItemDto"><Button Command="{Binding Source={x:Reference Root}, Path=ViewModel.OpenItemCommand, x:DataType={x:Type pages:CollectionsPage}}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}"><Button.Text><MultiBinding StringFormat="{}{0}  {1}"><Binding Path="Position" /><Binding Path="Title" /></MultiBinding></Button.Text></Button></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>

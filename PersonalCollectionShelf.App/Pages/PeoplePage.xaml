@@ -10,14 +10,17 @@
     x:DataType="viewModels:PeopleViewModel"
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False">
-    <Grid RowDefinitions="64,*" BackgroundColor="{DynamicResource PageBackground}">
-        <Grid x:Name="HeaderGrid" Padding="24,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+    <Grid RowDefinitions="64,Auto,*" BackgroundColor="{DynamicResource PageBackground}">
+        <Grid x:Name="HeaderGrid" Padding="24,12" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
             <Button x:Name="BackButton" Command="{Binding GoBackCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding BackText}" />
             <Label x:Name="HeaderTitle" Grid.Column="1" FontAttributes="Bold" FontFamily="Cambria" FontSize="28" Text="{Binding PageTitle}" VerticalTextAlignment="Center" />
-            <Button x:Name="NewPersonButton" Grid.Column="2" Command="{Binding NewPersonCommand}" Text="{Binding NewPersonText}" />
+            <Button x:Name="PeopleSearchButton" Grid.Column="2" Clicked="HandleSearchClicked" Style="{StaticResource IconToggleButtonStyle}" Text="⌕" />
+            <Button x:Name="NewPersonButton" Grid.Column="3" Command="{Binding NewPersonCommand}" Text="{Binding NewPersonText}" />
         </Grid>
 
-        <Grid x:Name="WorkspaceGrid" Grid.Row="1" Padding="24,8,24,24" ColumnDefinitions="280,*" ColumnSpacing="18">
+        <SearchBar x:Name="PeopleSearch" Grid.Row="1" Margin="14,0" IsVisible="{Binding IsSearchVisible}" Placeholder="{Binding SearchPlaceholder}" Text="{Binding SearchText}" />
+
+        <Grid x:Name="WorkspaceGrid" Grid.Row="2" Padding="24,8,24,24" ColumnDefinitions="280,*" ColumnSpacing="18">
             <Border x:Name="PeopleListCard" Padding="0" Style="{StaticResource CardBorderStyle}">
                 <Grid RowDefinitions="Auto,*">
                     <Label Padding="16,14" FontAttributes="Bold" Text="{Binding PageTitle}" />

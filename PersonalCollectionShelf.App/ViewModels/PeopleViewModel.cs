@@ -15,6 +15,7 @@ public partial class PeopleViewModel : BaseViewModel
     private readonly IPeopleManagementService _peopleManagementService;
     private readonly IAuthService _authService;
     private string _userId = "local-user";
+    private IReadOnlyList<PersonDto> _allPeople = [];
 
     [ObservableProperty] public partial PersonDto? SelectedPerson { get; set; }
     [ObservableProperty] public partial string Name { get; set; } = string.Empty;
@@ -37,6 +38,8 @@ public partial class PeopleViewModel : BaseViewModel
     [ObservableProperty] public partial LocalizedOption<PersonRelationKind>? SelectedRelationKind { get; set; }
     [ObservableProperty] public partial string RelationNotes { get; set; } = string.Empty;
     [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool IsSearchVisible { get; set; }
+    [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
 
     private Guid? _editingId;
 
@@ -86,6 +89,9 @@ public partial class PeopleViewModel : BaseViewModel
     public string ProfessionPlaceholder => T("People.ProfessionPlaceholder");
     public string RelatedPersonLabel => T("People.RelatedPerson");
     public string RelationKindLabel => T("People.RelationKind");
+    public string SearchPlaceholder => T("People.SearchPlaceholder");
+
+    partial void OnSearchTextChanged(string value) => ApplyPeopleFilter();
 
     partial void OnSelectedPersonChanged(PersonDto? value)
     {
@@ -100,8 +106,8 @@ public partial class PeopleViewModel : BaseViewModel
     {
         _userId = await _authService.GetCurrentUserIdAsync() ?? "local-user";
         var selectedId = _editingId;
-        var people = await _personService.SearchAsync(_userId, null, 500);
-        Replace(People, people);
+        _allPeople = await _personService.SearchAsync(_userId, null, 500);
+        ApplyPeopleFilter();
         RefreshRelatedPeople();
         if (selectedId.HasValue)
         {
@@ -120,6 +126,13 @@ public partial class PeopleViewModel : BaseViewModel
         SelectedPerson = null;
         ClearForm();
         StatusMessage = string.Empty;
+    }
+
+    [RelayCommand]
+    private void ToggleSearch()
+    {
+        IsSearchVisible = !IsSearchVisible;
+        if (!IsSearchVisible) SearchText = string.Empty;
     }
 
     [RelayCommand]
@@ -272,7 +285,15 @@ public partial class PeopleViewModel : BaseViewModel
         RefreshRelatedPeople();
     }
 
-    private void RefreshRelatedPeople() => Replace(RelatedPeople, People.Where(value => value.Id != _editingId));
+    private void ApplyPeopleFilter()
+    {
+        var term = SearchText.Trim();
+        Replace(People, _allPeople.Where(value => term.Length == 0 ||
+            value.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(value.Tagline) && value.Tagline.Contains(term, StringComparison.OrdinalIgnoreCase))));
+    }
+
+    private void RefreshRelatedPeople() => Replace(RelatedPeople, _allPeople.Where(value => value.Id != _editingId));
 
     private void InitializeRelationKinds()
     {

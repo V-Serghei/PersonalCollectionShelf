@@ -16,18 +16,19 @@
             Grid.Row="0"
             Padding="18,7"
             BackgroundColor="{DynamicResource PageBackground}"
-            ColumnDefinitions="310,Auto,*"
+            ColumnDefinitions="*,Auto,Auto"
             ColumnSpacing="10">
-            <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
+            <Border Grid.Column="0" IsVisible="{Binding IsSearchVisible}" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                     <Label FontSize="15" Text="⌕" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
-                    <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." Text="{Binding SearchTerm}" />
+                    <Entry x:Name="TopSearchEntry" Grid.Column="1" BackgroundColor="Transparent" Placeholder="{Binding SearchPlaceholder}" Text="{Binding SearchTerm}" />
                     <Border Grid.Column="2" IsVisible="{OnIdiom Phone=False, Default=True}" Padding="6,2" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
                         <Label FontSize="10" Text="Ctrl K" TextColor="{DynamicResource MutedForeground}" />
                     </Border>
                 </Grid>
             </Border>
-            <Button Grid.Column="1" Command="{Binding CreateMediaItemCommand}" Text="+  Add Item" />
+            <Button Grid.Column="1" Clicked="HandleSearchClicked" Style="{StaticResource IconToggleButtonStyle}" Text="⌕" />
+            <Button Grid.Column="2" Command="{Binding CreateMediaItemCommand}" Text="{Binding AddButtonText}" />
         </Grid>
 
         <Grid
@@ -66,6 +67,7 @@
                 <SearchBar
                     x:Name="LibrarySearch"
                     Grid.Column="0"
+                    IsVisible="False"
                     Placeholder="Search your library..."
                     SearchCommand="{Binding LoadCommand}"
                     Text="{Binding SearchTerm}" />
@@ -82,6 +84,7 @@
             </Grid>
 
             <CollectionView
+                x:Name="MediaTypeFilterList"
                 BackgroundColor="{DynamicResource PageBackground}"
                 Grid.Row="2"
                 HeightRequest="44"
@@ -96,7 +99,9 @@
                             Command="{Binding Source={RelativeSource AncestorType={x:Type pages:LibraryPage}}, Path=ViewModel.SelectMediaTypeFilterCommand, x:DataType={x:Type pages:LibraryPage}}"
                             CommandParameter="{Binding .}"
                             Style="{StaticResource PillButtonStyle}"
-                            Text="{Binding DisplayName}" />
+                            Text="{Binding DisplayName}">
+                            <Button.Triggers><DataTrigger Binding="{Binding IsSelected}" TargetType="Button" Value="True"><Setter Property="BackgroundColor" Value="{DynamicResource Primary}" /><Setter Property="TextColor" Value="{DynamicResource PrimaryForeground}" /></DataTrigger></Button.Triggers>
+                        </Button>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

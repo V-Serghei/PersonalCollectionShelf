@@ -22,6 +22,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     private CancellationTokenSource? _searchDelayCancellation;
     private bool _suppressFilterReload;
     private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewModePreferenceKey, "grid") != "list";
+    private bool _isSearchVisible;
 
     public LibraryViewModel(
         IMediaItemService mediaItemService,
@@ -73,6 +74,12 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     public bool IsListView => !_isGridView;
 
+    public bool IsSearchVisible
+    {
+        get => _isSearchVisible;
+        set => SetProperty(ref _isSearchVisible, value);
+    }
+
     [RelayCommand]
     private void SetGridView()
     {
@@ -87,6 +94,11 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
+        if (query.TryGetValue("reset", out var reset) && string.Equals(reset?.ToString(), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            SelectedMediaTypeFilter = MediaTypeFilters.FirstOrDefault(option => option.Value is null);
+        }
+
         if (query.TryGetValue("mediaType", out var raw) &&
             Enum.TryParse<MediaType>(raw?.ToString(), true, out var mediaType))
         {
@@ -135,6 +147,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         {
             if (SetProperty(ref _selectedMediaTypeFilter, value))
             {
+                foreach (var option in MediaTypeFilters) option.IsSelected = ReferenceEquals(option, value);
                 OnSelectedMediaTypeFilterChanged(value);
             }
         }
@@ -203,6 +216,13 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     public string PageTitle => T("Library.Title");
 
     public string SearchPlaceholder => T("Library.SearchPlaceholder");
+
+    [RelayCommand]
+    private void ToggleSearch()
+    {
+        IsSearchVisible = !IsSearchVisible;
+        if (!IsSearchVisible) SearchTerm = string.Empty;
+    }
 
     public string MediaTypeFilterPlaceholder => T("Library.MediaTypeFilterPlaceholder");
 
@@ -309,6 +329,11 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     private void OnSelectedMediaTypeFilterChanged(LocalizedOption<MediaType?>? value)
     {
+        if (Shell.Current is AppShell shell)
+        {
+            shell.SetLibraryCategoryFilter(value?.Value);
+        }
+
         if (!_suppressFilterReload)
         {
             ApplyCurrentFilters();
@@ -558,6 +583,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             }
 
             SelectedMediaTypeFilter = MediaTypeFilters.First(option => EqualityComparer<MediaType?>.Default.Equals(option.Value, selectedMediaType));
+            foreach (var option in MediaTypeFilters) option.IsSelected = ReferenceEquals(option, SelectedMediaTypeFilter);
             SelectedStatusFilter = StatusFilters.First(option => EqualityComparer<MediaStatus?>.Default.Equals(option.Value, selectedStatus));
             SelectedSortOption = SortOptions.First(option => option.Value == selectedSort);
         }

@@ -41,7 +41,7 @@ public partial class PeoplePage : ContentPage
         }
 
         _usesCompactLayout = compact;
-        BackButton.IsVisible = true;
+        BackButton.IsVisible = false;
         HeaderGrid.Padding = compact ? new Thickness(14, 10) : new Thickness(24, 12);
         HeaderTitle.FontSize = compact ? 22 : 28;
         HeaderGrid.ColumnDefinitions.Clear();
@@ -50,21 +50,30 @@ public partial class PeoplePage : ContentPage
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
-            Grid.SetColumn(BackButton, 0);
+            HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
             Grid.SetColumn(HeaderTitle, 1);
-            Grid.SetColumn(NewPersonButton, 2);
+            Grid.SetColumn(PeopleSearchButton, 2);
+            Grid.SetColumn(NewPersonButton, 3);
         }
         else
         {
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+            HeaderGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
             Grid.SetColumn(HeaderTitle, 1);
-            Grid.SetColumn(NewPersonButton, 2);
+            Grid.SetColumn(PeopleSearchButton, 2);
+            Grid.SetColumn(NewPersonButton, 3);
         }
 
         ConfigureWorkspace(compact);
         ConfigureAssociations(compact);
+    }
+
+    private async void HandleSearchClicked(object? sender, EventArgs e)
+    {
+        ViewModel.ToggleSearchCommand.Execute(null);
+        if (ViewModel.IsSearchVisible) { await Task.Delay(50); PeopleSearch.Focus(); }
     }
 
     private void ConfigureWorkspace(bool compact)

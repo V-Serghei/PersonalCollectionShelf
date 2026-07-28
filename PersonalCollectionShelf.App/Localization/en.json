@@ -390,5 +390,13 @@
   ,"People.Works": "Works and roles"
   ,"Collections.Title": "Series and universes"
   ,"Collections.Empty": "No series, cycles, or universes yet."
+  ,"Collections.SearchPlaceholder": "Search series, universes, and items"
   ,"Tags.Title": "Tags"
+  ,"Tags.Empty": "No matching tags."
+  ,"Tags.SearchPlaceholder": "Search tags and linked items"
+  ,"Profile.Title": "Profile"
+  ,"Profile.Account": "Account and library"
+  ,"Profile.OpenSettings": "Account settings"
+  ,"Profile.OpenPeople": "People and contributors"
+  ,"People.SearchPlaceholder": "Search people"
 }
