@@ -287,7 +287,6 @@
   "Validation.Isbn13Invalid": "ISBN-13 должен содержать 13 символов.",
   "Validation.BookYearRange": "Годы книги должны быть от 1 до 2200.",
   "Common.Back": "Назад",
-  "Common.Save": "Сохранить",
   "Common.Add": "Добавить",
   "Common.Delete": "Удалить",
   "Settings.LibraryData.Title": "СТРУКТУРА МЕДИАТЕКИ",

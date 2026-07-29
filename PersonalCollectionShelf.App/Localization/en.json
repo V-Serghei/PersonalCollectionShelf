@@ -287,7 +287,6 @@
   "Validation.Isbn13Invalid": "ISBN-13 must contain 13 characters.",
   "Validation.BookYearRange": "Book years must be between 1 and 2200.",
   "Common.Back": "Back",
-  "Common.Save": "Save",
   "Common.Add": "Add",
   "Common.Delete": "Delete",
   "Settings.LibraryData.Title": "LIBRARY STRUCTURE",
