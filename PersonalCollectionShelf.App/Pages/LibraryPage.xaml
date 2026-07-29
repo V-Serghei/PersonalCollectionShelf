@@ -16,8 +16,8 @@
             Grid.Row="0"
             Padding="18,7"
             BackgroundColor="{DynamicResource PageBackground}"
-            ColumnDefinitions="*,Auto,Auto"
-            ColumnSpacing="10">
+            ColumnDefinitions="*,Auto,Auto,Auto,Auto"
+            ColumnSpacing="6">
             <Border Grid.Column="0" IsVisible="{Binding IsSearchVisible}" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                     <Label FontSize="15" Text="⌕" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
@@ -27,69 +27,41 @@
                     </Border>
                 </Grid>
             </Border>
-            <Button Grid.Column="1" Clicked="HandleSearchClicked" Style="{StaticResource IconToggleButtonStyle}" Text="⌕" />
-            <Button Grid.Column="2" Command="{Binding CreateMediaItemCommand}" Text="{Binding AddButtonText}" />
+            <Button Grid.Column="1" Command="{Binding ToggleViewCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="{Binding ViewModeIcon}" />
+            <Button Grid.Column="2" Clicked="HandleSearchClicked" Style="{StaticResource IconToggleButtonStyle}" Text="⌕" />
+            <Button Grid.Column="3" Command="{Binding ToggleFiltersCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="⋮" />
+            <Button Grid.Column="4" Command="{Binding CreateMediaItemCommand}" FontSize="24" HeightRequest="40" Padding="0" Text="+" WidthRequest="44" />
         </Grid>
 
         <Grid
             x:Name="LibraryContent"
             Grid.Row="1"
-            Padding="0,24,0,0"
+            Padding="0,8,0,0"
             HorizontalOptions="Fill"
             MaximumWidthRequest="920"
-            RowDefinitions="Auto,Auto,Auto,Auto,*"
-            RowSpacing="16">
-            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
-                <Border Grid.Column="1" Padding="6" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 16">
-                    <HorizontalStackLayout Spacing="6">
-                        <Button Command="{Binding SetGridViewCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="▦">
-                            <Button.Triggers>
-                                <DataTrigger Binding="{Binding IsGridView}" TargetType="Button" Value="True">
-                                    <Setter Property="TextColor" Value="{DynamicResource Primary}" />
-                                    <Setter Property="BackgroundColor" Value="{DynamicResource MutedSoft}" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
-                        <Button Command="{Binding SetListViewCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="≡">
-                            <Button.Triggers>
-                                <DataTrigger Binding="{Binding IsListView}" TargetType="Button" Value="True">
-                                    <Setter Property="TextColor" Value="{DynamicResource Primary}" />
-                                    <Setter Property="BackgroundColor" Value="{DynamicResource MutedSoft}" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
-                    </HorizontalStackLayout>
-                </Border>
-            </Grid>
+            RowDefinitions="Auto,*"
+            RowSpacing="6">
+            <VerticalStackLayout x:Name="FilterPanel" Grid.Row="0" IsVisible="{Binding IsFilterPanelVisible}" Spacing="6">
+                <Grid x:Name="FilterGrid" ColumnDefinitions="*,44,44" ColumnSpacing="6">
+                    <Label FontSize="11" Text="{Binding LibraryCountText}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                    <Grid Grid.Column="1" HeightRequest="40" WidthRequest="44">
+                        <Border BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 10" />
+                        <Label FontSize="18" HorizontalTextAlignment="Center" Text="◉" VerticalTextAlignment="Center" />
+                        <Picker x:Name="StatusPicker" ItemsSource="{Binding StatusFilters}" Opacity="0.01" SelectedItem="{Binding SelectedStatusFilter}" />
+                    </Grid>
+                    <Grid Grid.Column="2" HeightRequest="40" WidthRequest="44">
+                        <Border BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 10" />
+                        <Label FontSize="20" HorizontalTextAlignment="Center" Text="↕" VerticalTextAlignment="Center" />
+                        <Picker x:Name="SortPicker" ItemsSource="{Binding SortOptions}" Opacity="0.01" SelectedItem="{Binding SelectedSortOption}" />
+                    </Grid>
+                </Grid>
 
-            <Grid x:Name="FilterGrid" Grid.Row="1" ColumnDefinitions="*,130,170" ColumnSpacing="10">
-                <SearchBar
-                    x:Name="LibrarySearch"
-                    Grid.Column="0"
-                    IsVisible="False"
-                Placeholder="{Binding SearchPlaceholder}"
-                    SearchCommand="{Binding LoadCommand}"
-                    Text="{Binding SearchTerm}" />
-                <Picker
-                    x:Name="StatusPicker"
-                    Grid.Column="1"
-                    ItemsSource="{Binding StatusFilters}"
-                    SelectedItem="{Binding SelectedStatusFilter}" />
-                <Picker
-                    x:Name="SortPicker"
-                    Grid.Column="2"
-                    ItemsSource="{Binding SortOptions}"
-                    SelectedItem="{Binding SelectedSortOption}" />
-            </Grid>
-
-            <CollectionView
-                x:Name="MediaTypeFilterList"
-                BackgroundColor="{DynamicResource PageBackground}"
-                Grid.Row="2"
-                HeightRequest="44"
-                ItemsSource="{Binding MediaTypeFilters}"
-                SelectionMode="None">
+                <CollectionView
+                    x:Name="MediaTypeFilterList"
+                    BackgroundColor="{DynamicResource PageBackground}"
+                    HeightRequest="44"
+                    ItemsSource="{Binding MediaTypeFilters}"
+                    SelectionMode="None">
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout ItemSpacing="8" Orientation="Horizontal" />
                 </CollectionView.ItemsLayout>
@@ -104,20 +76,10 @@
                         </Button>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
-            </CollectionView>
+                </CollectionView>
+            </VerticalStackLayout>
 
-            <Label
-                Grid.Row="3"
-                FontSize="12"
-                Text="{Binding LibraryCountText}"
-                TextColor="{DynamicResource Primary}" />
-
-            <RefreshView
-                Grid.Row="4"
-                BackgroundColor="{DynamicResource PageBackground}"
-                Command="{Binding LoadCommand}"
-                IsRefreshing="{Binding IsBusy}">
-                <Grid>
+            <Grid Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
                 <CollectionView
                     x:Name="GridLibraryList"
                     BackgroundColor="{DynamicResource PageBackground}"
@@ -125,8 +87,9 @@
                     ItemsUpdatingScrollMode="KeepScrollOffset"
                     ItemSizingStrategy="MeasureFirstItem"
                     ItemsSource="{Binding MediaItems}"
-                    RemainingItemsThreshold="12"
+                    RemainingItemsThreshold="60"
                     RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
+                    Scrolled="HandleLibraryScrolled"
                     SelectionMode="None">
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout
@@ -134,7 +97,7 @@
                             Orientation="Vertical"
                             SnapPointsAlignment="Start"
                             SnapPointsType="None"
-                            Span="{OnIdiom Phone=2, Tablet=5, Desktop=6}"
+                            Span="{Binding GridColumnCount}"
                             VerticalItemSpacing="16" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.EmptyView>
@@ -188,8 +151,9 @@
                     ItemsUpdatingScrollMode="KeepScrollOffset"
                     ItemSizingStrategy="MeasureFirstItem"
                     ItemsSource="{Binding MediaItems}"
-                    RemainingItemsThreshold="12"
+                    RemainingItemsThreshold="60"
                     RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
+                    Scrolled="HandleLibraryScrolled"
                     SelectionMode="None">
                     <CollectionView.ItemsLayout>
                         <LinearItemsLayout
@@ -235,8 +199,7 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-                </Grid>
-            </RefreshView>
+            </Grid>
         </Grid>
     </Grid>
 </ContentPage>

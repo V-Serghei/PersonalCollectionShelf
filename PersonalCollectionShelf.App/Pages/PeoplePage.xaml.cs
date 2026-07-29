@@ -27,7 +27,11 @@ public partial class PeoplePage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        try { await ViewModel.LoadAsync(); }
+        try
+        {
+            ViewModel.RefreshDisplayPreferences();
+            await ViewModel.LoadAsync();
+        }
         catch (Exception exception) { await CrashReporter.ReportAsync(exception, "PeoplePage.OnAppearing"); }
     }
 

@@ -24,7 +24,8 @@ public sealed record PersonCardViewModel(
 
 public partial class PeopleViewModel : BaseViewModel
 {
-    private const int PeoplePageSize = 90;
+    private const int PeoplePageSize = 240;
+    private const string GridColumnCountPreferenceKey = "people.gridColumnCount";
     private const string ViewPreferenceKey = "people.viewMode";
     private readonly IPeopleManagementService _people;
     private readonly IAuthService _auth;
@@ -81,6 +82,11 @@ public partial class PeopleViewModel : BaseViewModel
     }
 
     public bool IsListView => !IsGridView;
+
+    public int GridColumnCount => Math.Clamp(
+        Microsoft.Maui.Storage.Preferences.Get(GridColumnCountPreferenceKey, 3), 1, 4);
+
+    public void RefreshDisplayPreferences() => OnPropertyChanged(nameof(GridColumnCount));
 
     public LocalizedOption<PeopleSortOption>? SelectedSortOption
     {

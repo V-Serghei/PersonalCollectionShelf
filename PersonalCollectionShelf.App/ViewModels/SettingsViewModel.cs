@@ -31,6 +31,8 @@ public partial class SettingsViewModel : BaseViewModel
     private bool _suppressLanguageChange;
     private bool _isDarkTheme;
     private double _backgroundBlur;
+    private int _libraryGridColumnCount;
+    private int _peopleGridColumnCount;
     private string _statusMessageKey = "Sync.Status.NotConfigured";
     private string? _appearanceStatusKey;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -67,6 +69,8 @@ public partial class SettingsViewModel : BaseViewModel
         _appearanceService = appearanceService;
         _isDarkTheme = _appearanceService.IsDarkTheme;
         _backgroundBlur = _appearanceService.BackgroundBlur;
+        _libraryGridColumnCount = Math.Clamp(Preferences.Get("library.gridColumnCount", 2), 1, 4);
+        _peopleGridColumnCount = Math.Clamp(Preferences.Get("people.gridColumnCount", 3), 1, 4);
         _appearanceService.AppearanceChanged += HandleAppearanceChanged;
         InitializeLanguageOptions();
         UpdateBackgroundImageDescription();
@@ -74,6 +78,7 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     public ObservableCollection<LocalizedOption<string>> LanguageOptions { get; } = [];
+    public IReadOnlyList<int> GridColumnOptions { get; } = [1, 2, 3, 4];
 
     private LocalizedOption<string>? _selectedLanguageOption;
 
@@ -176,6 +181,32 @@ public partial class SettingsViewModel : BaseViewModel
 
     public string BackgroundBlurText => $"{BackgroundBlur:0}";
 
+    public int LibraryGridColumnCount
+    {
+        get => _libraryGridColumnCount;
+        set
+        {
+            var normalized = Math.Clamp(value, 1, 4);
+            if (SetProperty(ref _libraryGridColumnCount, normalized))
+            {
+                Preferences.Set("library.gridColumnCount", normalized);
+            }
+        }
+    }
+
+    public int PeopleGridColumnCount
+    {
+        get => _peopleGridColumnCount;
+        set
+        {
+            var normalized = Math.Clamp(value, 1, 4);
+            if (SetProperty(ref _peopleGridColumnCount, normalized))
+            {
+                Preferences.Set("people.gridColumnCount", normalized);
+            }
+        }
+    }
+
     public string BackgroundImageDescription
     {
         get => _backgroundImageDescription;
@@ -199,6 +230,12 @@ public partial class SettingsViewModel : BaseViewModel
     public string AddItemText => T("Library.AddButton");
 
     public string AppearanceSectionTitle => T("Settings.Appearance.Title");
+
+    public string GridDensityTitle => T("Settings.GridDensity.Title");
+
+    public string LibraryGridDensityLabel => T("Settings.GridDensity.Library");
+
+    public string PeopleGridDensityLabel => T("Settings.GridDensity.People");
 
     public string AccentColorTitle => T("Settings.Accent.Title");
 

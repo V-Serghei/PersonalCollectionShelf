@@ -14,7 +14,8 @@ namespace PersonalCollectionShelf.App.ViewModels;
 public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 {
     private const string ViewModePreferenceKey = "library.viewMode";
-    private const int LibraryPageSize = 80;
+    private const int LibraryPageSize = 240;
+    private const string GridColumnCountPreferenceKey = "library.gridColumnCount";
 
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
@@ -25,6 +26,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     private bool _suppressFilterReload;
     private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewModePreferenceKey, "grid") != "list";
     private bool _isSearchVisible;
+    private bool _isFilterPanelVisible = true;
 
     public LibraryViewModel(
         IMediaItemService mediaItemService,
@@ -69,12 +71,24 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             if (SetProperty(ref _isGridView, value))
             {
                 OnPropertyChanged(nameof(IsListView));
+                OnPropertyChanged(nameof(ViewModeIcon));
                 Microsoft.Maui.Storage.Preferences.Set(ViewModePreferenceKey, value ? "grid" : "list");
             }
         }
     }
 
     public bool IsListView => !_isGridView;
+
+    public string ViewModeIcon => IsGridView ? "≡" : "▦";
+
+    public int GridColumnCount => Math.Clamp(
+        Microsoft.Maui.Storage.Preferences.Get(GridColumnCountPreferenceKey, 2), 1, 4);
+
+    public bool IsFilterPanelVisible
+    {
+        get => _isFilterPanelVisible;
+        set => SetProperty(ref _isFilterPanelVisible, value);
+    }
 
     public bool IsSearchVisible
     {
@@ -93,6 +107,16 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         IsGridView = false;
     }
+
+    [RelayCommand]
+    private void ToggleView() => IsGridView = !IsGridView;
+
+    [RelayCommand]
+    private void ToggleFilters() => IsFilterPanelVisible = !IsFilterPanelVisible;
+
+    public void CollapseFilters() => IsFilterPanelVisible = false;
+
+    public void RefreshDisplayPreferences() => OnPropertyChanged(nameof(GridColumnCount));
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
