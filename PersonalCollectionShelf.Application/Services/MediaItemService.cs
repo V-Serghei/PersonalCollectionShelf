@@ -131,6 +131,16 @@ public sealed class MediaItemService : IMediaItemService
             CreatorId = creatorId,
             StudioId = studioId,
             SerialNumber = Normalize(request.SerialNumber),
+            TmdbId = request.TmdbId,
+            ImdbId = Normalize(request.ImdbId),
+            KinopoiskId = request.KinopoiskId,
+            TmdbRating = request.TmdbRating,
+            TmdbVoteCount = request.TmdbVoteCount,
+            ImdbRating = request.ImdbRating,
+            ImdbVoteCount = request.ImdbVoteCount,
+            KinopoiskRating = request.KinopoiskRating,
+            KinopoiskVoteCount = request.KinopoiskVoteCount,
+            ExternalRatingsUpdatedAt = request.ExternalRatingsUpdatedAt,
             MediaType = request.MediaType,
             Status = request.Status,
             Rating = request.Rating,
@@ -198,6 +208,16 @@ public sealed class MediaItemService : IMediaItemService
             ResolvePrimaryStudioName(request.Publisher ?? request.BookDetails?.Publisher, request.StudioCredits),
             cancellationToken);
         existing.SerialNumber = Normalize(request.SerialNumber);
+        existing.TmdbId = request.TmdbId;
+        existing.ImdbId = Normalize(request.ImdbId);
+        existing.KinopoiskId = request.KinopoiskId;
+        existing.TmdbRating = request.TmdbRating;
+        existing.TmdbVoteCount = request.TmdbVoteCount;
+        existing.ImdbRating = request.ImdbRating;
+        existing.ImdbVoteCount = request.ImdbVoteCount;
+        existing.KinopoiskRating = request.KinopoiskRating;
+        existing.KinopoiskVoteCount = request.KinopoiskVoteCount;
+        existing.ExternalRatingsUpdatedAt = request.ExternalRatingsUpdatedAt;
         existing.MediaType = request.MediaType;
         existing.Status = request.Status;
         existing.Rating = request.Rating;
@@ -902,6 +922,16 @@ public sealed class MediaItemService : IMediaItemService
             StudioId = item.StudioId,
             Publisher = publisherName,
             SerialNumber = item.SerialNumber,
+            TmdbId = item.TmdbId,
+            ImdbId = item.ImdbId,
+            KinopoiskId = item.KinopoiskId,
+            TmdbRating = item.TmdbRating,
+            TmdbVoteCount = item.TmdbVoteCount,
+            ImdbRating = item.ImdbRating,
+            ImdbVoteCount = item.ImdbVoteCount,
+            KinopoiskRating = item.KinopoiskRating,
+            KinopoiskVoteCount = item.KinopoiskVoteCount,
+            ExternalRatingsUpdatedAt = item.ExternalRatingsUpdatedAt,
             Cast = castNames,
             Contributions = contributionDtos,
             StudioCredits = studioCreditDtos,

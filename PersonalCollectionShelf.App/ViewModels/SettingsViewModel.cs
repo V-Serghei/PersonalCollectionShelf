@@ -928,6 +928,16 @@ public partial class SettingsViewModel : BaseViewModel
             FinishDate = item.FinishDate,
             ReleaseYear = item.ReleaseYear,
             CoverUrl = item.CoverUrl,
+            TmdbId = item.TmdbId,
+            ImdbId = item.ImdbId,
+            KinopoiskId = item.KinopoiskId,
+            TmdbRating = item.TmdbRating,
+            TmdbVoteCount = item.TmdbVoteCount,
+            ImdbRating = item.ImdbRating,
+            ImdbVoteCount = item.ImdbVoteCount,
+            KinopoiskRating = item.KinopoiskRating,
+            KinopoiskVoteCount = item.KinopoiskVoteCount,
+            ExternalRatingsUpdatedAt = item.ExternalRatingsUpdatedAt,
             Notes = item.Notes,
             IsFavorite = item.IsFavorite
         };
@@ -984,6 +994,16 @@ public partial class SettingsViewModel : BaseViewModel
             FinishDate = item.FinishDate,
             ReleaseYear = item.ReleaseYear,
             CoverUrl = item.CoverUrl,
+            TmdbId = item.TmdbId,
+            ImdbId = item.ImdbId,
+            KinopoiskId = item.KinopoiskId,
+            TmdbRating = item.TmdbRating,
+            TmdbVoteCount = item.TmdbVoteCount,
+            ImdbRating = item.ImdbRating,
+            ImdbVoteCount = item.ImdbVoteCount,
+            KinopoiskRating = item.KinopoiskRating,
+            KinopoiskVoteCount = item.KinopoiskVoteCount,
+            ExternalRatingsUpdatedAt = item.ExternalRatingsUpdatedAt,
             Notes = item.Notes,
             IsFavorite = item.IsFavorite
         };

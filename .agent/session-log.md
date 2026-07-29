@@ -124,3 +124,20 @@
 - Removed the Blaze dependency: Firebase Storage and its rules/configuration were removed. Firebase Spark
   now handles only Auth and Firestore, while content-addressed compressed images are stored in the app-owned
   Google Drive assets folder through the narrow `drive.file` scope.
+- Added no-cost, non-commercial screen-title autofill: TMDB search/details/posters, official IMDb daily
+  ratings with a 24-hour local cache, and optional Kinopoisk API Unofficial ratings. Candidate cards show
+  localized/original titles, year, leading cast, and rating before filling the structured editor.
+- Persisted provider IDs, rating snapshots, vote counts, and refresh timestamps through SQLite, DTOs,
+  JSON import/export, Firestore row synchronization, and details UI. Personal ratings remain separate.
+- Added ignored `metadata.json` packaging, an example file, setup script, English/Russian UI, Android
+  internet permission, and required TMDB attribution. Windows compilation completes with zero warnings.
+- Simplified personal tracking around status: removed manual current/total progress inputs and percentage
+  bars from editor, library, dashboard, and details. Saving derives an internal complete/not-complete value
+  from the selected status. Dashboard status cards open live filtered library views, the library title now
+  reflects the selected status, and resetting the library also clears a previously selected status filter.
+- Limited user-visible external scores to the requested pair: IMDb and Kinopoisk. TMDB remains the
+  metadata/poster/search provider, but its rating is no longer shown in candidate, editor, or detail UI.
+- Added an unlabeled refresh icon to TMDB-linked detail cards. The command refreshes exactly one item's
+  TMDB description/year/genres/credits/type details and IMDb/Kinopoisk rating snapshots, downloading a
+  poster only when none exists. Personal rating, status, notes, dates, favorite state, and existing cover
+  remain untouched; no provider calls occur on startup, item opening, or cloud synchronization.

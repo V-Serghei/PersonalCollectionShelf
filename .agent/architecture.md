@@ -30,3 +30,12 @@ Important decisions:
 - MAUI pages use compact layouts below 700 device-independent pixels; phones use an overlay Shell flyout while wider devices keep the locked sidebar.
 - Android phones open detail and editor pages modally through `AppNavigation` because the MAUI 10 Shell fragment renderer can fail when pushing global routes after activity recreation; desktop keeps Shell routes.
 - Library pages use lightweight media summaries with batched tag loading. Full contribution, relation, collection, and type-detail graphs load only when a single item is opened.
+- Optional media autofill is an App-layer integration: TMDB provides localized metadata and posters,
+  the official IMDb non-commercial dataset supplies IMDb ratings, and Kinopoisk API Unofficial can
+  supply an optional Kinopoisk rating. Provider secrets live in ignored `metadata.json`; external IDs,
+  rating snapshots, vote counts, and refresh time are ordinary `MediaItem` fields and therefore follow
+  the same SQLite, export/import, and Firestore synchronization path as the rest of an item.
+- Provider traffic is strictly user-triggered: initial autofill fetches metadata after candidate selection,
+  while the detail-page refresh icon re-fetches one TMDB-linked item. Startup, item opening, and cloud
+  synchronization never crawl or refresh the library. Refresh preserves personal tracking fields and a
+  user-selected cover while replacing provider-owned descriptive metadata, credits, and rating snapshots.

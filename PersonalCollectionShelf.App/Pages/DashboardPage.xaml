@@ -150,7 +150,6 @@
                                         <Grid>
                                             <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
                                             <Label FontAttributes="Bold" FontSize="36" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
-                                            <ProgressBar BackgroundColor="#33FFFFFF" Progress="{Binding ProgressPercent}" ProgressColor="{StaticResource Info}" VerticalOptions="End" />
                                         </Grid>
                                     </Border>
                                     <Label FontAttributes="Bold" FontSize="12" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding Title}" />

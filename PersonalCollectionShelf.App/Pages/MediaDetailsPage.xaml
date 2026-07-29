@@ -79,30 +79,43 @@
                             TextColor="{DynamicResource MutedForeground}"
                             VerticalOptions="Center" />
 
-                        <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="10">
+                        <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,Auto,Auto,*" ColumnSpacing="10">
                             <Button Command="{Binding EditCommand}" Text="{Binding EditButtonText}" />
                             <Button Grid.Column="1" Command="{Binding ToggleFavoriteCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding FavoriteActionText}" />
                             <Button Grid.Column="2" Command="{Binding DeleteCommand}" Style="{StaticResource DangerButtonStyle}" Text="{Binding DeleteButtonText}" />
+                            <Button
+                                Grid.Column="3"
+                                Command="{Binding RefreshMetadataCommand}"
+                                FontSize="23"
+                                IsEnabled="{Binding IsNotBusy}"
+                                IsVisible="{Binding CanRefreshOnlineMetadata}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Text="↻"
+                                ToolTipProperties.Text="{Binding RefreshMetadataTooltip}" />
                         </Grid>
                     </Grid>
                 </Grid>
             </Border>
 
             <!-- At-a-glance metrics -->
-            <Grid x:Name="MetricsGrid" ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+            <Grid x:Name="MetricsGrid" ColumnDefinitions="*,*,*" ColumnSpacing="12">
                 <Border x:Name="RatingMetric" Padding="16" Style="{StaticResource CardBorderStyle}">
                     <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RatingLabel}" /><Label FontAttributes="Bold" FontSize="24" Text="{Binding RatingValue}" TextColor="{StaticResource Warning}" /></VerticalStackLayout>
                 </Border>
-                <Border x:Name="ProgressMetric" Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}">
-                    <VerticalStackLayout Spacing="7"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProgressLabel}" /><Label FontAttributes="Bold" FontSize="16" Text="{Binding ProgressValue}" /><ProgressBar IsVisible="{Binding HasProgressBar}" Progress="{Binding ProgressPercent}" ProgressColor="{StaticResource Info}" /></VerticalStackLayout>
-                </Border>
-                <Border x:Name="FavoriteMetric" Grid.Column="2" Padding="16" Style="{StaticResource CardBorderStyle}">
+                <Border x:Name="FavoriteMetric" Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}">
                     <Grid ColumnDefinitions="*,Auto"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FavoriteLabel}" /><Label FontAttributes="Bold" FontSize="16" Text="{Binding FavoriteValue}" /></VerticalStackLayout><Button Grid.Column="1" Command="{Binding ToggleFavoriteCommand}" FontSize="28" Padding="8,0" Style="{StaticResource LinkButtonStyle}" Text="{Binding FavoriteIcon}" TextColor="#F07CB8" /></Grid>
                 </Border>
-                <Border x:Name="YearMetric" Grid.Column="3" Padding="16" Style="{StaticResource CardBorderStyle}">
+                <Border x:Name="YearMetric" Grid.Column="2" Padding="16" Style="{StaticResource CardBorderStyle}">
                     <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ReleaseYearLabel}" /><Label FontAttributes="Bold" FontSize="20" Text="{Binding ReleaseYearValue}" /></VerticalStackLayout>
                 </Border>
             </Grid>
+
+            <Border IsVisible="{Binding HasExternalRatings}" Padding="16" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ExternalRatingsLabel}" />
+                    <Label FontAttributes="Bold" FontSize="16" Text="{Binding ExternalRatingsValue}" TextColor="{DynamicResource MutedForeground}" />
+                </VerticalStackLayout>
+            </Border>
 
             <!-- Grouped content instead of one long property list -->
             <Grid x:Name="DetailsColumnsGrid" ColumnDefinitions="*,*" ColumnSpacing="18">
@@ -129,7 +142,7 @@
                 <VerticalStackLayout x:Name="DetailsRightColumn" Grid.Column="1" Spacing="18">
                     <Border Padding="20" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="16">
-                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ProgressLabel}" />
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding StatusLabel}" />
                             <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StatusLabel}" /><Label FontAttributes="Bold" Text="{Binding StatusValue}" /></VerticalStackLayout></Border>
                             <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StartDateLabel}" /><Label Text="{Binding DatesValue}" /></VerticalStackLayout></Border>
                             <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding UpdatedAtLabel}" /><Label Text="{Binding AuditValue}" /></VerticalStackLayout></Border>

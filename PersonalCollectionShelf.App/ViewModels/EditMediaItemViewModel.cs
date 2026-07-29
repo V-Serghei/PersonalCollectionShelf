@@ -31,16 +31,19 @@ public partial class EditMediaItemViewModel : BaseViewModel
     private readonly IMediaItemService _mediaItemService;
     private readonly IPersonService _personService;
     private readonly IAuthService _authService;
+    private readonly IMediaMetadataService _mediaMetadataService;
     public EditMediaItemViewModel(
         IMediaItemService mediaItemService,
         IPersonService personService,
         IAuthService authService,
+        IMediaMetadataService mediaMetadataService,
         ILocalizationService localizationService)
         : base(localizationService)
     {
         _mediaItemService = mediaItemService;
         _personService = personService;
         _authService = authService;
+        _mediaMetadataService = mediaMetadataService;
         ReloadOptions();
         InitializeBookFields();
         InitializeMovieFields();
@@ -168,6 +171,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
                 OnPropertyChanged(nameof(ShowGraphicPublicationFields));
                 OnPropertyChanged(nameof(ShowGameFields));
                 OnPropertyChanged(nameof(ShowLegacyCreditFields));
+                OnPropertyChanged(nameof(IsAutofillSupported));
             }
         }
     }
@@ -433,6 +437,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
             Creator = item.Creator ?? string.Empty;
             Publisher = item.Publisher ?? string.Empty;
             SerialNumber = item.SerialNumber ?? string.Empty;
+            LoadExternalMetadata(item);
             SetTagChips(item.TagNames.Count > 0 ? item.TagNames : null);
             SetCastChips(item.Cast);
             SelectedMediaType = MediaTypes.First(option => option.Value == item.MediaType);
@@ -477,8 +482,6 @@ public partial class EditMediaItemViewModel : BaseViewModel
         ErrorMessage = string.Empty;
 
         if (!TryParseOptionalDecimal(Rating, out var parsedRating) ||
-            !TryParseRequiredInt(ProgressCurrent, 0, out var parsedProgressCurrent) ||
-             !TryParseOptionalInt(ProgressTotal, out var parsedProgressTotal) ||
              !TryParseOptionalInt(ReleaseYear, out var parsedReleaseYear) ||
              !TryBuildBookInputs(out var bookDetails, out var collection) ||
              !TryBuildMovieInput(out var movieDetails) ||
@@ -492,6 +495,9 @@ public partial class EditMediaItemViewModel : BaseViewModel
         try
         {
             var userId = await GetCurrentUserIdAsync();
+            var selectedStatus = SelectedStatus?.Value ?? MediaStatus.Planned;
+            var automaticProgressCurrent = selectedStatus == MediaStatus.Completed ? 1 : 0;
+            int? automaticProgressTotal = selectedStatus == MediaStatus.Completed ? 1 : null;
 
             if (MediaItemId.HasValue)
             {
@@ -510,6 +516,16 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Creator = Creator,
                     Publisher = Publisher,
                     SerialNumber = SerialNumber,
+                    TmdbId = TmdbId,
+                    ImdbId = ImdbId,
+                    KinopoiskId = KinopoiskId,
+                    TmdbRating = TmdbRating,
+                    TmdbVoteCount = TmdbVoteCount,
+                    ImdbRating = ImdbRating,
+                    ImdbVoteCount = ImdbVoteCount,
+                    KinopoiskRating = KinopoiskRating,
+                    KinopoiskVoteCount = KinopoiskVoteCount,
+                    ExternalRatingsUpdatedAt = ExternalRatingsUpdatedAt,
                     Cast = BuildCastList(),
                     Contributions = BuildContributions(),
                     StudioCredits = BuildStudioCredits(),
@@ -521,10 +537,10 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Collection = collection,
                     Relations = BuildRelations(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
-                    Status = SelectedStatus?.Value ?? MediaStatus.Planned,
+                    Status = selectedStatus,
                     Rating = parsedRating,
-                    ProgressCurrent = parsedProgressCurrent,
-                    ProgressTotal = parsedProgressTotal,
+                    ProgressCurrent = automaticProgressCurrent,
+                    ProgressTotal = automaticProgressTotal,
                     StartDate = HasStartDate ? StartDate : null,
                     FinishDate = HasFinishDate ? FinishDate : null,
                     ReleaseYear = parsedReleaseYear,
@@ -549,6 +565,16 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Creator = Creator,
                     Publisher = Publisher,
                     SerialNumber = SerialNumber,
+                    TmdbId = TmdbId,
+                    ImdbId = ImdbId,
+                    KinopoiskId = KinopoiskId,
+                    TmdbRating = TmdbRating,
+                    TmdbVoteCount = TmdbVoteCount,
+                    ImdbRating = ImdbRating,
+                    ImdbVoteCount = ImdbVoteCount,
+                    KinopoiskRating = KinopoiskRating,
+                    KinopoiskVoteCount = KinopoiskVoteCount,
+                    ExternalRatingsUpdatedAt = ExternalRatingsUpdatedAt,
                     Cast = BuildCastList(),
                     Contributions = BuildContributions(),
                     StudioCredits = BuildStudioCredits(),
@@ -560,10 +586,10 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     Collection = collection,
                     Relations = BuildRelations(),
                     MediaType = SelectedMediaType?.Value ?? MediaType.Other,
-                    Status = SelectedStatus?.Value ?? MediaStatus.Planned,
+                    Status = selectedStatus,
                     Rating = parsedRating,
-                    ProgressCurrent = parsedProgressCurrent,
-                    ProgressTotal = parsedProgressTotal,
+                    ProgressCurrent = automaticProgressCurrent,
+                    ProgressTotal = automaticProgressTotal,
                     StartDate = HasStartDate ? StartDate : null,
                     FinishDate = HasFinishDate ? FinishDate : null,
                     ReleaseYear = parsedReleaseYear,
@@ -874,6 +900,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
         Creator = string.Empty;
         Publisher = string.Empty;
         SerialNumber = string.Empty;
+        ResetExternalMetadata();
         SetTagChips((IReadOnlyList<string>?)null);
         SetCastChips(null);
         SelectedMediaType = MediaTypes.First(option => option.Value == MediaType.Other);

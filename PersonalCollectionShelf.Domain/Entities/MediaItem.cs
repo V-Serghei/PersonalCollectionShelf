@@ -26,6 +26,26 @@ public sealed class MediaItem
 
     public string? SerialNumber { get; set; }
 
+    public int? TmdbId { get; set; }
+
+    public string? ImdbId { get; set; }
+
+    public int? KinopoiskId { get; set; }
+
+    public decimal? TmdbRating { get; set; }
+
+    public int? TmdbVoteCount { get; set; }
+
+    public decimal? ImdbRating { get; set; }
+
+    public int? ImdbVoteCount { get; set; }
+
+    public decimal? KinopoiskRating { get; set; }
+
+    public int? KinopoiskVoteCount { get; set; }
+
+    public DateTime? ExternalRatingsUpdatedAt { get; set; }
+
     public MediaType MediaType { get; set; } = MediaType.Other;
 
     public MediaStatus Status { get; set; } = MediaStatus.Planned;

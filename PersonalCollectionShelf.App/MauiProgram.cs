@@ -31,6 +31,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IMediaItemService, MediaItemService>();
         builder.Services.AddSingleton<ICollectionExplorerService, CollectionExplorerService>();
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
+        builder.Services.AddSingleton(MediaMetadataOptions.Load(FileSystem.AppDataDirectory));
+        builder.Services.AddSingleton<IMediaMetadataService, OnlineMediaMetadataService>();
         builder.Services.AddSingleton<IGoogleAccountService, GoogleAccountService>();
         builder.Services.AddSingleton<IGoogleDriveBackupService, GoogleDriveBackupService>();
         builder.Services.AddSingleton<ICloudAssetStore, GoogleDriveCloudAssetStore>();
@@ -81,16 +83,22 @@ public static class MauiProgram
 
     private static void InstallBundledCloudConfiguration()
     {
-        var destination = Path.Combine(FileSystem.AppDataDirectory, "firebase.json");
+        InstallBundledConfiguration("firebase.json");
+        InstallBundledConfiguration("metadata.json");
+    }
+
+    private static void InstallBundledConfiguration(string fileName)
+    {
+        var destination = Path.Combine(FileSystem.AppDataDirectory, fileName);
         try
         {
-            using var source = FileSystem.OpenAppPackageFileAsync("firebase.json").GetAwaiter().GetResult();
+            using var source = FileSystem.OpenAppPackageFileAsync(fileName).GetAwaiter().GetResult();
             using var target = File.Create(destination);
             source.CopyTo(target);
         }
         catch (FileNotFoundException)
         {
-            // Cloud configuration is optional; the Settings page explains how to enable it.
+            // Optional integrations remain disabled when their bundled configuration is absent.
         }
     }
 }

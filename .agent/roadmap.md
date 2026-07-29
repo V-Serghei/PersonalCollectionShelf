@@ -22,6 +22,7 @@
 - Phone-responsive layouts across the primary navigation, forms, detail, management, and account screens
 - Type-specific movie details (runtime, languages, country, age rating) with SQLite persistence
 - Touch-friendly cross-platform controls and lightweight library loading
+- Optional TMDB autofill with official IMDb dataset ratings and optional Kinopoisk API Unofficial ratings
 
 ## Next Versions
 
@@ -39,7 +40,6 @@
 - Custom list templates
 - Backup and restore workflows
 - Rich progress analytics
-- Optional cloud media metadata providers
 
 ## Release Checklist (MVP)
 

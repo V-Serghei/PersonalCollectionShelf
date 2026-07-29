@@ -35,6 +35,29 @@ public sealed class MediaItemRecord
     public string? SerialNumber { get; set; }
 
     [Indexed]
+    public int? TmdbId { get; set; }
+
+    [Indexed]
+    public string? ImdbId { get; set; }
+
+    [Indexed]
+    public int? KinopoiskId { get; set; }
+
+    public decimal? TmdbRating { get; set; }
+
+    public int? TmdbVoteCount { get; set; }
+
+    public decimal? ImdbRating { get; set; }
+
+    public int? ImdbVoteCount { get; set; }
+
+    public decimal? KinopoiskRating { get; set; }
+
+    public int? KinopoiskVoteCount { get; set; }
+
+    public DateTime? ExternalRatingsUpdatedAt { get; set; }
+
+    [Indexed]
     public int MediaType { get; set; }
 
     [Indexed]

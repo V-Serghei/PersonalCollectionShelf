@@ -151,6 +151,11 @@ public partial class EditMediaItemPage : ContentPage, IQueryAttributable
         PersonPickerCard.Padding = usesCompactLayout ? new Thickness(18) : new Thickness(24);
         PersonPickerCard.WidthRequest = usesCompactLayout ? -1 : 500;
         PersonPickerCard.HorizontalOptions = usesCompactLayout ? LayoutOptions.Fill : LayoutOptions.Center;
+        Grid.SetColumnSpan(MetadataPickerOverlay, usesCompactLayout ? 1 : 3);
+        MetadataPickerOverlay.Padding = usesCompactLayout ? new Thickness(12) : new Thickness(24);
+        MetadataPickerCard.Padding = usesCompactLayout ? new Thickness(16) : new Thickness(24);
+        MetadataPickerCard.WidthRequest = usesCompactLayout ? -1 : 760;
+        MetadataPickerCard.HorizontalOptions = usesCompactLayout ? LayoutOptions.Fill : LayoutOptions.Center;
     }
 
     private static void ConfigureStackingGrid(

@@ -26,6 +26,17 @@ public sealed record UpdateMediaItemRequest
 
     public string? SerialNumber { get; init; }
 
+    public int? TmdbId { get; init; }
+    public string? ImdbId { get; init; }
+    public int? KinopoiskId { get; init; }
+    public decimal? TmdbRating { get; init; }
+    public int? TmdbVoteCount { get; init; }
+    public decimal? ImdbRating { get; init; }
+    public int? ImdbVoteCount { get; init; }
+    public decimal? KinopoiskRating { get; init; }
+    public int? KinopoiskVoteCount { get; init; }
+    public DateTime? ExternalRatingsUpdatedAt { get; init; }
+
     public IReadOnlyList<string>? Cast { get; init; }
 
     public MediaType MediaType { get; init; } = MediaType.Other;

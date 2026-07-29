@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application"
     xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    xmlns:services="clr-namespace:PersonalCollectionShelf.App.Services"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:EditMediaItemViewModel"
     BackgroundColor="{DynamicResource PageBackground}"
@@ -83,6 +84,18 @@
                                     </VerticalStackLayout>
                                 </VerticalStackLayout>
                             </Grid>
+
+                            <VerticalStackLayout IsVisible="{Binding IsAutofillSupported}" Spacing="8">
+                                <Button
+                                    Command="{Binding SearchMetadataCommand}"
+                                    HorizontalOptions="Start"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Text="{Binding AutofillButtonText}" />
+                                <VerticalStackLayout IsVisible="{Binding HasExternalRatings}" Spacing="3">
+                                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ExternalRatingsLabel}" />
+                                    <Label FontSize="13" Text="{Binding ExternalRatingsSummary}" TextColor="{DynamicResource MutedForeground}" />
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
 
                             <VerticalStackLayout Spacing="6">
                                 <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CategoryLabel}" />
@@ -201,17 +214,6 @@
                                         ToolTipProperties.Text="{Binding FavoriteLabel}"
                                         WidthRequest="52" />
                                     <Label FontSize="11" HorizontalTextAlignment="Center" Text="{Binding FavoriteLabel}" TextColor="{DynamicResource MutedForeground}" />
-                                </VerticalStackLayout>
-                            </Grid>
-
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
-                                <VerticalStackLayout Grid.Column="0" Spacing="6">
-                                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProgressCurrentLabel}" />
-                                    <Entry Keyboard="Numeric" Placeholder="{Binding ProgressCurrentPlaceholder}" Text="{Binding ProgressCurrent}" />
-                                </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="1" Spacing="6">
-                                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProgressTotalLabel}" />
-                                    <Entry Keyboard="Numeric" Placeholder="{Binding ProgressTotalPlaceholder}" Text="{Binding ProgressTotal}" />
                                 </VerticalStackLayout>
                             </Grid>
 
@@ -574,6 +576,48 @@
                 </VerticalStackLayout>
             </Border>
         </ScrollView>
+
+        <Grid x:Name="MetadataPickerOverlay" Grid.ColumnSpan="3" BackgroundColor="#99000000" IsVisible="{Binding IsMetadataPickerOpen}" Padding="24">
+            <Border x:Name="MetadataPickerCard" Padding="24" BackgroundColor="{DynamicResource Card}" HorizontalOptions="Center" MaximumWidthRequest="760" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 16" VerticalOptions="Center" WidthRequest="760">
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Spacing="3">
+                            <Label FontAttributes="Bold" FontSize="20" Text="{Binding MetadataPickerTitle}" />
+                            <Label FontSize="12" Text="{Binding MetadataPickerHint}" TextColor="{DynamicResource MutedForeground}" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Command="{Binding CloseMetadataPickerCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="Ã—" />
+                    </Grid>
+                    <ActivityIndicator IsRunning="{Binding IsMetadataSearching}" IsVisible="{Binding IsMetadataSearching}" />
+                    <Label FontSize="13" Text="{Binding MetadataStatusMessage}" TextColor="{DynamicResource MutedForeground}" />
+                    <CollectionView HeightRequest="480" ItemsSource="{Binding MetadataCandidates}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="services:MediaMetadataCandidate">
+                                <Border Margin="0,0,0,10" Padding="12" BackgroundColor="{DynamicResource Muted}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 12">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.SelectMetadataCandidateCommand, x:DataType={x:Type pages:EditMediaItemPage}}"
+                                            CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="72,*" ColumnSpacing="14">
+                                        <Border HeightRequest="104" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 8" WidthRequest="72">
+                                            <Image Aspect="AspectFill" Source="{Binding PosterUrl}" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                            <Label FontAttributes="Bold" FontSize="15" LineBreakMode="TailTruncation" Text="{Binding DisplayTitle}" />
+                                            <Label FontSize="12" Text="{Binding OriginalTitle}" TextColor="{DynamicResource MutedForeground}" />
+                                            <Label FontSize="12" Text="{Binding YearText}" />
+                                            <Label FontSize="12" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding CastSummary}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <Label FontSize="11" Text="{Binding TmdbAttributionText}" TextColor="{DynamicResource MutedForeground}" />
+                    <Button Command="{Binding CloseMetadataPickerCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding MetadataCloseText}" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
 
         <Grid x:Name="PersonPickerOverlay" Grid.ColumnSpan="3" BackgroundColor="#99000000" IsVisible="{Binding IsPersonPickerOpen}" Padding="24">
             <Border x:Name="PersonPickerCard" Padding="24" BackgroundColor="{DynamicResource Card}" HorizontalOptions="Center" MaximumWidthRequest="500" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 16" VerticalOptions="Center" WidthRequest="500">

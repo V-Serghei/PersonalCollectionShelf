@@ -14,16 +14,19 @@ public partial class MediaDetailsViewModel : BaseViewModel
 {
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
+    private readonly IMediaMetadataService _mediaMetadataService;
     private Guid? _currentItemId;
 
     public MediaDetailsViewModel(
         IMediaItemService mediaItemService,
         IAuthService authService,
+        IMediaMetadataService mediaMetadataService,
         ILocalizationService localizationService)
         : base(localizationService)
     {
         _mediaItemService = mediaItemService;
         _authService = authService;
+        _mediaMetadataService = mediaMetadataService;
     }
 
     private MediaItemDto? _item;
@@ -56,6 +59,11 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
 
+    public bool CanRefreshOnlineMetadata => Item?.TmdbId.HasValue == true &&
+        Item.MediaType is MediaType.Movie or MediaType.Cartoon or MediaType.Series or MediaType.AnimatedSeries or MediaType.Anime;
+
+    public string RefreshMetadataTooltip => T("Metadata.Action.Refresh");
+
     public string PageTitle => Item?.Title ?? T("Details.Title");
 
     public string TypeLabel => T("Details.TypeLabel");
@@ -65,6 +73,27 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string ProgressLabel => T("Details.ProgressLabel");
 
     public string RatingLabel => T("Details.RatingLabel");
+
+    public string ExternalRatingsLabel => T("Metadata.Label.ExternalRatings");
+
+    public bool HasExternalRatings => Item?.ImdbRating.HasValue == true ||
+                                      Item?.KinopoiskRating.HasValue == true;
+
+    public string ExternalRatingsValue
+    {
+        get
+        {
+            if (Item is null)
+            {
+                return T("Common.NotSet");
+            }
+
+            var values = new List<string>();
+            AddExternalRating(values, "IMDb", Item.ImdbRating, Item.ImdbVoteCount);
+            AddExternalRating(values, T("Metadata.Kinopoisk"), Item.KinopoiskRating, Item.KinopoiskVoteCount);
+            return values.Count == 0 ? T("Common.NotSet") : string.Join("   ·   ", values);
+        }
+    }
 
     public string NotesLabel => T("Details.NotesLabel");
 
@@ -484,6 +513,41 @@ public partial class MediaDetailsViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private async Task RefreshMetadataAsync()
+    {
+        if (Item?.TmdbId is not { } tmdbId || !CanRefreshOnlineMetadata || IsBusy)
+        {
+            return;
+        }
+
+        ErrorMessage = string.Empty;
+        IsBusy = true;
+        try
+        {
+            var candidate = await _mediaMetadataService.GetCandidateAsync(tmdbId, Item.MediaType);
+            var metadata = await _mediaMetadataService.GetDetailsAsync(candidate);
+            var coverUrl = Item.CoverUrl;
+            if (string.IsNullOrWhiteSpace(coverUrl))
+            {
+                coverUrl = await _mediaMetadataService.DownloadPosterAsync(candidate) ?? coverUrl;
+            }
+
+            var userId = await GetCurrentUserIdAsync();
+            Item = await _mediaItemService.UpdateMediaItemAsync(
+                ToUpdateRequest(Item, userId, Item.IsFavorite, metadata, coverUrl));
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = T("Metadata.Error.RefreshFailed");
+            await CrashReporter.ReportAsync(exception, $"MediaDetailsViewModel.RefreshMetadataAsync id={Item.Id}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
     private async Task DeleteAsync()
     {
         if (Item is null)
@@ -517,6 +581,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
     private void RefreshItemProperties()
     {
         OnPropertyChanged(nameof(PageTitle));
+        OnPropertyChanged(nameof(CanRefreshOnlineMetadata));
+        OnPropertyChanged(nameof(RefreshMetadataTooltip));
         OnPropertyChanged(nameof(OriginalTitleValue));
         OnPropertyChanged(nameof(DescriptionValue));
         OnPropertyChanged(nameof(CategoryValue));
@@ -559,6 +625,9 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(StatusBackgroundColor));
         OnPropertyChanged(nameof(ProgressValue));
         OnPropertyChanged(nameof(RatingValue));
+        OnPropertyChanged(nameof(ExternalRatingsLabel));
+        OnPropertyChanged(nameof(ExternalRatingsValue));
+        OnPropertyChanged(nameof(HasExternalRatings));
         OnPropertyChanged(nameof(RatingShort));
         OnPropertyChanged(nameof(HasRating));
         OnPropertyChanged(nameof(ProgressPercent));
@@ -597,21 +666,27 @@ public partial class MediaDetailsViewModel : BaseViewModel
         return await _authService.GetCurrentUserIdAsync() ?? "local-user";
     }
 
-    private static UpdateMediaItemRequest ToUpdateRequest(MediaItemDto item, string userId, bool isFavorite)
+    private static UpdateMediaItemRequest ToUpdateRequest(
+        MediaItemDto item,
+        string userId,
+        bool isFavorite,
+        MediaMetadataDetails? metadata = null,
+        string? refreshedCoverUrl = null)
     {
         return new UpdateMediaItemRequest
         {
             Id = item.Id,
             UserId = userId,
             Title = item.Title,
-            OriginalTitle = item.OriginalTitle,
-            Description = item.Description,
+            OriginalTitle = metadata?.Candidate.OriginalTitle ?? item.OriginalTitle,
+            Description = metadata?.Description ?? item.Description,
             Category = item.Category,
             MediaCategoryId = item.MediaCategoryId,
             Tags = item.Tags,
             TagNames = item.TagNames,
-            Genres = item.Genres,
-            Contributions = item.Contributions.Select(value => new PersonCreditInput
+            Genres = metadata?.Genres ?? item.Genres,
+            Contributions = metadata is null
+                ? item.Contributions.Select(value => new PersonCreditInput
             {
                 PersonId = value.PersonId,
                 CreditRoleId = value.CreditRoleId,
@@ -620,14 +695,28 @@ public partial class MediaDetailsViewModel : BaseViewModel
                 SortOrder = value.SortOrder,
                 Details = value.Details,
                 CreditedAs = value.CreditedAs
-            }).ToList(),
-            StudioCredits = item.StudioCredits.Select(value => new StudioCreditInput
+            }).ToList()
+                : metadata.People.Select((value, index) => new PersonCreditInput
+                {
+                    Name = value.Name,
+                    Role = value.Role,
+                    SortOrder = index,
+                    Details = value.Details
+                }).ToList(),
+            StudioCredits = metadata is null
+                ? item.StudioCredits.Select(value => new StudioCreditInput
             {
                 StudioId = value.StudioId,
                 Name = value.StudioName,
                 Role = value.Role,
                 SortOrder = value.SortOrder
-            }).ToList(),
+            }).ToList()
+                : metadata.Studios.Select((value, index) => new StudioCreditInput
+                {
+                    Name = value.Name,
+                    Role = value.Role,
+                    SortOrder = index
+                }).ToList(),
             BookDetails = item.BookDetails is null ? null : new BookDetailsInput
             {
                 Subtitle = item.BookDetails.Subtitle,
@@ -647,7 +736,15 @@ public partial class MediaDetailsViewModel : BaseViewModel
                 CountryOfOrigin = item.BookDetails.CountryOfOrigin,
                 AgeRating = item.BookDetails.AgeRating
             },
-            MovieDetails = item.MovieDetails is null ? null : new MovieDetailsInput
+            MovieDetails = metadata is not null && item.MediaType is MediaType.Movie or MediaType.Cartoon
+                ? new MovieDetailsInput
+                {
+                    RuntimeMinutes = metadata.RuntimeMinutes,
+                    OriginalLanguage = metadata.OriginalLanguage,
+                    CountryOfOrigin = metadata.Country,
+                    AgeRating = metadata.AgeRating
+                }
+                : item.MovieDetails is null ? null : new MovieDetailsInput
             {
                 RuntimeMinutes = item.MovieDetails.RuntimeMinutes,
                 OriginalLanguage = item.MovieDetails.OriginalLanguage,
@@ -655,7 +752,18 @@ public partial class MediaDetailsViewModel : BaseViewModel
                 CountryOfOrigin = item.MovieDetails.CountryOfOrigin,
                 AgeRating = item.MovieDetails.AgeRating
             },
-            EpisodicDetails = item.EpisodicDetails,
+            EpisodicDetails = metadata is not null && item.MediaType is MediaType.Series or MediaType.AnimatedSeries or MediaType.Anime
+                ? new EpisodicDetailsInput
+                {
+                    SeasonCount = metadata.SeasonCount,
+                    EpisodeCount = metadata.EpisodeCount,
+                    EpisodeRuntimeMinutes = metadata.RuntimeMinutes,
+                    Network = metadata.Network,
+                    AiringStatus = metadata.AiringStatus,
+                    SourceMaterial = item.EpisodicDetails?.SourceMaterial,
+                    OriginalLanguage = metadata.OriginalLanguage
+                }
+                : item.EpisodicDetails,
             GraphicPublicationDetails = item.GraphicPublicationDetails,
             GameDetails = item.GameDetails,
             Collection = item.Collection is null ? null : new CollectionMembershipInput
@@ -682,8 +790,18 @@ public partial class MediaDetailsViewModel : BaseViewModel
             ProgressTotal = item.ProgressTotal,
             StartDate = item.StartDate,
             FinishDate = item.FinishDate,
-            ReleaseYear = item.ReleaseYear,
-            CoverUrl = item.CoverUrl,
+            ReleaseYear = metadata?.Candidate.Year ?? item.ReleaseYear,
+            CoverUrl = refreshedCoverUrl ?? item.CoverUrl,
+            TmdbId = item.TmdbId,
+            ImdbId = metadata?.ImdbId ?? item.ImdbId,
+            KinopoiskId = metadata?.KinopoiskId ?? item.KinopoiskId,
+            TmdbRating = metadata?.Candidate.TmdbRating ?? item.TmdbRating,
+            TmdbVoteCount = metadata?.Candidate.TmdbVoteCount ?? item.TmdbVoteCount,
+            ImdbRating = metadata?.ImdbRating ?? item.ImdbRating,
+            ImdbVoteCount = metadata?.ImdbVoteCount ?? item.ImdbVoteCount,
+            KinopoiskRating = metadata?.KinopoiskRating ?? item.KinopoiskRating,
+            KinopoiskVoteCount = metadata?.KinopoiskVoteCount ?? item.KinopoiskVoteCount,
+            ExternalRatingsUpdatedAt = metadata?.RatingsUpdatedAtUtc ?? item.ExternalRatingsUpdatedAt,
             Notes = item.Notes,
             IsFavorite = isFavorite
         };
@@ -697,5 +815,16 @@ public partial class MediaDetailsViewModel : BaseViewModel
         if (third.HasValue) values.Add(third.Value.ToString(CultureInfo.InvariantCulture));
         values.AddRange(textValues.Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value!));
         return values.Count == 0 ? T("Common.NotSet") : string.Join(" · ", values);
+    }
+
+    private static void AddExternalRating(List<string> values, string source, decimal? rating, int? voteCount)
+    {
+        if (!rating.HasValue)
+        {
+            return;
+        }
+
+        var votes = voteCount.HasValue ? $" ({voteCount.Value:N0})" : string.Empty;
+        values.Add($"{source} {rating.Value:0.0}{votes}");
     }
 }

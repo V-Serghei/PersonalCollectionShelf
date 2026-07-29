@@ -157,7 +157,6 @@
                                                 <Label FontAttributes="Bold" FontSize="11" Text="{Binding RatingShort}" TextColor="White" />
                                             </HorizontalStackLayout>
                                         </Border>
-                                        <ProgressBar BackgroundColor="#33FFFFFF" HeightRequest="3" IsVisible="{Binding HasProgressBar}" Progress="{Binding ProgressPercent}" ProgressColor="{StaticResource Info}" VerticalOptions="End" />
                                     </Grid>
 
                                     <Grid Grid.Row="1" Padding="10" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">

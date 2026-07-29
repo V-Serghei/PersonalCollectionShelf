@@ -434,7 +434,12 @@ public partial class EditMediaItemViewModel
     private void AddContributor(ContributorChipViewModel value)
     {
         var collection = GetContributorCollection(value.Role);
-        if (!collection.Any(existing => existing.PersonId == value.PersonId))
+        var alreadyExists = collection.Any(existing =>
+            value.PersonId != Guid.Empty
+                ? existing.PersonId == value.PersonId
+                : existing.PersonId == Guid.Empty &&
+                  string.Equals(existing.Name, value.Name, StringComparison.OrdinalIgnoreCase));
+        if (!alreadyExists)
         {
             collection.Add(value);
         }

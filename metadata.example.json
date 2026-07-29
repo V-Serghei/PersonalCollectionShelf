@@ -1,0 +1,4 @@
+{
+  "tmdbReadAccessToken": "TMDB_API_READ_ACCESS_TOKEN",
+  "kinopoiskApiKey": "OPTIONAL_KINOPOISK_UNOFFICIAL_API_KEY"
+}

@@ -9,11 +9,13 @@ Offline-first cross-platform personal collection tracker with cloud sync for mov
 - Add, edit, delete, search, and filter media items.
 - Use touch-friendly Android forms with keyboard-aware focus, user-cancelled auto-positioning, and responsive controls.
 - Load library summaries and filters without repeatedly hydrating every detail graph.
-- Track status, progress, rating, notes, dates, favorites, and release year.
+- Track status, rating, notes, dates, favorites, and release year without manually maintaining percentages.
 - Use English and Russian localization across navigation, dashboards, statistics, settings, and dynamic entity labels.
 - Sign in with Google or email/password and synchronize through Firebase.
 - Keep original images on the device that added them while syncing 768px WebP copies to other devices.
 - Create checksummed, versioned Google Drive backups containing portable data and cloud-optimized image copies.
+- Search TMDB and autofill screen titles; show IMDb and Kinopoisk ratings separately from the personal rating.
+- Refresh online metadata and both external ratings only on demand from an icon in the detail card; opening the app or an item never triggers a provider refresh.
 - Target Windows and Android with .NET MAUI.
 
 ## Tech Stack
@@ -116,6 +118,20 @@ firebase deploy --config firebase.deploy.json --only firestore:rules
 ```
 
 6. Rebuild both targets. The uncommitted configuration is packaged into each build and copied to that device's private app-data directory on first launch. Remove `PersonalCollectionShelf.App/Resources/Raw/firebase.json` before sharing source or build artifacts with someone else.
+
+Media autofill is optional and uses no-cost sources suitable for this personal, non-commercial app:
+
+- TMDB supplies search results, localized titles, descriptions, posters, credits, genres, studios, and years. Its own rating is not shown. Create an account, open **Settings → API**, request a developer API key for personal/non-commercial use, and copy the **API Read Access Token** (the long bearer token, not the short API key).
+- IMDb ratings come from the official non-commercial daily dataset and need no key. The app caches the compressed dataset for 24 hours and reads the selected title's rating.
+- Kinopoisk ratings use a free Kinopoisk API Unofficial token. Without that token, TMDB autofill and IMDb still work, but the second requested rating cannot be displayed.
+
+Copy `metadata.example.json` to a private location, replace the TMDB placeholder and optionally the Kinopoisk placeholder, then run:
+
+```powershell
+.\scripts\configure-metadata.ps1 -ConfigPath C:\secure\metadata.json
+```
+
+Rebuild Windows and Android. `metadata.json` is ignored by Git and bundled only into local builds. Do not publish either token or a build containing your personal tokens. The required TMDB attribution is displayed in the title picker.
 
 The app project targets Windows by default so Rider can build and run the desktop app without touching Android tooling. Windows builds are self-contained for the Windows App SDK runtime. Android is opt-in and must be enabled explicitly with `-p:EnableAndroidTarget=true`.
 

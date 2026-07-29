@@ -97,6 +97,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         if (query.TryGetValue("reset", out var reset) && string.Equals(reset?.ToString(), "true", StringComparison.OrdinalIgnoreCase))
         {
             SelectedMediaTypeFilter = MediaTypeFilters.FirstOrDefault(option => option.Value is null);
+            SelectedStatusFilter = StatusFilters.FirstOrDefault(option => option.Value is null);
         }
 
         if (query.TryGetValue("mediaType", out var raw) &&
@@ -213,7 +214,9 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         }
     }
 
-    public string PageTitle => T("Library.Title");
+    public string PageTitle => SelectedStatusFilter?.Value is null
+        ? T("Library.Title")
+        : SelectedStatusFilter.DisplayName;
 
     public string SearchPlaceholder => T("Library.SearchPlaceholder");
 
@@ -359,6 +362,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     private void OnSelectedStatusFilterChanged(LocalizedOption<MediaStatus?>? value)
     {
+        OnPropertyChanged(nameof(PageTitle));
         if (!_suppressFilterReload)
         {
             ApplyCurrentFilters();

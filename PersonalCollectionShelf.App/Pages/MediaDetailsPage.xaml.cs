@@ -130,7 +130,7 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
 
     private void ConfigureMetricGrid(bool usesCompactLayout)
     {
-        var metrics = new View[] { RatingMetric, ProgressMetric, FavoriteMetric, YearMetric };
+        var metrics = new View[] { RatingMetric, FavoriteMetric, YearMetric };
         MetricsGrid.ColumnDefinitions.Clear();
         MetricsGrid.RowDefinitions.Clear();
         MetricsGrid.RowSpacing = usesCompactLayout ? 12 : 0;
