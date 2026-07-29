@@ -18,6 +18,32 @@ public sealed class FirebaseAuthClient(HttpClient httpClient, FirebaseOptions op
         return SendCredentialsRequestAsync("signUp", email, password, cancellationToken);
     }
 
+    public async Task<AuthTokens> SignInWithGoogleAsync(
+        string idToken,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        var postBody = $"id_token={Uri.EscapeDataString(idToken)}&access_token={Uri.EscapeDataString(accessToken)}&providerId=google.com";
+        var body = JsonSerializer.Serialize(new
+        {
+            postBody,
+            requestUri = "http://localhost",
+            returnIdpCredential = true,
+            returnSecureToken = true
+        });
+        var requestUrl = $"{IdentityToolkitBaseUrl}:signInWithIdp?key={Uri.EscapeDataString(options.ApiKey)}";
+        using var content = new StringContent(body, Encoding.UTF8, "application/json");
+        using var response = await httpClient.PostAsync(requestUrl, content, cancellationToken);
+        var payload = await ReadPayloadAsync(response, cancellationToken);
+
+        return new AuthTokens(
+            UserId: GetRequiredString(payload, "localId"),
+            Email: payload.TryGetProperty("email", out var email) ? email.GetString() : null,
+            IdToken: GetRequiredString(payload, "idToken"),
+            RefreshToken: GetRequiredString(payload, "refreshToken"),
+            ExpiresAtUtc: DateTime.UtcNow.AddSeconds(ParseExpiresIn(payload, "expiresIn")));
+    }
+
     public async Task<AuthTokens> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
         var content = new FormUrlEncodedContent(new Dictionary<string, string>

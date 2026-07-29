@@ -106,3 +106,21 @@
 - Added first-class Cartoon and AnimatedSeries media types while preserving existing enum values;
   cartoons reuse movie metadata and credits, animated series reuse episodic metadata and screen
   production credits, and both appear with Anime in navigation, filters, statistics, and localization.
+- Replaced the Firestore placeholder with an incremental row sync journal, SHA-256 change detection,
+  UTC last-write-wins merging, deletion tombstones, Firebase REST transport, and per-user security rules.
+- Added Google installed-app OAuth with PKCE, Firebase Google token exchange, SecureStorage-backed Google
+  refresh tokens, and the `drive.file` grant shared by Windows and Android builds.
+- Added separate image synchronization: local originals are never modified, while 768px quality-78 WebP
+  copies are deduplicated, uploaded to Firebase Storage, and downloaded into a distinct cloud cache.
+- Upgraded portable JSON to version 3 with embedded media covers and added checksummed ZIP backups to
+  Google Drive, latest-backup restore, and 30-recent/12-monthly/yearly retention.
+- Added ignored build-time cloud configuration packaging, a configuration helper script, example config,
+  Firebase deployment files, synchronized English/Russian cloud UI, and the missing Settings sync controls.
+- Verified both Windows and Android targets compile and all 38 automated tests pass after the cloud
+  implementation; no app or phone was launched.
+- Copied the existing device-local Firebase config into the ignored MAUI Raw asset so future Windows and
+  Android builds share it. The legacy file contains only `apiKey` and `projectId`; add `googleClientId`
+  before Google sign-in, Drive image sync, and Drive backup can be enabled.
+- Removed the Blaze dependency: Firebase Storage and its rules/configuration were removed. Firebase Spark
+  now handles only Auth and Firestore, while content-addressed compressed images are stored in the app-owned
+  Google Drive assets folder through the narrow `drive.file` scope.

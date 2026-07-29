@@ -11,7 +11,9 @@ Offline-first cross-platform personal collection tracker with cloud sync for mov
 - Load library summaries and filters without repeatedly hydrating every detail graph.
 - Track status, progress, rating, notes, dates, favorites, and release year.
 - Use English and Russian localization across navigation, dashboards, statistics, settings, and dynamic entity labels.
-- Prepare account and synchronization boundaries for Firebase Auth and Firestore.
+- Sign in with Google or email/password and synchronize through Firebase.
+- Keep original images on the device that added them while syncing 768px WebP copies to other devices.
+- Create checksummed, versioned Google Drive backups containing portable data and cloud-optimized image copies.
 - Target Windows and Android with .NET MAUI.
 
 ## Tech Stack
@@ -25,7 +27,7 @@ Offline-first cross-platform personal collection tracker with cloud sync for mov
 
 ## Architecture Overview
 
-The solution uses clean layered architecture. The domain layer contains entities, enums, value objects, and repository abstractions. The application layer contains DTOs, service interfaces, validators, and use case orchestration. The infrastructure layer contains SQLite persistence, repository implementations, local storage services, and placeholders for Firebase Auth and Firestore synchronization. The MAUI app layer contains pages, view models, navigation, dependency injection setup, resources, and localization.
+The solution uses clean layered architecture. The domain layer contains entities, enums, value objects, and repository abstractions. The application layer contains DTOs, service interfaces, validators, and use case orchestration. The infrastructure layer contains SQLite persistence, repository implementations, Firebase Auth, Firestore synchronization, image processing, and sync state. The MAUI app layer contains pages, view models, Google OAuth/Drive data and image storage, navigation, dependency injection setup, resources, and localization.
 
 Dependencies flow inward: App depends on Application and Infrastructure, Infrastructure depends on Application and Domain, Application depends on Domain, and Domain does not depend on other project layers.
 
@@ -34,7 +36,7 @@ Dependencies flow inward: App depends on Application and Infrastructure, Infrast
 - `PersonalCollectionShelf.App` - MAUI UI, pages, view models, navigation, app resources, and JSON localization.
 - `PersonalCollectionShelf.Domain` - media entity, enums, value objects, and repository abstractions.
 - `PersonalCollectionShelf.Application` - DTOs, media item service, interfaces, validators, and orchestration logic.
-- `PersonalCollectionShelf.Infrastructure` - SQLite database service, media repository, Firebase placeholders, sync placeholder, and DI registration.
+- `PersonalCollectionShelf.Infrastructure` - SQLite persistence, Firebase REST clients, incremental sync, cloud image compression/cache, and DI registration.
 - `PersonalCollectionShelf.Tests` - unit tests for domain and application behavior.
 - `.agent` - project context files for future AI coding sessions.
 
@@ -66,11 +68,16 @@ Already delivered beyond MVP:
 - Compact expandable search across Library, People, Tags, and Series/Universes, plus route-aware sidebar and category highlighting
 - Dedicated local/account profile page accessible from the sidebar footer
 
+Cloud foundation now included:
+
+- Firebase Auth with Google and email/password
+- Incremental Firestore synchronization with tombstones and last-write-wins conflict handling
+- Google Drive WebP image copies with local-original preservation and SHA-256 deduplication
+- Versioned Google Drive backup and restore with SHA-256 validation
+
 Next versions:
 
-- Firebase Auth (foundation in place; see `.agent/sync-plan.md`)
-- Firestore synchronization
-- Conflict resolution
+- Background scheduling and richer sync history
 - Calendar and progress history
 - Custom lists
 
@@ -89,6 +96,26 @@ Long-term ideas:
 3. Restore dependencies with `dotnet restore PersonalCollectionShelf.sln`.
 4. Run tests with `dotnet test PersonalCollectionShelf.Tests/PersonalCollectionShelf.Tests.csproj`.
 5. Run the Windows desktop app with `.\scripts\run-windows.cmd`.
+
+Cloud setup is optional. Without configuration the app remains fully local. To enable it:
+
+1. Create a Firebase project; enable Google and/or Email/Password in Authentication.
+2. Create the default Firestore database. Firebase Storage is not used, so the Spark plan is sufficient.
+3. In Google Cloud, enable Google Drive API, configure the OAuth consent screen, and create a Desktop OAuth client for the installed-app PKCE flow.
+4. Copy `firebase.example.json`, fill `apiKey`, `projectId`, and `googleClientId`, then run:
+
+```powershell
+.\scripts\configure-cloud.ps1 -ConfigPath C:\secure\firebase.json
+```
+
+5. Deploy the per-user Firestore rules:
+
+```powershell
+Set-Location firebase
+firebase deploy --config firebase.deploy.json --only firestore:rules
+```
+
+6. Rebuild both targets. The uncommitted configuration is packaged into each build and copied to that device's private app-data directory on first launch. Remove `PersonalCollectionShelf.App/Resources/Raw/firebase.json` before sharing source or build artifacts with someone else.
 
 The app project targets Windows by default so Rider can build and run the desktop app without touching Android tooling. Windows builds are self-contained for the Windows App SDK runtime. Android is opt-in and must be enabled explicitly with `-p:EnableAndroidTarget=true`.
 
@@ -126,9 +153,15 @@ All visible UI text must be loaded from JSON localization files in `PersonalColl
 - Pages and view models must not hardcode visible UI text.
 - Validation messages, placeholders, buttons, page titles, labels, descriptions, and status messages must be localized.
 
-## Sync Strategy
+## Sync and Backup Strategy
 
-The app is offline-first. SQLite is the source of truth for the current MVP. Firebase Auth and Firestore classes exist only as placeholders and do not contain credentials or real configuration. Future synchronization should authenticate the user, upload and download changed records, preserve deleted records through soft-delete metadata, and resolve conflicts with a documented strategy.
+SQLite remains the working database on every device. A sync scans user-owned rows, hashes their portable representation, pulls newer Firestore documents, applies last-write-wins by UTC change time, uploads remaining local changes, and keeps tombstones so a deletion also reaches devices that were offline.
+
+Device-local file paths are never written into Firestore. Covers and person photos are handled separately: the source device retains its original; a maximum-768px WebP copy (quality 78) is deduplicated by SHA-256 and uploaded to the app-owned `Personal Collection Shelf Assets` folder in Google Drive; another device downloads that copy into its own `cloud-cache`. A remote copy never replaces an existing local original.
+
+Google Drive is the independent recovery layer. Optimized images are stored once under content-addressed names, while each small backup ZIP contains portable JSON, references to those images, and a SHA-256 checksum. Retention keeps the 30 newest backups, 12 monthly representatives, and one representative for every year. Pressing Sync also creates a Drive backup when the Google Drive grant is available; Settings also provides explicit backup and restore actions. Manual JSON export remains self-contained and keeps the locally available image quality.
+
+Firebase refresh tokens and Google OAuth refresh tokens are stored in MAUI SecureStorage. Firestore data is scoped to `users/{Firebase uid}` by the checked-in security rules, while Drive uses the narrow `drive.file` scope and can access only files created by this app. See `.agent/sync-plan.md` for implementation details and limitations.
 
 ## Contribution Notes
 

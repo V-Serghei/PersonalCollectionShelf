@@ -152,6 +152,31 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SyncSectionTitle}" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding SyncSectionTitle}" />
+                                    <Label FontSize="12" Text="{Binding SyncDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding SyncNowCommand}" IsEnabled="{Binding IsNotBusy}" Text="{Binding SyncNowButtonText}" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Google Drive" />
+                                    <Label FontSize="12" Text="{Binding DriveBackupDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding BackupToDriveCommand}" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding DriveBackupButtonText}" />
+                                <Button Grid.Column="2" Command="{Binding RestoreFromDriveCommand}" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding DriveRestoreButtonText}" />
+                            </Grid>
+                            <Label Padding="16,0,16,16" FontSize="12" Text="{Binding StatusMessage}" TextColor="{DynamicResource MutedForeground}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding LibraryDataSectionTitle}" />
                     <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="0">

@@ -5,6 +5,7 @@ using PersonalCollectionShelf.Infrastructure.Persistence;
 using PersonalCollectionShelf.Infrastructure.Repositories;
 using PersonalCollectionShelf.Infrastructure.Services;
 using PersonalCollectionShelf.Infrastructure.Services.Firebase;
+using PersonalCollectionShelf.Infrastructure.Services.Sync;
 
 namespace PersonalCollectionShelf.Infrastructure.DependencyInjection;
 
@@ -37,6 +38,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFirebaseAuthClient, FirebaseAuthClient>();
         services.AddSingleton<IAuthTokenStore, InMemoryAuthTokenStore>();
         services.AddSingleton<IAuthService, FirebaseAuthService>();
+        services.AddSingleton<IFirebaseSessionProvider>(provider =>
+            (IFirebaseSessionProvider)provider.GetRequiredService<IAuthService>());
+        services.AddSingleton<FirestoreRestClient>();
+        services.AddSingleton<ICloudAssetStore, DisabledCloudAssetStore>();
+        services.AddSingleton<CloudImageCompressor>();
+        services.AddSingleton<CloudAssetSyncService>();
         services.AddSingleton<FirestoreSyncService>();
         services.AddSingleton<ISyncService, SyncService>();
 

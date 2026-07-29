@@ -16,5 +16,10 @@ public interface IAuthService
 
     Task<AuthResultDto> SignUpAsync(string email, string password, CancellationToken cancellationToken = default);
 
+    Task<AuthResultDto> SignInWithGoogleAsync(
+        string idToken,
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
     Task SignOutAsync(CancellationToken cancellationToken = default);
 }

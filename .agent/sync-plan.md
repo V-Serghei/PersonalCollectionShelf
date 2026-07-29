@@ -1,59 +1,72 @@
-# Firebase Auth and Firestore Sync Plan
+# Firebase, Google Drive, and Image Sync
 
-Status: Phase 1 foundation implemented on 2026-07-19 (no UI yet). Phases 2+ are not started.
+Status: implementation completed 2026-07-29; real-project and two-device behavior still require owner testing.
 
-## Principles
+## Local-first rules
 
-- Offline-first stays: SQLite remains the source of truth on the device. Sync reconciles, it never gates local usage.
-- No secrets in the repo. Firebase configuration lives in an uncommitted `firebase.json` file in the app data directory (`FileSystem.AppDataDirectory`). When the file is absent, all cloud features stay disabled and the app behaves exactly as today.
-- No official Firebase SDK for .NET MAUI is used; Auth and Firestore are accessed through their public REST APIs with plain `HttpClient`.
+- SQLite is the working store and the app stays usable without an account or network.
+- Existing local rows always use `local-user`; the Firebase UID scopes the remote path and never replaces the local owner id.
+- Signing in cannot hide or replace the current local library.
 
 ## Configuration
 
-`firebase.json` in the app data directory:
+Runtime configuration is `firebase.json` in `FileSystem.AppDataDirectory`. A build may package an ignored
+`PersonalCollectionShelf.App/Resources/Raw/firebase.json`; first launch copies it into private app data.
+Use `scripts/configure-cloud.ps1` with a config based on `firebase.example.json`.
 
-```json
-{
-  "apiKey": "<web API key>",
-  "projectId": "<firebase project id>"
-}
-```
+Required values: Firebase Web API key, project id, and a Google installed-app OAuth client id.
+No refresh tokens, service-account files, client secrets, or user data may be committed.
 
-Loaded by `FirebaseOptions.Load` in Infrastructure. `FirebaseOptions.IsConfigured` drives every feature toggle.
+## Authentication
 
-## Phase 1 — Firebase Auth foundation (implemented)
+- Email/password uses Firebase Identity Toolkit REST.
+- Google uses system-browser OAuth 2.0 Authorization Code + PKCE with a loopback callback and scopes
+  `openid email profile drive.file`; the resulting Google ID/access tokens are exchanged through Firebase
+  `signInWithIdp`.
+- Firebase and Google refresh tokens live in MAUI SecureStorage.
+- The loopback flow is intentionally backend-free for a personal installation. It needs owner verification on
+  the target Android browser/firmware; no embedded web view is used.
 
-- `IAuthService` extended with `SignInAsync`, `SignUpAsync`, `SignOutAsync` returning `AuthResultDto` with localization error keys (`Auth.Error.*`).
-- `FirebaseAuthClient` (Infrastructure) calls the Identity Toolkit REST API:
-  - Sign up: `POST https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=API_KEY`
-  - Sign in: `POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=API_KEY`
-  - Refresh: `POST https://securetoken.googleapis.com/v1/token?key=API_KEY`
-- `IAuthTokenStore` abstraction stores the session (`userId`, `email`, `idToken`, `refreshToken`, `expiresAtUtc`). Infrastructure ships an in-memory store; the App layer registers `SecureStorageAuthTokenStore` backed by MAUI SecureStorage so refresh tokens never sit in plain files.
-- `FirebaseAuthService` refreshes the id token on demand and reports signed-in state to `SyncService`.
-- IMPORTANT: `GetCurrentUserIdAsync` intentionally keeps returning `local-user` even when signed in. All existing rows are owned by `local-user`; switching the id to the Firebase uid would make the local library invisible. The mapping from `local-user` to the Firebase uid happens at sync time (Phase 3), not at auth time.
+## Firestore
 
-## Phase 2 — Account UI (needs UX pass first, per development rules)
+- Remote path: `users/{uid}/libraryData/{sha256(entityType:entityKey)}`.
+- Documents contain portable JSON payload, content hash, UTC changed time, tombstone flag, and schema version.
+- Local `CloudEntityStates` compares canonical SHA-256 hashes; unchanged rows do not generate writes.
+- Pull is incremental by `changedAt`; first sync reads the collection. Merge is last-write-wins by UTC changed
+  time, followed by push of remaining local changes.
+- Physical removals detected after a previously synced row become tombstones. Existing domain soft deletes also
+  become tombstones. Tombstones are retained so late devices converge.
+- Device-local image paths are stripped from Firestore payloads.
 
-- Settings page: account section with email/password sign-in, sign-up, sign-out, and current-account display. Progressive disclosure: collapsed to a single row when signed out.
-- All strings via `en.json`/`ru.json` (the `Auth.*` keys already exist).
-- Requires a real Firebase project to test end to end.
+## Images
 
-## Phase 3 — Firestore synchronization
+- Covers, person portraits, and gallery photos are scanned separately.
+- The source file remains untouched and is tracked as `OriginalPath` only on that device.
+- Cloud copies use WebP, quality 78, maximum long edge 768px, and Google Drive filenames based on source SHA-256.
+- Images live in the app-created `Personal Collection Shelf Assets` Drive folder. Firebase Storage is not used,
+  so Firebase can remain on the Spark plan.
+- Remote files download into `cloud-cache/{cloudHash}.webp` only when that device has no local original.
+- A later remote image never overwrites a valid local original. A locally changed file is detected by content hash.
 
-- Firestore REST API (`https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/...`) with the id token as Bearer auth.
-- Document layout: `users/{uid}/mediaItems/{itemId}`, plus `users/{uid}/people/{id}` and `users/{uid}/studios/{id}`.
-- Push: upload local rows with `UpdatedAt` newer than `LastSyncedAt`, including soft-deleted rows (tombstones with `DeletedAt` set). Soft delete already exists end to end (`MediaItem.MarkDeleted`, repository filters on `DeletedAt == null`).
-- Pull: query documents with server `updatedAt > LastSyncedAt`, upsert locally.
-- Track `LastSyncedAt` per collection in a local `sync_state` table.
+## Google Drive backup
 
-## Phase 4 — Conflict resolution
+- `drive.file` limits access to files/folders created by this app.
+- Backups are ZIP files under `Personal Collection Shelf Backups` and contain `library.json` plus `sha256.txt`.
+- Drive snapshot JSON stores references to content-addressed assets instead of embedding duplicate image bytes;
+  restore resolves those references from `Personal Collection Shelf Assets`.
+- Manual JSON exports remain self-contained and embed locally available images at local quality.
+- Retention: 30 newest files, 12 monthly representatives, and one representative per year.
+- Restore downloads the latest archive, validates SHA-256, asks for confirmation, and then uses normal import.
 
-- Strategy: last-write-wins by `UpdatedAt` (UTC) per record. Deletion participates: a tombstone with the newest `UpdatedAt` wins over an edit.
-- Tombstones are kept, not purged, so late-syncing devices converge; add a purge policy later (e.g. tombstones older than 90 days after all devices synced).
-- Document the strategy in README when implemented.
+## Security and deployment
 
-## Open items
+- `firebase/firestore.rules` allows only an authenticated matching UID.
+- Google Drive access uses `drive.file`, so the app cannot browse unrelated user files.
+- Deploy from `firebase/` with `firebase deploy --config firebase.deploy.json --only firestore:rules`.
 
-- Create the Firebase project and enable Email/Password auth (owner action; nothing to commit).
-- Decide whether Person/Studio sync happens in the first sync release or later.
-- Firestore security rules: restrict `users/{uid}/**` to `request.auth.uid == uid`.
+## Known follow-ups
+
+- Validate Google loopback authorization on the owner's Android device and Windows browser.
+- Add OS background scheduling if automatic sync while the app is closed becomes necessary.
+- Add server-time conflict metadata if users later operate devices with badly incorrect system clocks.
+- Add an optional tombstone compaction protocol only after per-device acknowledgements exist.

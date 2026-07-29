@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Localization\*.json" LogicalName="PersonalCollectionShelf.App.Localization.%(Filename)%(Extension)" />
+    <MauiAsset Include="Resources\Raw\firebase.json" LogicalName="firebase.json" Condition="Exists('Resources\Raw\firebase.json')" />
   </ItemGroup>
 
   <ItemGroup>

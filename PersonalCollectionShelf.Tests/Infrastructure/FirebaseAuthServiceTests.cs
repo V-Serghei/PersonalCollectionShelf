@@ -152,6 +152,14 @@ public sealed class FirebaseAuthServiceTests
             return SignInAsync(email, password, cancellationToken);
         }
 
+        public Task<AuthTokens> SignInWithGoogleAsync(
+            string idToken,
+            string accessToken,
+            CancellationToken cancellationToken = default)
+        {
+            return SignInAsync("google@example.com", accessToken, cancellationToken);
+        }
+
         public Task<AuthTokens> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default)
         {
             if (RefreshError is not null)

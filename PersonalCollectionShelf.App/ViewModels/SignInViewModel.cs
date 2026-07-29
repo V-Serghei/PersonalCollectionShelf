@@ -8,6 +8,7 @@ namespace PersonalCollectionShelf.App.ViewModels;
 public partial class SignInViewModel : BaseViewModel
 {
     private readonly IAuthService _authService;
+    private readonly IGoogleAccountService _googleAccountService;
 
     private string _email = string.Empty;
     private string _password = string.Empty;
@@ -15,10 +16,14 @@ public partial class SignInViewModel : BaseViewModel
     private string? _statusKey;
     private string _statusMessage = string.Empty;
 
-    public SignInViewModel(IAuthService authService, ILocalizationService localizationService)
+    public SignInViewModel(
+        IAuthService authService,
+        IGoogleAccountService googleAccountService,
+        ILocalizationService localizationService)
         : base(localizationService)
     {
         _authService = authService;
+        _googleAccountService = googleAccountService;
     }
 
     public string PageTitle => T("Settings.Account.SignIn");
@@ -32,6 +37,10 @@ public partial class SignInViewModel : BaseViewModel
     public string SignInButtonText => T("Settings.Account.SignIn");
 
     public string SignUpButtonText => T("Settings.Account.SignUp");
+
+    public string GoogleSignInButtonText => T("Settings.Account.GoogleSignIn");
+
+    public bool IsGoogleConfigured => _googleAccountService.IsConfigured;
 
     public string CancelButtonText => T("Common.Cancel");
 
@@ -85,6 +94,38 @@ public partial class SignInViewModel : BaseViewModel
     private async Task SignUpAsync()
     {
         await ExecuteAuthFlowAsync(_authService.SignUpAsync);
+    }
+
+    [RelayCommand]
+    private async Task GoogleSignInAsync()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var result = await _googleAccountService.SignInAsync();
+            if (result.Succeeded)
+            {
+                await CloseAsync();
+            }
+            else
+            {
+                SetStatus(result.ErrorKey ?? "Auth.Error.Unknown");
+            }
+        }
+        catch (Exception exception)
+        {
+            SetStatus("Auth.Error.Unknown");
+            await CrashReporter.ReportAsync(exception, "SignInViewModel.GoogleSignInAsync");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]

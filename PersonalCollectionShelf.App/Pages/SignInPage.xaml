@@ -34,6 +34,12 @@
 
                 <Label FontSize="12" Text="{Binding StatusMessage}" TextColor="{StaticResource Danger}" />
 
+                <Button
+                    Command="{Binding GoogleSignInCommand}"
+                    IsEnabled="{Binding IsNotBusy}"
+                    IsVisible="{Binding IsGoogleConfigured}"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Text="{Binding GoogleSignInButtonText}" />
                 <Button Command="{Binding SignInCommand}" IsEnabled="{Binding IsNotBusy}" Text="{Binding SignInButtonText}" />
                 <Button Command="{Binding SignUpCommand}" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding SignUpButtonText}" />
                 <Button Command="{Binding CancelCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding CancelButtonText}" />

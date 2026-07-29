@@ -15,12 +15,16 @@ public sealed class LocalDatabaseService
     {
         InitializeProvider();
 
+        DatabasePath = databasePath;
+
         Connection = new SQLiteAsyncConnection(
             databasePath,
             SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
     }
 
     public SQLiteAsyncConnection Connection { get; }
+
+    public string DatabasePath { get; }
 
     private static void InitializeProvider()
     {
@@ -73,6 +77,9 @@ public sealed class LocalDatabaseService
             await Connection.CreateTableAsync<PersonRelationRecord>();
             await Connection.CreateTableAsync<ProfessionRecord>();
             await Connection.CreateTableAsync<PersonProfessionRecord>();
+            await Connection.CreateTableAsync<CloudEntityStateRecord>();
+            await Connection.CreateTableAsync<CloudSyncMetadataRecord>();
+            await Connection.CreateTableAsync<CloudAssetStateRecord>();
 
             await MigrateLegacyDataAsync();
             _isInitialized = true;

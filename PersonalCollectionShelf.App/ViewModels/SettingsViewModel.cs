@@ -1,4 +1,7 @@
 using System.Collections.ObjectModel;
+using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,6 +13,7 @@ using PersonalCollectionShelf.Application.Interfaces;
 using PersonalCollectionShelf.App.Models;
 using PersonalCollectionShelf.App.Pages;
 using PersonalCollectionShelf.App.Services;
+using PersonalCollectionShelf.Infrastructure.Services.Sync;
 
 namespace PersonalCollectionShelf.App.ViewModels;
 
@@ -20,6 +24,10 @@ public partial class SettingsViewModel : BaseViewModel
     private readonly IPeopleManagementService _peopleManagementService;
     private readonly IAuthService _authService;
     private readonly IAppearanceService _appearanceService;
+    private readonly IGoogleAccountService _googleAccountService;
+    private readonly IGoogleDriveBackupService _driveBackupService;
+    private readonly CloudImageCompressor _cloudImageCompressor;
+    private readonly ICloudAssetStore _cloudAssetStore;
     private bool _suppressLanguageChange;
     private bool _isDarkTheme;
     private double _backgroundBlur;
@@ -40,6 +48,10 @@ public partial class SettingsViewModel : BaseViewModel
         IMediaItemService mediaItemService,
         IPeopleManagementService peopleManagementService,
         IAuthService authService,
+        IGoogleAccountService googleAccountService,
+        IGoogleDriveBackupService driveBackupService,
+        CloudImageCompressor cloudImageCompressor,
+        ICloudAssetStore cloudAssetStore,
         ILocalizationService localizationService,
         IAppearanceService appearanceService)
         : base(localizationService)
@@ -48,6 +60,10 @@ public partial class SettingsViewModel : BaseViewModel
         _mediaItemService = mediaItemService;
         _peopleManagementService = peopleManagementService;
         _authService = authService;
+        _googleAccountService = googleAccountService;
+        _driveBackupService = driveBackupService;
+        _cloudImageCompressor = cloudImageCompressor;
+        _cloudAssetStore = cloudAssetStore;
         _appearanceService = appearanceService;
         _isDarkTheme = _appearanceService.IsDarkTheme;
         _backgroundBlur = _appearanceService.BackgroundBlur;
@@ -238,7 +254,7 @@ public partial class SettingsViewModel : BaseViewModel
     [RelayCommand]
     private async Task SignOutAsync()
     {
-        await _authService.SignOutAsync();
+        await _googleAccountService.SignOutAsync();
         IsSignedIn = false;
         SignedInEmail = null;
         SetAccountStatus("Settings.Account.SignedOutMessage");
@@ -255,6 +271,12 @@ public partial class SettingsViewModel : BaseViewModel
     public string SyncDescription => T("Settings.Sync.Description");
 
     public string SyncNowButtonText => T("Settings.Sync.Button");
+
+    public string DriveBackupButtonText => T("Settings.DriveBackup.Button");
+
+    public string DriveRestoreButtonText => T("Settings.DriveRestore.Button");
+
+    public string DriveBackupDescription => T("Settings.DriveBackup.Description");
 
     public string ExportImportSectionTitle => T("Settings.ExportImport.Title");
 
@@ -324,22 +346,60 @@ public partial class SettingsViewModel : BaseViewModel
     [RelayCommand]
     private async Task SyncNowAsync()
     {
-        await _syncService.RequestSyncAsync();
-        _statusMessageKey = "Sync.Status.Requested";
-        StatusMessage = T(_statusMessageKey);
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            await _syncService.RequestSyncAsync();
+            if (await _googleAccountService.GetDriveAccessTokenAsync() is not null)
+            {
+                var backup = await BuildExportDocumentAsync(compressImages: true);
+                await _driveBackupService.UploadBackupAsync(
+                    $"personal-collection-shelf-{DateTime.UtcNow:yyyyMMdd-HHmmss}.zip",
+                    CreateBackupArchive(backup));
+            }
+            _statusMessageKey = "Sync.Status.Requested";
+            StatusMessage = T(_statusMessageKey);
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = T("Sync.Status.Failed");
+            await CrashReporter.ReportAsync(exception, "SettingsViewModel.SyncNowAsync");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task BackupToDriveAsync()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            var document = await BuildExportDocumentAsync(compressImages: true);
+            var archive = CreateBackupArchive(document);
+            var name = $"personal-collection-shelf-{DateTime.UtcNow:yyyyMMdd-HHmmss}.zip";
+            await _driveBackupService.UploadBackupAsync(name, archive);
+            StatusMessage = T("Settings.DriveBackup.Completed");
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = T("Settings.DriveBackup.Failed");
+            await CrashReporter.ReportAsync(exception, "SettingsViewModel.BackupToDriveAsync");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]
     private async Task ExportAsync()
     {
-        var userId = await GetCurrentUserIdAsync();
-        var items = await _mediaItemService.GetLibraryAsync(userId);
-        var people = await BuildPersonExportsAsync(userId);
-        var document = new LibraryExportDocument
-        {
-            Items = items,
-            People = people
-        };
+        var document = await BuildExportDocumentAsync();
 
         var exportsDirectory = Path.Combine(FileSystem.AppDataDirectory, "exports");
         Directory.CreateDirectory(exportsDirectory);
@@ -349,13 +409,75 @@ public partial class SettingsViewModel : BaseViewModel
         var json = JsonSerializer.Serialize(document, JsonOptions);
         await File.WriteAllTextAsync(filePath, json);
 
-        StatusMessage = string.Format(T("Settings.Export.Completed"), items.Count, filePath);
+        StatusMessage = string.Format(T("Settings.Export.Completed"), document.Items.Count, filePath);
 
         await Share.RequestAsync(new ShareFileRequest
         {
             Title = T("Settings.Export.ShareTitle"),
             File = new ShareFile(filePath)
         });
+    }
+
+    private async Task<LibraryExportDocument> BuildExportDocumentAsync(bool compressImages = false)
+    {
+        var userId = await GetCurrentUserIdAsync();
+        var items = await _mediaItemService.GetLibraryAsync(userId);
+        return new LibraryExportDocument
+        {
+            Items = items,
+            People = await BuildPersonExportsAsync(userId, compressImages),
+            Covers = await BuildCoverExportsAsync(items, compressImages)
+        };
+    }
+
+    private static byte[] CreateBackupArchive(LibraryExportDocument document)
+    {
+        var json = JsonSerializer.SerializeToUtf8Bytes(document, JsonOptions);
+        var checksum = Convert.ToHexString(SHA256.HashData(json)).ToLowerInvariant();
+        using var output = new MemoryStream();
+        using (var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            var dataEntry = archive.CreateEntry("library.json", CompressionLevel.Optimal);
+            using (var stream = dataEntry.Open())
+            {
+                stream.Write(json);
+            }
+
+            var checksumEntry = archive.CreateEntry("sha256.txt", CompressionLevel.NoCompression);
+            using var writer = new StreamWriter(checksumEntry.Open(), Encoding.UTF8);
+            writer.Write($"{checksum}  library.json");
+        }
+
+        return output.ToArray();
+    }
+
+    private async Task<IReadOnlyList<PortableMediaCover>> BuildCoverExportsAsync(
+        IReadOnlyList<MediaItemDto> items,
+        bool compressImages)
+    {
+        var covers = new List<PortableMediaCover>();
+        foreach (var item in items)
+        {
+            var path = ResolveFilePath(item.CoverUrl);
+            if (path is null) continue;
+            var image = await ReadPortableImageAsync(path, compressImages);
+            covers.Add(new PortableMediaCover
+            {
+                MediaItemId = item.Id,
+                Extension = image.Extension,
+                DataBase64 = image.DataBase64,
+                CloudObjectName = image.CloudObjectName
+            });
+        }
+
+        return covers;
+    }
+
+    private static string? ResolveFilePath(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        if (Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.IsFile) value = uri.LocalPath;
+        return File.Exists(value) ? value : null;
     }
 
     [RelayCommand]
@@ -390,6 +512,69 @@ public partial class SettingsViewModel : BaseViewModel
             return;
         }
 
+        await ImportDocumentAsync(document);
+    }
+
+    [RelayCommand]
+    private async Task RestoreFromDriveAsync()
+    {
+        if (IsBusy) return;
+        var confirmed = Shell.Current is not null && await Shell.Current.DisplayAlertAsync(
+            T("Settings.DriveRestore.ConfirmTitle"),
+            T("Settings.DriveRestore.ConfirmMessage"),
+            T("Settings.DriveRestore.Confirm"),
+            T("Common.Cancel"));
+        if (!confirmed) return;
+        IsBusy = true;
+        try
+        {
+            var backup = await _driveBackupService.DownloadLatestBackupAsync();
+            if (backup is null)
+            {
+                StatusMessage = T("Settings.DriveRestore.NotFound");
+                return;
+            }
+
+            using var input = new MemoryStream(backup.Content);
+            using var archive = new ZipArchive(input, ZipArchiveMode.Read);
+            var dataEntry = archive.GetEntry("library.json")
+                ?? throw new InvalidDataException("Backup does not contain library.json.");
+            await using var dataStream = dataEntry.Open();
+            using var buffer = new MemoryStream();
+            await dataStream.CopyToAsync(buffer);
+            var json = buffer.ToArray();
+
+            var checksumEntry = archive.GetEntry("sha256.txt");
+            if (checksumEntry is not null)
+            {
+                using var reader = new StreamReader(checksumEntry.Open(), Encoding.UTF8);
+                var expected = (await reader.ReadToEndAsync()).Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                var actual = Convert.ToHexString(SHA256.HashData(json)).ToLowerInvariant();
+                if (!string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidDataException("Backup checksum does not match.");
+                }
+            }
+
+            var document = JsonSerializer.Deserialize<LibraryExportDocument>(json, JsonOptions)
+                ?? throw new InvalidDataException("Backup data is invalid.");
+            await ImportDocumentAsync(document);
+            StatusMessage = T("Settings.DriveRestore.Completed");
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = T("Settings.DriveRestore.Failed");
+            await CrashReporter.ReportAsync(exception, "SettingsViewModel.RestoreFromDriveAsync");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ImportDocumentAsync(LibraryExportDocument document)
+    {
+
         var userId = await GetCurrentUserIdAsync();
         var imported = 0;
         var updated = 0;
@@ -421,14 +606,17 @@ public partial class SettingsViewModel : BaseViewModel
 
             foreach (var portablePhoto in exportedPerson.Photos)
             {
-                if (string.IsNullOrWhiteSpace(portablePhoto.DataBase64)) continue;
+                var photoBytes = await GetPortableImageBytesAsync(
+                    portablePhoto.DataBase64,
+                    portablePhoto.CloudObjectName);
+                if (photoBytes is null) continue;
                 var extension = NormalizePhotoExtension(portablePhoto.Extension);
                 var directory = Path.Combine(FileSystem.AppDataDirectory, "person-photos");
                 Directory.CreateDirectory(directory);
                 var photoPath = Path.Combine(directory, $"{portablePhoto.Id:N}{extension}");
                 if (!File.Exists(photoPath))
                 {
-                    await File.WriteAllBytesAsync(photoPath, Convert.FromBase64String(portablePhoto.DataBase64));
+                    await File.WriteAllBytesAsync(photoPath, photoBytes);
                 }
                 await _peopleManagementService.AddPhotoAsync(new AddPersonPhotoRequest
                 {
@@ -465,8 +653,28 @@ public partial class SettingsViewModel : BaseViewModel
             }
         }
 
-        foreach (var item in document.Items)
+        foreach (var exportedItem in document.Items)
         {
+            var item = exportedItem;
+            var portableCover = document.Covers.FirstOrDefault(cover => cover.MediaItemId == item.Id);
+            if (portableCover is not null)
+            {
+                var coverBytes = await GetPortableImageBytesAsync(
+                    portableCover.DataBase64,
+                    portableCover.CloudObjectName);
+                if (coverBytes is not null)
+                {
+                    var directory = Path.Combine(FileSystem.AppDataDirectory, "covers");
+                    Directory.CreateDirectory(directory);
+                    var coverPath = Path.Combine(directory, $"{item.Id:N}{NormalizePhotoExtension(portableCover.Extension)}");
+                    if (!File.Exists(coverPath))
+                    {
+                        await File.WriteAllBytesAsync(coverPath, coverBytes);
+                    }
+                    item = item with { CoverUrl = new Uri(coverPath).AbsoluteUri };
+                }
+            }
+
             var existing = item.Id == Guid.Empty
                 ? null
                 : await _mediaItemService.GetMediaItemAsync(item.Id, userId);
@@ -486,7 +694,9 @@ public partial class SettingsViewModel : BaseViewModel
         StatusMessage = string.Format(T("Settings.Import.Completed"), imported, updated);
     }
 
-    private async Task<IReadOnlyList<PersonExportDocument>> BuildPersonExportsAsync(string userId)
+    private async Task<IReadOnlyList<PersonExportDocument>> BuildPersonExportsAsync(
+        string userId,
+        bool compressImages = false)
     {
         var result = new List<PersonExportDocument>();
         foreach (var summary in await _peopleManagementService.GetCatalogAsync(userId))
@@ -497,20 +707,58 @@ public partial class SettingsViewModel : BaseViewModel
             foreach (var photo in person.Photos)
             {
                 if (!File.Exists(photo.FilePath)) continue;
+                var image = await ReadPortableImageAsync(photo.FilePath, compressImages);
                 photos.Add(new PortablePersonPhoto
                 {
                     Id = photo.Id == Guid.Empty ? Guid.NewGuid() : photo.Id,
                     Caption = photo.Caption,
                     IsPrimary = photo.IsPrimary,
                     SortOrder = photo.SortOrder,
-                    Extension = NormalizePhotoExtension(Path.GetExtension(photo.FilePath)),
-                    DataBase64 = Convert.ToBase64String(await File.ReadAllBytesAsync(photo.FilePath))
+                    Extension = image.Extension,
+                    DataBase64 = image.DataBase64,
+                    CloudObjectName = image.CloudObjectName
                 });
             }
             result.Add(new PersonExportDocument { Person = person, Photos = photos });
         }
         return result;
     }
+
+    private async Task<PortableImageData> ReadPortableImageAsync(string path, bool compress)
+    {
+        if (!compress)
+        {
+            return new PortableImageData(
+                NormalizePhotoExtension(Path.GetExtension(path)),
+                Convert.ToBase64String(await File.ReadAllBytesAsync(path)));
+        }
+
+        var compressed = await _cloudImageCompressor.CompressAsync(path, CancellationToken.None);
+        var objectName = $"{compressed.SourceHash}.webp";
+        await _cloudAssetStore.UploadAsync(
+            objectName,
+            compressed.Bytes,
+            "image/webp",
+            CancellationToken.None);
+        return new PortableImageData(".webp", string.Empty, objectName);
+    }
+
+    private async Task<byte[]?> GetPortableImageBytesAsync(string? dataBase64, string? cloudObjectName)
+    {
+        if (!string.IsNullOrWhiteSpace(dataBase64))
+        {
+            return Convert.FromBase64String(dataBase64);
+        }
+
+        return string.IsNullOrWhiteSpace(cloudObjectName)
+            ? null
+            : await _cloudAssetStore.DownloadAsync(cloudObjectName, CancellationToken.None);
+    }
+
+    private sealed record PortableImageData(
+        string Extension,
+        string DataBase64,
+        string? CloudObjectName = null);
 
     private static string NormalizePhotoExtension(string? extension)
     {

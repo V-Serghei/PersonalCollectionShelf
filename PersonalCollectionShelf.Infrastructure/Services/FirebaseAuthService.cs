@@ -7,7 +7,7 @@ namespace PersonalCollectionShelf.Infrastructure.Services;
 public sealed class FirebaseAuthService(
     FirebaseOptions options,
     IFirebaseAuthClient authClient,
-    IAuthTokenStore tokenStore) : IAuthService
+    IAuthTokenStore tokenStore) : IAuthService, IFirebaseSessionProvider
 {
     // Local rows are owned by this id. The Firebase uid is mapped to it during sync,
     // not here, so signing in never hides the existing local library.
@@ -42,6 +42,32 @@ public sealed class FirebaseAuthService(
     public Task<AuthResultDto> SignUpAsync(string email, string password, CancellationToken cancellationToken = default)
     {
         return ExecuteCredentialsFlowAsync(email, password, authClient.SignUpAsync, cancellationToken);
+    }
+
+    public async Task<AuthResultDto> SignInWithGoogleAsync(
+        string idToken,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        if (!options.IsGoogleConfigured)
+        {
+            return AuthResultDto.Failure("Auth.Error.GoogleNotConfigured");
+        }
+
+        try
+        {
+            var tokens = await authClient.SignInWithGoogleAsync(idToken, accessToken, cancellationToken);
+            await tokenStore.SaveAsync(tokens, cancellationToken);
+            return AuthResultDto.Success(tokens.UserId, tokens.Email);
+        }
+        catch (FirebaseAuthException exception)
+        {
+            return AuthResultDto.Failure(MapErrorKey(exception.ErrorCode));
+        }
+        catch (HttpRequestException)
+        {
+            return AuthResultDto.Failure("Auth.Error.Network");
+        }
     }
 
     public Task SignOutAsync(CancellationToken cancellationToken = default)
@@ -80,6 +106,18 @@ public sealed class FirebaseAuthService(
         {
             return null;
         }
+    }
+
+    public async Task<FirebaseSession?> GetSessionAsync(CancellationToken cancellationToken = default)
+    {
+        var idToken = await GetValidIdTokenAsync(cancellationToken);
+        if (idToken is null)
+        {
+            return null;
+        }
+
+        var tokens = await tokenStore.GetAsync(cancellationToken);
+        return tokens is null ? null : new FirebaseSession(tokens.UserId, idToken, tokens.Email);
     }
 
     private async Task<AuthResultDto> ExecuteCredentialsFlowAsync(

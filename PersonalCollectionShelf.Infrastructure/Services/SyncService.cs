@@ -13,13 +13,22 @@ public sealed class SyncService(FirestoreSyncService firestoreSyncService, IAuth
         {
             IsEnabled = firestoreSyncService.IsConfigured,
             IsSignedIn = isSignedIn,
-            LastSyncedAt = null,
-            MessageKey = "Sync.Status.NotConfigured"
+            LastSyncedAt = await firestoreSyncService.GetLastSyncedAtAsync(cancellationToken),
+            MessageKey = !firestoreSyncService.IsConfigured
+                ? "Sync.Status.NotConfigured"
+                : isSignedIn
+                    ? "Sync.Status.Ready"
+                    : "Sync.Status.SignInRequired"
         };
     }
 
-    public Task RequestSyncAsync(CancellationToken cancellationToken = default)
+    public async Task RequestSyncAsync(CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        if (!await authService.IsSignedInAsync(cancellationToken))
+        {
+            throw new InvalidOperationException("Sign in before synchronization.");
+        }
+
+        await firestoreSyncService.SyncAsync(cancellationToken);
     }
 }

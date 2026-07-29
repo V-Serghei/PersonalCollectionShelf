@@ -14,6 +14,7 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        InstallBundledCloudConfiguration();
         var builder = MauiApp.CreateBuilder();
 
         builder
@@ -30,6 +31,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<IMediaItemService, MediaItemService>();
         builder.Services.AddSingleton<ICollectionExplorerService, CollectionExplorerService>();
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
+        builder.Services.AddSingleton<IGoogleAccountService, GoogleAccountService>();
+        builder.Services.AddSingleton<IGoogleDriveBackupService, GoogleDriveBackupService>();
+        builder.Services.AddSingleton<ICloudAssetStore, GoogleDriveCloudAssetStore>();
 
         builder.Services.AddSingleton<AppShell>();
         builder.Services.AddTransient<LibraryViewModel>();
@@ -73,5 +77,20 @@ public static class MauiProgram
     private static string GetDatabasePath()
     {
         return Path.Combine(FileSystem.AppDataDirectory, "personalcollectionshelf.db3");
+    }
+
+    private static void InstallBundledCloudConfiguration()
+    {
+        var destination = Path.Combine(FileSystem.AppDataDirectory, "firebase.json");
+        try
+        {
+            using var source = FileSystem.OpenAppPackageFileAsync("firebase.json").GetAwaiter().GetResult();
+            using var target = File.Create(destination);
+            source.CopyTo(target);
+        }
+        catch (FileNotFoundException)
+        {
+            // Cloud configuration is optional; the Settings page explains how to enable it.
+        }
     }
 }
