@@ -15,18 +15,21 @@ public partial class MediaDetailsViewModel : BaseViewModel
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
     private readonly IMediaMetadataService _mediaMetadataService;
+    private readonly IExternalCatalogMetadataService _externalCatalogMetadataService;
     private Guid? _currentItemId;
 
     public MediaDetailsViewModel(
         IMediaItemService mediaItemService,
         IAuthService authService,
         IMediaMetadataService mediaMetadataService,
+        IExternalCatalogMetadataService externalCatalogMetadataService,
         ILocalizationService localizationService)
         : base(localizationService)
     {
         _mediaItemService = mediaItemService;
         _authService = authService;
         _mediaMetadataService = mediaMetadataService;
+        _externalCatalogMetadataService = externalCatalogMetadataService;
     }
 
     private MediaItemDto? _item;
@@ -59,10 +62,14 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
 
-    public bool CanRefreshOnlineMetadata => Item?.TmdbId.HasValue == true &&
-        Item.MediaType is MediaType.Movie or MediaType.Cartoon or MediaType.Series or MediaType.AnimatedSeries or MediaType.Anime;
+    public bool CanRefreshOnlineMetadata => Item is not null &&
+        (Item.TmdbId.HasValue || (!string.IsNullOrWhiteSpace(Item.CatalogProvider) && !string.IsNullOrWhiteSpace(Item.CatalogItemId)));
 
     public string RefreshMetadataTooltip => T("Metadata.Action.Refresh");
+
+    public bool HasCatalogSourceUrl => Uri.TryCreate(Item?.CatalogSourceUrl, UriKind.Absolute, out _);
+
+    public string CatalogSourceText => string.Format(T("Metadata.Source.Format"), Item?.CatalogProvider ?? T("Metadata.Source.Unknown"));
 
     public string PageTitle => Item?.Title ?? T("Details.Title");
 
@@ -77,7 +84,11 @@ public partial class MediaDetailsViewModel : BaseViewModel
     public string ExternalRatingsLabel => T("Metadata.Label.ExternalRatings");
 
     public bool HasExternalRatings => Item?.ImdbRating.HasValue == true ||
-                                      Item?.KinopoiskRating.HasValue == true;
+                                      Item?.KinopoiskRating.HasValue == true ||
+                                      Item?.CatalogRatingPrimary.HasValue == true ||
+                                      Item?.CatalogRatingSecondary.HasValue == true;
+
+    public bool HasExternalMetadata => HasExternalRatings || HasCatalogSourceUrl;
 
     public string ExternalRatingsValue
     {
@@ -91,6 +102,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
             var values = new List<string>();
             AddExternalRating(values, "IMDb", Item.ImdbRating, Item.ImdbVoteCount);
             AddExternalRating(values, T("Metadata.Kinopoisk"), Item.KinopoiskRating, Item.KinopoiskVoteCount);
+            AddExternalRating(values, Item.CatalogRatingPrimarySource ?? string.Empty, Item.CatalogRatingPrimary, Item.CatalogRatingPrimaryCount);
+            AddExternalRating(values, Item.CatalogRatingSecondarySource ?? string.Empty, Item.CatalogRatingSecondary, Item.CatalogRatingSecondaryCount);
             return values.Count == 0 ? T("Common.NotSet") : string.Join("   ·   ", values);
         }
     }
@@ -515,7 +528,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
     [RelayCommand]
     private async Task RefreshMetadataAsync()
     {
-        if (Item?.TmdbId is not { } tmdbId || !CanRefreshOnlineMetadata || IsBusy)
+        if (Item is null || !CanRefreshOnlineMetadata || IsBusy)
         {
             return;
         }
@@ -524,17 +537,27 @@ public partial class MediaDetailsViewModel : BaseViewModel
         IsBusy = true;
         try
         {
-            var candidate = await _mediaMetadataService.GetCandidateAsync(tmdbId, Item.MediaType);
-            var metadata = await _mediaMetadataService.GetDetailsAsync(candidate);
-            var coverUrl = Item.CoverUrl;
-            if (string.IsNullOrWhiteSpace(coverUrl))
-            {
-                coverUrl = await _mediaMetadataService.DownloadPosterAsync(candidate) ?? coverUrl;
-            }
-
             var userId = await GetCurrentUserIdAsync();
-            Item = await _mediaItemService.UpdateMediaItemAsync(
-                ToUpdateRequest(Item, userId, Item.IsFavorite, metadata, coverUrl));
+            if (Item.TmdbId is { } tmdbId)
+            {
+                var candidate = await _mediaMetadataService.GetCandidateAsync(tmdbId, Item.MediaType);
+                var metadata = await _mediaMetadataService.GetDetailsAsync(candidate);
+                var coverUrl = Item.CoverUrl;
+                if (string.IsNullOrWhiteSpace(coverUrl))
+                    coverUrl = await _mediaMetadataService.DownloadPosterAsync(candidate) ?? coverUrl;
+                Item = await _mediaItemService.UpdateMediaItemAsync(
+                    ToUpdateRequest(Item, userId, Item.IsFavorite, metadata, refreshedCoverUrl: coverUrl));
+            }
+            else if (Enum.TryParse<ExternalCatalogProvider>(Item.CatalogProvider, out var provider) && Item.CatalogItemId is { } externalId)
+            {
+                var candidate = await _externalCatalogMetadataService.GetCandidateAsync(provider, externalId, Item.MediaType);
+                var catalog = await _externalCatalogMetadataService.GetDetailsAsync(candidate);
+                var coverUrl = Item.CoverUrl;
+                if (string.IsNullOrWhiteSpace(coverUrl))
+                    coverUrl = await _externalCatalogMetadataService.DownloadImageAsync(candidate) ?? coverUrl;
+                Item = await _mediaItemService.UpdateMediaItemAsync(
+                    ToUpdateRequest(Item, userId, Item.IsFavorite, catalog: catalog, refreshedCoverUrl: coverUrl));
+            }
         }
         catch (Exception exception)
         {
@@ -544,6 +567,15 @@ public partial class MediaDetailsViewModel : BaseViewModel
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenCatalogSourceAsync()
+    {
+        if (Uri.TryCreate(Item?.CatalogSourceUrl, UriKind.Absolute, out var uri))
+        {
+            await Launcher.Default.OpenAsync(uri);
         }
     }
 
@@ -583,6 +615,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(PageTitle));
         OnPropertyChanged(nameof(CanRefreshOnlineMetadata));
         OnPropertyChanged(nameof(RefreshMetadataTooltip));
+        OnPropertyChanged(nameof(HasCatalogSourceUrl));
+        OnPropertyChanged(nameof(CatalogSourceText));
         OnPropertyChanged(nameof(OriginalTitleValue));
         OnPropertyChanged(nameof(DescriptionValue));
         OnPropertyChanged(nameof(CategoryValue));
@@ -628,6 +662,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(ExternalRatingsLabel));
         OnPropertyChanged(nameof(ExternalRatingsValue));
         OnPropertyChanged(nameof(HasExternalRatings));
+        OnPropertyChanged(nameof(HasExternalMetadata));
         OnPropertyChanged(nameof(RatingShort));
         OnPropertyChanged(nameof(HasRating));
         OnPropertyChanged(nameof(ProgressPercent));
@@ -671,6 +706,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
         string userId,
         bool isFavorite,
         MediaMetadataDetails? metadata = null,
+        ExternalCatalogDetails? catalog = null,
         string? refreshedCoverUrl = null)
     {
         return new UpdateMediaItemRequest
@@ -679,30 +715,34 @@ public partial class MediaDetailsViewModel : BaseViewModel
             UserId = userId,
             Title = item.Title,
             OriginalTitle = metadata?.Candidate.OriginalTitle ?? item.OriginalTitle,
-            Description = metadata?.Description ?? item.Description,
+            Description = metadata?.Description ?? catalog?.Description ?? item.Description,
             Category = item.Category,
             MediaCategoryId = item.MediaCategoryId,
             Tags = item.Tags,
             TagNames = item.TagNames,
-            Genres = metadata?.Genres ?? item.Genres,
-            Contributions = metadata is null
-                ? item.Contributions.Select(value => new PersonCreditInput
-            {
-                PersonId = value.PersonId,
-                CreditRoleId = value.CreditRoleId,
-                Name = value.PersonName,
-                Role = value.Role,
-                SortOrder = value.SortOrder,
-                Details = value.Details,
-                CreditedAs = value.CreditedAs
-            }).ToList()
-                : metadata.People.Select((value, index) => new PersonCreditInput
+            Genres = metadata?.Genres ?? catalog?.Genres ?? item.Genres,
+            Contributions = metadata is not null
+                ? metadata.People.Select((value, index) => new PersonCreditInput
                 {
                     Name = value.Name,
                     Role = value.Role,
                     SortOrder = index,
                     Details = value.Details
-                }).ToList(),
+                }).ToList()
+                : catalog is not null
+                    ? catalog.Authors.Select((name, index) => new PersonCreditInput { Name = name, Role = ContributionRole.Author, SortOrder = index })
+                        .Concat(catalog.Developers.Select((name, index) => new PersonCreditInput { Name = name, Role = ContributionRole.Developer, SortOrder = index }))
+                        .ToList()
+                    : item.Contributions.Select(value => new PersonCreditInput
+                    {
+                        PersonId = value.PersonId,
+                        CreditRoleId = value.CreditRoleId,
+                        Name = value.PersonName,
+                        Role = value.Role,
+                        SortOrder = value.SortOrder,
+                        Details = value.Details,
+                        CreditedAs = value.CreditedAs
+                    }).ToList(),
             StudioCredits = metadata is null
                 ? item.StudioCredits.Select(value => new StudioCreditInput
             {
@@ -717,25 +757,45 @@ public partial class MediaDetailsViewModel : BaseViewModel
                     Role = value.Role,
                     SortOrder = index
                 }).ToList(),
-            BookDetails = item.BookDetails is null ? null : new BookDetailsInput
-            {
-                Subtitle = item.BookDetails.Subtitle,
-                Publisher = item.BookDetails.Publisher,
-                Edition = item.BookDetails.Edition,
-                EditionNumber = item.BookDetails.EditionNumber,
-                EditionYear = item.BookDetails.EditionYear,
-                OriginalPublicationYear = item.BookDetails.OriginalPublicationYear,
-                TranslationYear = item.BookDetails.TranslationYear,
-                OriginalLanguage = item.BookDetails.OriginalLanguage,
-                Language = item.BookDetails.Language,
-                PageCount = item.BookDetails.PageCount,
-                Isbn10 = item.BookDetails.Isbn10,
-                Isbn13 = item.BookDetails.Isbn13,
-                Format = item.BookDetails.Format,
-                Binding = item.BookDetails.Binding,
-                CountryOfOrigin = item.BookDetails.CountryOfOrigin,
-                AgeRating = item.BookDetails.AgeRating
-            },
+            BookDetails = catalog is not null && item.MediaType == MediaType.Book
+                ? new BookDetailsInput
+                {
+                    Subtitle = catalog.Candidate.Subtitle,
+                    Publisher = catalog.Publisher ?? item.BookDetails?.Publisher,
+                    Edition = item.BookDetails?.Edition,
+                    EditionNumber = item.BookDetails?.EditionNumber,
+                    EditionYear = catalog.Candidate.Year ?? item.BookDetails?.EditionYear,
+                    OriginalPublicationYear = item.BookDetails?.OriginalPublicationYear,
+                    TranslationYear = item.BookDetails?.TranslationYear,
+                    OriginalLanguage = item.BookDetails?.OriginalLanguage,
+                    Language = catalog.Language ?? item.BookDetails?.Language,
+                    PageCount = catalog.PageCount ?? item.BookDetails?.PageCount,
+                    Isbn10 = catalog.Isbn10 ?? item.BookDetails?.Isbn10,
+                    Isbn13 = catalog.Isbn13 ?? item.BookDetails?.Isbn13,
+                    Format = item.BookDetails?.Format,
+                    Binding = item.BookDetails?.Binding,
+                    CountryOfOrigin = item.BookDetails?.CountryOfOrigin,
+                    AgeRating = item.BookDetails?.AgeRating
+                }
+                : item.BookDetails is null ? null : new BookDetailsInput
+                {
+                    Subtitle = item.BookDetails.Subtitle,
+                    Publisher = item.BookDetails.Publisher,
+                    Edition = item.BookDetails.Edition,
+                    EditionNumber = item.BookDetails.EditionNumber,
+                    EditionYear = item.BookDetails.EditionYear,
+                    OriginalPublicationYear = item.BookDetails.OriginalPublicationYear,
+                    TranslationYear = item.BookDetails.TranslationYear,
+                    OriginalLanguage = item.BookDetails.OriginalLanguage,
+                    Language = item.BookDetails.Language,
+                    PageCount = item.BookDetails.PageCount,
+                    Isbn10 = item.BookDetails.Isbn10,
+                    Isbn13 = item.BookDetails.Isbn13,
+                    Format = item.BookDetails.Format,
+                    Binding = item.BookDetails.Binding,
+                    CountryOfOrigin = item.BookDetails.CountryOfOrigin,
+                    AgeRating = item.BookDetails.AgeRating
+                },
             MovieDetails = metadata is not null && item.MediaType is MediaType.Movie or MediaType.Cartoon
                 ? new MovieDetailsInput
                 {
@@ -764,8 +824,29 @@ public partial class MediaDetailsViewModel : BaseViewModel
                     OriginalLanguage = metadata.OriginalLanguage
                 }
                 : item.EpisodicDetails,
-            GraphicPublicationDetails = item.GraphicPublicationDetails,
-            GameDetails = item.GameDetails,
+            GraphicPublicationDetails = catalog is not null && item.MediaType is MediaType.Manga or MediaType.Comic
+                ? new GraphicPublicationDetailsInput
+                {
+                    VolumeCount = catalog.VolumeCount ?? item.GraphicPublicationDetails?.VolumeCount,
+                    ChapterOrIssueCount = catalog.IssueCount ?? item.GraphicPublicationDetails?.ChapterOrIssueCount,
+                    ReadingDirection = item.GraphicPublicationDetails?.ReadingDirection,
+                    IsColor = item.GraphicPublicationDetails?.IsColor,
+                    PublicationStatus = item.GraphicPublicationDetails?.PublicationStatus,
+                    Imprint = catalog.Publisher ?? item.GraphicPublicationDetails?.Imprint,
+                    OriginalLanguage = catalog.Language ?? item.GraphicPublicationDetails?.OriginalLanguage
+                }
+                : item.GraphicPublicationDetails,
+            GameDetails = catalog is not null && item.MediaType == MediaType.Game
+                ? new GameDetailsInput
+                {
+                    Platform = catalog.Platform ?? item.GameDetails?.Platform,
+                    MainStoryHours = item.GameDetails?.MainStoryHours,
+                    CompletionistHours = item.GameDetails?.CompletionistHours,
+                    GameMode = catalog.GameMode ?? item.GameDetails?.GameMode,
+                    Engine = catalog.Engine ?? item.GameDetails?.Engine,
+                    Region = item.GameDetails?.Region
+                }
+                : item.GameDetails,
             Collection = item.Collection is null ? null : new CollectionMembershipInput
             {
                 CollectionId = item.Collection.CollectionId,
@@ -780,7 +861,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
                 Notes = value.Notes
             }).ToList(),
             Creator = item.Creator,
-            Publisher = item.Publisher,
+            Publisher = catalog?.Publisher ?? item.Publisher,
             SerialNumber = item.SerialNumber,
             Cast = item.Cast,
             MediaType = item.MediaType,
@@ -790,7 +871,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
             ProgressTotal = item.ProgressTotal,
             StartDate = item.StartDate,
             FinishDate = item.FinishDate,
-            ReleaseYear = metadata?.Candidate.Year ?? item.ReleaseYear,
+            ReleaseYear = metadata?.Candidate.Year ?? catalog?.Candidate.Year ?? item.ReleaseYear,
             CoverUrl = refreshedCoverUrl ?? item.CoverUrl,
             TmdbId = item.TmdbId,
             ImdbId = metadata?.ImdbId ?? item.ImdbId,
@@ -801,7 +882,16 @@ public partial class MediaDetailsViewModel : BaseViewModel
             ImdbVoteCount = metadata?.ImdbVoteCount ?? item.ImdbVoteCount,
             KinopoiskRating = metadata?.KinopoiskRating ?? item.KinopoiskRating,
             KinopoiskVoteCount = metadata?.KinopoiskVoteCount ?? item.KinopoiskVoteCount,
-            ExternalRatingsUpdatedAt = metadata?.RatingsUpdatedAtUtc ?? item.ExternalRatingsUpdatedAt,
+            ExternalRatingsUpdatedAt = metadata?.RatingsUpdatedAtUtc ?? catalog?.UpdatedAtUtc ?? item.ExternalRatingsUpdatedAt,
+            CatalogProvider = catalog?.Candidate.Provider.ToString() ?? item.CatalogProvider,
+            CatalogItemId = catalog?.Candidate.ExternalId ?? item.CatalogItemId,
+            CatalogSourceUrl = catalog?.Candidate.SourceUrl ?? item.CatalogSourceUrl,
+            CatalogRatingPrimarySource = catalog?.PrimaryRatingSource ?? item.CatalogRatingPrimarySource,
+            CatalogRatingPrimary = catalog?.PrimaryRating ?? item.CatalogRatingPrimary,
+            CatalogRatingPrimaryCount = catalog?.PrimaryRatingCount ?? item.CatalogRatingPrimaryCount,
+            CatalogRatingSecondarySource = catalog?.SecondaryRatingSource ?? item.CatalogRatingSecondarySource,
+            CatalogRatingSecondary = catalog?.SecondaryRating ?? item.CatalogRatingSecondary,
+            CatalogRatingSecondaryCount = catalog?.SecondaryRatingCount ?? item.CatalogRatingSecondaryCount,
             Notes = item.Notes,
             IsFavorite = isFavorite
         };

@@ -24,8 +24,11 @@ public partial class EditMediaItemViewModel
     public int? KinopoiskVoteCount { get; private set; }
     public DateTime? ExternalRatingsUpdatedAt { get; private set; }
 
-    public bool IsAutofillSupported => SelectedMediaType?.Value is MediaType.Movie or MediaType.Cartoon or
+    public bool IsScreenAutofillSupported => SelectedMediaType?.Value is MediaType.Movie or MediaType.Cartoon or
         MediaType.Series or MediaType.AnimatedSeries or MediaType.Anime;
+
+    public bool IsAutofillSupported => IsScreenAutofillSupported ||
+        (SelectedMediaType?.Value is { } mediaType && _externalCatalogMetadataService.Supports(mediaType));
 
     public bool IsMetadataPickerOpen
     {
@@ -53,7 +56,8 @@ public partial class EditMediaItemViewModel
         set => SetProperty(ref _metadataStatusMessage, value);
     }
 
-    public bool HasExternalRatings => ImdbRating.HasValue || KinopoiskRating.HasValue;
+    public bool HasExternalRatings => ImdbRating.HasValue || KinopoiskRating.HasValue ||
+                                      CatalogRatingPrimary.HasValue || CatalogRatingSecondary.HasValue;
 
     public string ExternalRatingsSummary
     {
@@ -62,6 +66,8 @@ public partial class EditMediaItemViewModel
             var values = new List<string>();
             if (ImdbRating.HasValue) values.Add($"IMDb {ImdbRating:0.0} ({ImdbVoteCount ?? 0:N0})");
             if (KinopoiskRating.HasValue) values.Add($"{T("Metadata.Kinopoisk")} {KinopoiskRating:0.0} ({KinopoiskVoteCount ?? 0:N0})");
+            if (CatalogRatingPrimary.HasValue) values.Add($"{CatalogRatingPrimarySource} {CatalogRatingPrimary:0.0} ({CatalogRatingPrimaryCount ?? 0:N0})");
+            if (CatalogRatingSecondary.HasValue) values.Add($"{CatalogRatingSecondarySource} {CatalogRatingSecondary:0.0} ({CatalogRatingSecondaryCount ?? 0:N0})");
             return string.Join("  ·  ", values);
         }
     }
@@ -86,6 +92,12 @@ public partial class EditMediaItemViewModel
         if (string.IsNullOrWhiteSpace(ItemTitle))
         {
             ErrorMessage = T("Metadata.Error.TitleRequired");
+            return;
+        }
+
+        if (!IsScreenAutofillSupported)
+        {
+            await SearchCatalogMetadataAsync();
             return;
         }
 
@@ -235,6 +247,7 @@ public partial class EditMediaItemViewModel
         KinopoiskRating = item.KinopoiskRating;
         KinopoiskVoteCount = item.KinopoiskVoteCount;
         ExternalRatingsUpdatedAt = item.ExternalRatingsUpdatedAt;
+        LoadCatalogMetadata(item);
         NotifyExternalMetadataChanged();
     }
 
@@ -250,6 +263,7 @@ public partial class EditMediaItemViewModel
         KinopoiskRating = null;
         KinopoiskVoteCount = null;
         ExternalRatingsUpdatedAt = null;
+        ResetCatalogMetadata();
         MetadataCandidates.Clear();
         IsMetadataPickerOpen = false;
         NotifyExternalMetadataChanged();

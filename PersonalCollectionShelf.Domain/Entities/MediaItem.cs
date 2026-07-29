@@ -45,6 +45,15 @@ public sealed class MediaItem
     public int? KinopoiskVoteCount { get; set; }
 
     public DateTime? ExternalRatingsUpdatedAt { get; set; }
+    public string? CatalogProvider { get; set; }
+    public string? CatalogItemId { get; set; }
+    public string? CatalogSourceUrl { get; set; }
+    public string? CatalogRatingPrimarySource { get; set; }
+    public decimal? CatalogRatingPrimary { get; set; }
+    public int? CatalogRatingPrimaryCount { get; set; }
+    public string? CatalogRatingSecondarySource { get; set; }
+    public decimal? CatalogRatingSecondary { get; set; }
+    public int? CatalogRatingSecondaryCount { get; set; }
 
     public MediaType MediaType { get; set; } = MediaType.Other;
 

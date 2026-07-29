@@ -529,4 +529,8 @@
   ,"Metadata.TmdbAttribution": "This product uses the TMDB API but is not endorsed or certified by TMDB."
   ,"Metadata.Action.Refresh": "Refresh online information and ratings"
   ,"Metadata.Error.RefreshFailed": "Could not refresh online information. Check the internet connection and try again."
+  ,"Metadata.Error.CatalogNotConfigured": "This source is not configured yet. Add the required provider key to metadata.json."
+  ,"Metadata.CatalogAttribution": "Metadata may come from Google Books, Open Library, Comic Vine, or RAWG. Select a result to store its source link and attribution."
+  ,"Metadata.Source.Format": "Source: {0}"
+  ,"Metadata.Source.Unknown": "online catalog"
 }

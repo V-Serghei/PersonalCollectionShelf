@@ -32,11 +32,13 @@ public partial class EditMediaItemViewModel : BaseViewModel
     private readonly IPersonService _personService;
     private readonly IAuthService _authService;
     private readonly IMediaMetadataService _mediaMetadataService;
+    private readonly IExternalCatalogMetadataService _externalCatalogMetadataService;
     public EditMediaItemViewModel(
         IMediaItemService mediaItemService,
         IPersonService personService,
         IAuthService authService,
         IMediaMetadataService mediaMetadataService,
+        IExternalCatalogMetadataService externalCatalogMetadataService,
         ILocalizationService localizationService)
         : base(localizationService)
     {
@@ -44,6 +46,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
         _personService = personService;
         _authService = authService;
         _mediaMetadataService = mediaMetadataService;
+        _externalCatalogMetadataService = externalCatalogMetadataService;
         ReloadOptions();
         InitializeBookFields();
         InitializeMovieFields();
@@ -526,6 +529,15 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     KinopoiskRating = KinopoiskRating,
                     KinopoiskVoteCount = KinopoiskVoteCount,
                     ExternalRatingsUpdatedAt = ExternalRatingsUpdatedAt,
+                    CatalogProvider = CatalogProvider,
+                    CatalogItemId = CatalogItemId,
+                    CatalogSourceUrl = CatalogSourceUrl,
+                    CatalogRatingPrimarySource = CatalogRatingPrimarySource,
+                    CatalogRatingPrimary = CatalogRatingPrimary,
+                    CatalogRatingPrimaryCount = CatalogRatingPrimaryCount,
+                    CatalogRatingSecondarySource = CatalogRatingSecondarySource,
+                    CatalogRatingSecondary = CatalogRatingSecondary,
+                    CatalogRatingSecondaryCount = CatalogRatingSecondaryCount,
                     Cast = BuildCastList(),
                     Contributions = BuildContributions(),
                     StudioCredits = BuildStudioCredits(),
@@ -575,6 +587,15 @@ public partial class EditMediaItemViewModel : BaseViewModel
                     KinopoiskRating = KinopoiskRating,
                     KinopoiskVoteCount = KinopoiskVoteCount,
                     ExternalRatingsUpdatedAt = ExternalRatingsUpdatedAt,
+                    CatalogProvider = CatalogProvider,
+                    CatalogItemId = CatalogItemId,
+                    CatalogSourceUrl = CatalogSourceUrl,
+                    CatalogRatingPrimarySource = CatalogRatingPrimarySource,
+                    CatalogRatingPrimary = CatalogRatingPrimary,
+                    CatalogRatingPrimaryCount = CatalogRatingPrimaryCount,
+                    CatalogRatingSecondarySource = CatalogRatingSecondarySource,
+                    CatalogRatingSecondary = CatalogRatingSecondary,
+                    CatalogRatingSecondaryCount = CatalogRatingSecondaryCount,
                     Cast = BuildCastList(),
                     Contributions = BuildContributions(),
                     StudioCredits = BuildStudioCredits(),

@@ -156,6 +156,9 @@ public partial class EditMediaItemPage : ContentPage, IQueryAttributable
         MetadataPickerCard.Padding = usesCompactLayout ? new Thickness(16) : new Thickness(24);
         MetadataPickerCard.WidthRequest = usesCompactLayout ? -1 : 760;
         MetadataPickerCard.HorizontalOptions = usesCompactLayout ? LayoutOptions.Fill : LayoutOptions.Center;
+        CatalogMetadataPickerCard.Padding = usesCompactLayout ? new Thickness(16) : new Thickness(24);
+        CatalogMetadataPickerCard.WidthRequest = usesCompactLayout ? -1 : 760;
+        CatalogMetadataPickerCard.HorizontalOptions = usesCompactLayout ? LayoutOptions.Fill : LayoutOptions.Center;
     }
 
     private static void ConfigureStackingGrid(

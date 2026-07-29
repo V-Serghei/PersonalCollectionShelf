@@ -110,10 +110,11 @@
                 </Border>
             </Grid>
 
-            <Border IsVisible="{Binding HasExternalRatings}" Padding="16" Style="{StaticResource CardBorderStyle}">
+            <Border IsVisible="{Binding HasExternalMetadata}" Padding="16" Style="{StaticResource CardBorderStyle}">
                 <VerticalStackLayout Spacing="6">
                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ExternalRatingsLabel}" />
-                    <Label FontAttributes="Bold" FontSize="16" Text="{Binding ExternalRatingsValue}" TextColor="{DynamicResource MutedForeground}" />
+                    <Label FontAttributes="Bold" FontSize="16" IsVisible="{Binding HasExternalRatings}" Text="{Binding ExternalRatingsValue}" TextColor="{DynamicResource MutedForeground}" />
+                    <Button Command="{Binding OpenCatalogSourceCommand}" HorizontalOptions="Start" IsVisible="{Binding HasCatalogSourceUrl}" Style="{StaticResource LinkButtonStyle}" Text="{Binding CatalogSourceText}" />
                 </VerticalStackLayout>
             </Border>
 

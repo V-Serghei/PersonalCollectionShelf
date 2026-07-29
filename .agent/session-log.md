@@ -141,3 +141,8 @@
   TMDB description/year/genres/credits/type details and IMDb/Kinopoisk rating snapshots, downloading a
   poster only when none exists. Personal rating, status, notes, dates, favorite state, and existing cover
   remain untouched; no provider calls occur on startup, item opening, or cloud synchronization.
+- Extended the same workflow to books, manga, comics, and games. Open Library works keylessly with a
+  contact-aware User-Agent; Google Books, Comic Vine, and RAWG are optional API-key sources; RAWG replaced IGDB to avoid Twitch 2FA,
+  automatically renewed Twitch client-credentials tokens. Added combined candidate UI, provider-specific
+  parsers, cover download, structured field mapping, source attribution links, generic two-rating storage,
+  import/export and Firestore-compatible persistence, and one-item manual refresh.

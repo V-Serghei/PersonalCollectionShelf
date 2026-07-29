@@ -619,6 +619,48 @@
             </Border>
         </Grid>
 
+        <Grid Grid.ColumnSpan="3" BackgroundColor="#99000000" IsVisible="{Binding IsCatalogMetadataPickerOpen}" Padding="24">
+            <Border x:Name="CatalogMetadataPickerCard" Padding="24" BackgroundColor="{DynamicResource Card}" HorizontalOptions="Center" MaximumWidthRequest="760" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 16" VerticalOptions="Center" WidthRequest="760">
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Spacing="3">
+                            <Label FontAttributes="Bold" FontSize="20" Text="{Binding MetadataPickerTitle}" />
+                            <Label FontSize="12" Text="{Binding MetadataPickerHint}" TextColor="{DynamicResource MutedForeground}" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Command="{Binding CloseCatalogMetadataPickerCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="×" />
+                    </Grid>
+                    <ActivityIndicator IsRunning="{Binding IsMetadataSearching}" IsVisible="{Binding IsMetadataSearching}" />
+                    <Label HorizontalTextAlignment="Center" IsVisible="{Binding IsNotMetadataSearching}" Text="{Binding MetadataStatusMessage}" TextColor="{DynamicResource MutedForeground}" />
+                    <CollectionView HeightRequest="480" ItemsSource="{Binding CatalogMetadataCandidates}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="services:ExternalCatalogCandidate">
+                                <Border Margin="0,0,0,10" Padding="12" Style="{StaticResource MutedBorderStyle}">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.SelectCatalogMetadataCandidateCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="72,*" ColumnSpacing="14">
+                                        <Border HeightRequest="104" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 8" WidthRequest="72">
+                                            <Image Aspect="AspectFill" Source="{Binding ImageUrl}" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                            <Label FontAttributes="Bold" FontSize="15" LineBreakMode="TailTruncation" Text="{Binding Title}" />
+                                            <Label FontSize="12" Text="{Binding Subtitle}" TextColor="{DynamicResource MutedForeground}" />
+                                            <Label FontSize="12" Text="{Binding CreatorSummary}" />
+                                            <Label FontSize="12" Text="{Binding EditionSummary}" TextColor="{DynamicResource MutedForeground}" />
+                                            <Label FontSize="12" Text="{Binding YearText}" />
+                                            <Label FontSize="12" Text="{Binding RatingText}" TextColor="{DynamicResource Primary}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <Label FontSize="11" Text="{Binding CatalogAttributionText}" TextColor="{DynamicResource MutedForeground}" />
+                    <Button Command="{Binding CloseCatalogMetadataPickerCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding MetadataCloseText}" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
         <Grid x:Name="PersonPickerOverlay" Grid.ColumnSpan="3" BackgroundColor="#99000000" IsVisible="{Binding IsPersonPickerOpen}" Padding="24">
             <Border x:Name="PersonPickerCard" Padding="24" BackgroundColor="{DynamicResource Card}" HorizontalOptions="Center" MaximumWidthRequest="500" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 16" VerticalOptions="Center" WidthRequest="500">
                 <ScrollView x:Name="PersonPickerScroll">

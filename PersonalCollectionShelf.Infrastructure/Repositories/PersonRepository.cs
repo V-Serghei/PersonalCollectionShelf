@@ -40,6 +40,17 @@ public sealed class PersonRepository(LocalDatabaseService databaseService) : IPe
     {
         await databaseService.InitializeAsync(cancellationToken);
 
+        var exact = await databaseService.Connection
+            .Table<PersonRecord>()
+            .FirstOrDefaultAsync(record =>
+                record.UserId == userId &&
+                record.Name == name &&
+                record.DeletedAt == null);
+        if (exact is not null)
+        {
+            return ToDomain(exact);
+        }
+
         var records = await databaseService.Connection
             .Table<PersonRecord>()
             .Where(record => record.UserId == userId && record.DeletedAt == null)

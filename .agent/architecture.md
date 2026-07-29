@@ -39,3 +39,8 @@ Important decisions:
   while the detail-page refresh icon re-fetches one TMDB-linked item. Startup, item opening, and cloud
   synchronization never crawl or refresh the library. Refresh preserves personal tracking fields and a
   user-selected cover while replacing provider-owned descriptive metadata, credits, and rating snapshots.
+- Books and manga aggregate Open Library plus optional Google Books results; comics add optional Comic
+  Vine results; games use the optional RAWG personal-use API. A generic catalog provider/id,
+  attribution URL, and primary/secondary rating snapshot live on `MediaItem`, allowing all providers to
+  share SQLite, Firestore, import/export, detail attribution, and manual refresh behavior without adding
+  a provider-specific table for every catalog.

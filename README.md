@@ -133,6 +133,19 @@ Copy `metadata.example.json` to a private location, replace the TMDB placeholder
 
 Rebuild Windows and Android. `metadata.json` is ignored by Git and bundled only into local builds. Do not publish either token or a build containing your personal tokens. The required TMDB attribution is displayed in the title picker.
 
+Additional personal/non-commercial catalog providers use the same search, local-cover, saved-rating,
+and manual-refresh flow:
+
+- **Open Library (books and manga):** no key is required. Set `openLibraryContactEmail` so requests carry the application name and contact required by Open Library's API guidance.
+- **Google Books (books and manga):** in Google Cloud Console select this project, open **APIs & Services → Library**, enable **Books API**, then open **Credentials → Create credentials → API key**. Restrict the key to Books API and put it in `googleBooksApiKey`.
+- **Comic Vine (comics and supplementary manga results):** sign in at `https://comicvine.gamespot.com/api/`, copy the personal API key shown on that page, and put it in `comicVineApiKey`. Comic Vine is non-commercial only; the app stores and displays a link to the selected source.
+- **RAWG (games):** create a free account at `https://rawg.io/`, open `https://rawg.io/apidocs`, choose **Get API Key**, and set `rawgApiKey`. The free personal plan allows up to 20,000 requests per month and requires a RAWG source link on pages using its data; the app stores and displays that link.
+
+Open Library works immediately. The other providers appear automatically after their corresponding
+configuration values are present and the app is rebuilt. No provider is queried on startup, item opening,
+or Firestore/Drive synchronization; calls happen only after selecting an autofill candidate or pressing
+the refresh icon for one linked item.
+
 The app project targets Windows by default so Rider can build and run the desktop app without touching Android tooling. Windows builds are self-contained for the Windows App SDK runtime. Android is opt-in and must be enabled explicitly with `-p:EnableAndroidTarget=true`.
 
 Useful commands:

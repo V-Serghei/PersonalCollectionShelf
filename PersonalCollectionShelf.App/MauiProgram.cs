@@ -33,6 +33,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
         builder.Services.AddSingleton(MediaMetadataOptions.Load(FileSystem.AppDataDirectory));
         builder.Services.AddSingleton<IMediaMetadataService, OnlineMediaMetadataService>();
+        builder.Services.AddSingleton<IExternalCatalogMetadataService, ExternalCatalogMetadataService>();
         builder.Services.AddSingleton<IGoogleAccountService, GoogleAccountService>();
         builder.Services.AddSingleton<IGoogleDriveBackupService, GoogleDriveBackupService>();
         builder.Services.AddSingleton<ICloudAssetStore, GoogleDriveCloudAssetStore>();

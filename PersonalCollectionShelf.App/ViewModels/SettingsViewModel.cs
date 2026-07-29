@@ -938,6 +938,15 @@ public partial class SettingsViewModel : BaseViewModel
             KinopoiskRating = item.KinopoiskRating,
             KinopoiskVoteCount = item.KinopoiskVoteCount,
             ExternalRatingsUpdatedAt = item.ExternalRatingsUpdatedAt,
+            CatalogProvider = item.CatalogProvider,
+            CatalogItemId = item.CatalogItemId,
+            CatalogSourceUrl = item.CatalogSourceUrl,
+            CatalogRatingPrimarySource = item.CatalogRatingPrimarySource,
+            CatalogRatingPrimary = item.CatalogRatingPrimary,
+            CatalogRatingPrimaryCount = item.CatalogRatingPrimaryCount,
+            CatalogRatingSecondarySource = item.CatalogRatingSecondarySource,
+            CatalogRatingSecondary = item.CatalogRatingSecondary,
+            CatalogRatingSecondaryCount = item.CatalogRatingSecondaryCount,
             Notes = item.Notes,
             IsFavorite = item.IsFavorite
         };
@@ -1004,6 +1013,15 @@ public partial class SettingsViewModel : BaseViewModel
             KinopoiskRating = item.KinopoiskRating,
             KinopoiskVoteCount = item.KinopoiskVoteCount,
             ExternalRatingsUpdatedAt = item.ExternalRatingsUpdatedAt,
+            CatalogProvider = item.CatalogProvider,
+            CatalogItemId = item.CatalogItemId,
+            CatalogSourceUrl = item.CatalogSourceUrl,
+            CatalogRatingPrimarySource = item.CatalogRatingPrimarySource,
+            CatalogRatingPrimary = item.CatalogRatingPrimary,
+            CatalogRatingPrimaryCount = item.CatalogRatingPrimaryCount,
+            CatalogRatingSecondarySource = item.CatalogRatingSecondarySource,
+            CatalogRatingSecondary = item.CatalogRatingSecondary,
+            CatalogRatingSecondaryCount = item.CatalogRatingSecondaryCount,
             Notes = item.Notes,
             IsFavorite = item.IsFavorite
         };

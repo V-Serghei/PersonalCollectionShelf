@@ -11,6 +11,7 @@ public sealed class PersonRecord
     [Indexed]
     public string UserId { get; set; } = string.Empty;
 
+    [Indexed]
     public string Name { get; set; } = string.Empty;
 
     public string? FirstName { get; set; }

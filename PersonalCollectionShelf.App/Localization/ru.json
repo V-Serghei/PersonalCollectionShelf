@@ -529,4 +529,8 @@
   ,"Metadata.TmdbAttribution": "Приложение использует TMDB API, но не одобрено и не сертифицировано TMDB."
   ,"Metadata.Action.Refresh": "Обновить информацию и рейтинги из интернета"
   ,"Metadata.Error.RefreshFailed": "Не удалось обновить информацию. Проверьте интернет и повторите попытку."
+  ,"Metadata.Error.CatalogNotConfigured": "Этот источник ещё не настроен. Добавьте требуемый ключ в metadata.json."
+  ,"Metadata.CatalogAttribution": "Данные могут поступать из Google Books, Open Library, Comic Vine или RAWG. Ссылка и источник выбранной записи сохраняются."
+  ,"Metadata.Source.Format": "Источник: {0}"
+  ,"Metadata.Source.Unknown": "интернет-каталог"
 }

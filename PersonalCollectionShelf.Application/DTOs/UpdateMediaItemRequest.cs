@@ -36,6 +36,15 @@ public sealed record UpdateMediaItemRequest
     public decimal? KinopoiskRating { get; init; }
     public int? KinopoiskVoteCount { get; init; }
     public DateTime? ExternalRatingsUpdatedAt { get; init; }
+    public string? CatalogProvider { get; init; }
+    public string? CatalogItemId { get; init; }
+    public string? CatalogSourceUrl { get; init; }
+    public string? CatalogRatingPrimarySource { get; init; }
+    public decimal? CatalogRatingPrimary { get; init; }
+    public int? CatalogRatingPrimaryCount { get; init; }
+    public string? CatalogRatingSecondarySource { get; init; }
+    public decimal? CatalogRatingSecondary { get; init; }
+    public int? CatalogRatingSecondaryCount { get; init; }
 
     public IReadOnlyList<string>? Cast { get; init; }
 
