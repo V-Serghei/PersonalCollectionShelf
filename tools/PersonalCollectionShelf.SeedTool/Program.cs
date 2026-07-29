@@ -70,11 +70,18 @@ var existingItems = await service.GetLibraryAsync(userId);
 var existingIds = existingItems.Select(value => value.Id).ToHashSet();
 var existingKinopoiskIds = existingItems.Where(value => value.KinopoiskId.HasValue)
     .Select(value => value.KinopoiskId!.Value).ToHashSet();
+var existingCatalogItems = existingItems
+    .Where(value => !string.IsNullOrWhiteSpace(value.CatalogProvider) && !string.IsNullOrWhiteSpace(value.CatalogItemId))
+    .Select(value => $"{value.CatalogProvider}:{value.CatalogItemId}".ToUpperInvariant())
+    .ToHashSet();
 var imported = 0;
 var skipped = 0;
 foreach (var item in seed.Items)
 {
-    if (existingIds.Contains(item.Id) || existingKinopoiskIds.Contains(item.KinopoiskId))
+    var catalogKey = $"{item.CatalogProvider}:{item.CatalogItemId}".ToUpperInvariant();
+    if (existingIds.Contains(item.Id) ||
+        (item.KinopoiskId.HasValue && existingKinopoiskIds.Contains(item.KinopoiskId.Value)) ||
+        (!string.IsNullOrWhiteSpace(item.CatalogProvider) && !string.IsNullOrWhiteSpace(item.CatalogItemId) && existingCatalogItems.Contains(catalogKey)))
     {
         skipped++;
         continue;
@@ -83,7 +90,12 @@ foreach (var item in seed.Items)
     var mediaType = Enum.TryParse<MediaType>(item.MediaType, true, out var parsedType)
         ? parsedType
         : item.SourceKind.Equals("series", StringComparison.OrdinalIgnoreCase) ? MediaType.Series : MediaType.Movie;
-    var contributions = item.People.Select((value, index) => new PersonCreditInput
+    var seedPeople = item.Authors.Select(value => new SeedPerson { Name = value, Role = "Author" })
+        .Concat(item.People)
+        .GroupBy(value => $"{value.Role}:{value.Name}", StringComparer.OrdinalIgnoreCase)
+        .Select(value => value.First())
+        .ToList();
+    var contributions = seedPeople.Select((value, index) => new PersonCreditInput
     {
         Name = value.Name,
         Role = Enum.TryParse<ContributionRole>(value.Role, true, out var role) ? role : ContributionRole.Actor,
@@ -120,10 +132,31 @@ foreach (var item in seed.Items)
         ImdbVoteCount = item.ImdbVoteCount,
         KinopoiskRating = item.KinopoiskRating,
         KinopoiskVoteCount = item.KinopoiskVoteCount,
+        CatalogProvider = item.CatalogProvider,
+        CatalogItemId = item.CatalogItemId,
+        CatalogSourceUrl = item.CatalogSourceUrl,
+        CatalogRatingPrimarySource = item.CatalogRatingPrimarySource,
+        CatalogRatingPrimary = item.CatalogRatingPrimary,
+        CatalogRatingPrimaryCount = item.CatalogRatingPrimaryCount,
+        CatalogRatingSecondarySource = item.CatalogRatingSecondarySource,
+        CatalogRatingSecondary = item.CatalogRatingSecondary,
+        CatalogRatingSecondaryCount = item.CatalogRatingSecondaryCount,
         ExternalRatingsUpdatedAt = seed.GeneratedAtUtc,
         Genres = item.Genres,
         Contributions = contributions,
         StudioCredits = studioCredits,
+        Publisher = item.Publisher,
+        BookDetails = mediaType == MediaType.Book ? new BookDetailsInput
+        {
+            Subtitle = item.Subtitle,
+            Publisher = item.Publisher,
+            EditionYear = item.ReleaseYear,
+            OriginalPublicationYear = item.ReleaseYear,
+            Language = item.Language,
+            PageCount = item.PageCount,
+            Isbn10 = item.Isbn10,
+            Isbn13 = item.Isbn13
+        } : null,
         MovieDetails = isMovie ? new MovieDetailsInput
         {
             RuntimeMinutes = item.RuntimeMinutes,
@@ -145,7 +178,9 @@ foreach (var item in seed.Items)
             Name = item.CollectionName,
             Kind = MediaCollectionKind.Series
         },
-        Notes = $"Imported from Kinopoisk ratings (ID {item.KinopoiskId})."
+        Notes = item.MediaType?.Equals("Book", StringComparison.OrdinalIgnoreCase) == true
+            ? $"Imported from LiveLib read list (ID {item.LivelibId}); completion date has month precision ({item.FinishMonth})."
+            : $"Imported from Kinopoisk ratings (ID {item.KinopoiskId})."
     });
     imported++;
     if (imported % 50 == 0) Console.WriteLine($"imported {imported}/{seed.Items.Count}");
@@ -166,10 +201,10 @@ static async Task<string?> DownloadCoverAsync(
     string coverDirectory,
     string? storedCoverRoot)
 {
-    if (string.IsNullOrWhiteSpace(item.PosterUrl)) return null;
+    if (string.IsNullOrWhiteSpace(item.PosterUrl) && string.IsNullOrWhiteSpace(item.LocalCoverPath)) return null;
     var fileName = $"{item.Id:N}.jpg";
     var path = Path.Combine(coverDirectory, fileName);
-    if (!File.Exists(path))
+    if (!File.Exists(path) && !string.IsNullOrWhiteSpace(item.PosterUrl))
     {
         try
         {
@@ -184,6 +219,10 @@ static async Task<string?> DownloadCoverAsync(
             return null;
         }
     }
+    if (!File.Exists(path) && !string.IsNullOrWhiteSpace(item.LocalCoverPath) && File.Exists(item.LocalCoverPath))
+        File.Copy(item.LocalCoverPath, path, overwrite: false);
+
+    if (!File.Exists(path)) return null;
 
     return string.IsNullOrWhiteSpace(storedCoverRoot)
         ? new Uri(path).AbsoluteUri
@@ -199,16 +238,18 @@ internal sealed record SeedDocument
 internal sealed record SeedItem
 {
     public Guid Id { get; init; }
-    public int KinopoiskId { get; init; }
+    public int? KinopoiskId { get; init; }
+    public int? LivelibId { get; init; }
     public string SourceKind { get; init; } = "film";
     public string Title { get; init; } = string.Empty;
     public string? OriginalTitle { get; init; }
     public string? Description { get; init; }
     public string? MediaType { get; init; }
-    public decimal Rating { get; init; }
+    public decimal? Rating { get; init; }
     public string? FinishDate { get; init; }
     public int? ReleaseYear { get; init; }
     public string? PosterUrl { get; init; }
+    public string? LocalCoverPath { get; init; }
     public int? TmdbId { get; init; }
     public string? ImdbId { get; init; }
     public decimal? TmdbRating { get; init; }
@@ -217,8 +258,18 @@ internal sealed record SeedItem
     public int? ImdbVoteCount { get; init; }
     public decimal? KinopoiskRating { get; init; }
     public int? KinopoiskVoteCount { get; init; }
+    public string? CatalogProvider { get; init; }
+    public string? CatalogItemId { get; init; }
+    public string? CatalogSourceUrl { get; init; }
+    public string? CatalogRatingPrimarySource { get; init; }
+    public decimal? CatalogRatingPrimary { get; init; }
+    public int? CatalogRatingPrimaryCount { get; init; }
+    public string? CatalogRatingSecondarySource { get; init; }
+    public decimal? CatalogRatingSecondary { get; init; }
+    public int? CatalogRatingSecondaryCount { get; init; }
     public IReadOnlyList<string> Genres { get; init; } = [];
     public IReadOnlyList<SeedPerson> People { get; init; } = [];
+    public IReadOnlyList<string> Authors { get; init; } = [];
     public IReadOnlyList<string> Studios { get; init; } = [];
     public int? RuntimeMinutes { get; init; }
     public string? OriginalLanguage { get; init; }
@@ -229,6 +280,13 @@ internal sealed record SeedItem
     public string? Network { get; init; }
     public string? AiringStatus { get; init; }
     public string? CollectionName { get; init; }
+    public string? Subtitle { get; init; }
+    public string? Publisher { get; init; }
+    public int? PageCount { get; init; }
+    public string? Language { get; init; }
+    public string? Isbn10 { get; init; }
+    public string? Isbn13 { get; init; }
+    public string? FinishMonth { get; init; }
 }
 
 internal sealed record SeedPerson
