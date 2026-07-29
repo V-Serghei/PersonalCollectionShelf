@@ -76,11 +76,11 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string TagsLabel => T("Details.TagsLabel");
 
-    public string CreatorLabel => Item?.MediaType is MediaType.Movie or MediaType.Series
+    public string CreatorLabel => Item?.MediaType is MediaType.Movie or MediaType.Series or MediaType.Cartoon or MediaType.AnimatedSeries
         ? T("Edit.Label.Creator.Director")
         : T("Details.CreatorLabel");
 
-    public string PublisherLabel => Item?.MediaType is MediaType.Movie or MediaType.Series or MediaType.Anime
+    public string PublisherLabel => Item?.MediaType is MediaType.Movie or MediaType.Series or MediaType.Anime or MediaType.Cartoon or MediaType.AnimatedSeries
         ? T("Edit.Label.Studio")
         : T("Details.PublisherLabel");
 
@@ -88,15 +88,15 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string CastLabel => T("Details.CastLabel");
 
-    public bool ShowCast => Item is not null && Item.MediaType is MediaType.Movie or MediaType.Series;
+    public bool ShowCast => Item is not null && Item.MediaType is MediaType.Movie or MediaType.Series or MediaType.Cartoon or MediaType.AnimatedSeries;
 
     public bool ShowBookDetails => Item?.MediaType == MediaType.Book;
 
-    public bool ShowMovieDetails => Item?.MediaType == MediaType.Movie;
+    public bool ShowMovieDetails => Item?.MediaType is MediaType.Movie or MediaType.Cartoon;
 
-    public bool ShowScreenProductionDetails => Item?.MediaType is MediaType.Movie or MediaType.Series or MediaType.Anime;
+    public bool ShowScreenProductionDetails => Item?.MediaType is MediaType.Movie or MediaType.Series or MediaType.Anime or MediaType.Cartoon or MediaType.AnimatedSeries;
 
-    public bool ShowEpisodicDetails => Item?.MediaType is MediaType.Series or MediaType.Anime;
+    public bool ShowEpisodicDetails => Item?.MediaType is MediaType.Series or MediaType.Anime or MediaType.AnimatedSeries;
 
     public bool ShowGraphicPublicationDetails => Item?.MediaType is MediaType.Manga or MediaType.Comic;
 
@@ -106,7 +106,12 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string MovieDetailsSectionTitle => T("Edit.Section.MovieDetails");
 
-    public string ScreenProductionSectionTitle => Item?.MediaType == MediaType.Movie ? MovieDetailsSectionTitle : T("Edit.Section.MoviePeople");
+    public string ScreenProductionSectionTitle => Item?.MediaType switch
+    {
+        MediaType.Movie => MovieDetailsSectionTitle,
+        MediaType.Cartoon => T("Edit.Section.CartoonDetails"),
+        _ => T("Edit.Section.MoviePeople")
+    };
 
     public string EpisodicDetailsSectionTitle => T("Edit.Section.EpisodicDetails");
 

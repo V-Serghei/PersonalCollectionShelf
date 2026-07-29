@@ -30,8 +30,8 @@ MediaItem ────< MediaContribution >──── Person ────< Per
     ├────< MediaStudioCredit >──── Studio       (production/distribution/VFX/...)
     ├────< MediaCollectionEntry >──── MediaCollection ── ParentCollectionId (tree)
     ├──── BookDetails (1:1, only when MediaType = Book)
-    ├──── MovieDetails (1:1, only when MediaType = Movie)
-    ├──── EpisodicDetails (1:1, Series / Anime)
+    ├──── MovieDetails (1:1, Movie / Cartoon)
+    ├──── EpisodicDetails (1:1, Series / AnimatedSeries / Anime)
     ├──── GraphicPublicationDetails (1:1, Manga / Comic)
     ├──── GameDetails (1:1, Game)
     └──── (future) GameDetails / AnimeDetails ...
@@ -97,7 +97,7 @@ Companion, Other. Stored one-directional; inverse is derived (Sequel ⇄ Prequel
 - Authors and translators are contributions, not columns here.
 - Series membership is a collection entry, not a column here.
 
-### MovieDetails (implemented, 1:1 with MediaItem where MediaType = Movie)
+### MovieDetails (implemented, 1:1 with MediaItem where MediaType = Movie or Cartoon)
 - `MediaItemId` (PK/FK), `RuntimeMinutes`, `OriginalLanguage`, `Language`,
   `CountryOfOrigin`, and `AgeRating`.
 - Directors, screenwriters, producers, cinematographers, composers, and actors are

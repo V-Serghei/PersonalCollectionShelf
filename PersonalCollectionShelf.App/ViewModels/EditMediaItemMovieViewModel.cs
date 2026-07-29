@@ -26,9 +26,9 @@ public partial class EditMediaItemViewModel
     public ObservableCollection<StudioCreditChipViewModel> MovieStudioCredits { get; } = [];
     public ObservableCollection<LocalizedOption<StudioRole>> MovieStudioRoles { get; } = [];
 
-    public bool ShowMovieFields => SelectedMediaType?.Value == MediaType.Movie;
+    public bool ShowMovieFields => SelectedMediaType?.Value is MediaType.Movie or MediaType.Cartoon;
 
-    public bool ShowScreenProductionFields => SelectedMediaType?.Value is MediaType.Movie or MediaType.Series or MediaType.Anime;
+    public bool ShowScreenProductionFields => SelectedMediaType?.Value is MediaType.Movie or MediaType.Series or MediaType.Anime or MediaType.Cartoon or MediaType.AnimatedSeries;
 
     public string MovieRuntimeMinutes
     {
@@ -72,7 +72,10 @@ public partial class EditMediaItemViewModel
         set => SetProperty(ref _selectedMovieStudioRole, value);
     }
 
-    public string MovieDetailsSectionTitle => T("Edit.Section.MovieDetails");
+    public string MovieDetailsSectionTitle => T(
+        SelectedMediaType?.Value == MediaType.Cartoon
+            ? "Edit.Section.CartoonDetails"
+            : "Edit.Section.MovieDetails");
 
     public string MovieRuntimeLabel => T("Edit.Label.MovieRuntime");
 

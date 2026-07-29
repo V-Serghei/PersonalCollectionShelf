@@ -581,7 +581,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         {
             MediaTypeFilters.Clear();
             MediaTypeFilters.Add(new LocalizedOption<MediaType?>(null, T("Common.All")));
-            foreach (var mediaType in Enum.GetValues<MediaType>())
+            foreach (var mediaType in MediaPresentation.OrderedMediaTypes)
             {
                 MediaTypeFilters.Add(new LocalizedOption<MediaType?>(mediaType, T($"MediaType.{mediaType}")));
             }
@@ -752,7 +752,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         }
 
         CategorySummaries.Clear();
-        foreach (var mediaType in Enum.GetValues<MediaType>())
+        foreach (var mediaType in MediaPresentation.OrderedMediaTypes)
         {
             var matchingItems = items.Where(item => item.MediaType == mediaType).ToList();
             CategorySummaries.Add(new CategorySummaryViewModel(

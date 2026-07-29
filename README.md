@@ -4,7 +4,7 @@ Offline-first cross-platform personal collection tracker with cloud sync for mov
 
 ## Main Features
 
-- Track movies, series, books, manga, comics, games, anime, and other media.
+- Track movies, cartoons, series, animated series, anime, books, manga, comics, games, and other media.
 - Store the library locally with SQLite for offline-first use.
 - Add, edit, delete, search, and filter media items.
 - Use touch-friendly Android forms with keyboard-aware focus, user-cancelled auto-positioning, and responsive controls.

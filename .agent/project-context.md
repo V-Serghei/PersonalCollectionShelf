@@ -1,6 +1,6 @@
 # Project Context
 
-PersonalCollectionShelf is an offline-first cross-platform personal collection tracker for movies, series, books, manga, comics, games, anime, and other media. It targets Windows and Android through .NET MAUI.
+PersonalCollectionShelf is an offline-first cross-platform personal collection tracker for movies, cartoons, series, animated series, anime, books, manga, comics, games, and other media. It targets Windows and Android through .NET MAUI.
 
 The product helps users organize their media library, track progress, manage statuses, add ratings and notes, and keep enough metadata for future synchronization across desktop and mobile devices.
 

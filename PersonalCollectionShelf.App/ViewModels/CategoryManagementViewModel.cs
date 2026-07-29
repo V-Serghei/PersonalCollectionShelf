@@ -138,7 +138,7 @@ public partial class CategoryManagementViewModel : BaseViewModel
     {
         BaseTypes.Clear();
         BaseTypes.Add(new LocalizedOption<MediaType?>(null, T("Categories.BaseType.None")));
-        foreach (var type in Enum.GetValues<MediaType>())
+        foreach (var type in MediaPresentation.OrderedMediaTypes)
         {
             BaseTypes.Add(new LocalizedOption<MediaType?>(type, T($"MediaType.{type}")));
         }

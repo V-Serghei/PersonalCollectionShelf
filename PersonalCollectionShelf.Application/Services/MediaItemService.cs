@@ -360,7 +360,9 @@ public sealed class MediaItemService : IMediaItemService
             }, cancellationToken);
         }
 
-        if (_movieDetails is not null && item.MediaType == MediaType.Movie && movieInput is not null)
+        if (_movieDetails is not null &&
+            (item.MediaType is MediaType.Movie or MediaType.Cartoon) &&
+            movieInput is not null)
         {
             var existing = await _movieDetails.GetAsync(item.Id, item.UserId, cancellationToken);
             var now = DateTime.UtcNow;
@@ -378,7 +380,9 @@ public sealed class MediaItemService : IMediaItemService
             }, cancellationToken);
         }
 
-        if (_typeDetails is not null && item.MediaType is MediaType.Series or MediaType.Anime && episodicInput is not null)
+        if (_typeDetails is not null &&
+            (item.MediaType is MediaType.Series or MediaType.Anime or MediaType.AnimatedSeries) &&
+            episodicInput is not null)
         {
             var existing = await _typeDetails.GetEpisodicAsync(item.Id, item.UserId, cancellationToken);
             var now = DateTime.UtcNow;
@@ -784,7 +788,7 @@ public sealed class MediaItemService : IMediaItemService
         }
 
         MovieDetailsDto? movieDto = null;
-        if (_movieDetails is not null && item.MediaType == MediaType.Movie)
+        if (_movieDetails is not null && item.MediaType is MediaType.Movie or MediaType.Cartoon)
         {
             var details = await _movieDetails.GetAsync(item.Id, item.UserId, cancellationToken);
             if (details is not null)
@@ -803,7 +807,7 @@ public sealed class MediaItemService : IMediaItemService
         EpisodicDetailsInput? episodicDto = null;
         GraphicPublicationDetailsInput? graphicDto = null;
         GameDetailsInput? gameDto = null;
-        if (_typeDetails is not null && item.MediaType is MediaType.Series or MediaType.Anime)
+        if (_typeDetails is not null && item.MediaType is MediaType.Series or MediaType.Anime or MediaType.AnimatedSeries)
         {
             var value = await _typeDetails.GetEpisodicAsync(item.Id, item.UserId, cancellationToken);
             if (value is not null)
@@ -928,7 +932,7 @@ public sealed class MediaItemService : IMediaItemService
     private static ContributionRole GetPrimaryRole(MediaType mediaType) => mediaType switch
     {
         MediaType.Book or MediaType.Manga or MediaType.Comic => ContributionRole.Author,
-        MediaType.Movie or MediaType.Series => ContributionRole.Director,
+        MediaType.Movie or MediaType.Series or MediaType.Cartoon or MediaType.AnimatedSeries => ContributionRole.Director,
         MediaType.Game => ContributionRole.Developer,
         _ => ContributionRole.Other
     };

@@ -225,7 +225,7 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
 
         MediaTypeFilters.Clear();
         MediaTypeFilters.Add(new LocalizedOption<MediaType?>(null, T("Common.All")));
-        foreach (var mediaType in Enum.GetValues<MediaType>())
+        foreach (var mediaType in MediaPresentation.OrderedMediaTypes)
         {
             MediaTypeFilters.Add(new LocalizedOption<MediaType?>(mediaType, T($"MediaType.{mediaType}")));
         }

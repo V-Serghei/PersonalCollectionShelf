@@ -126,7 +126,7 @@ public static class MediaItemValidator
             return;
         }
 
-        if (mediaType != MediaType.Movie)
+        if (mediaType is not (MediaType.Movie or MediaType.Cartoon))
         {
             result.Add("Validation.MovieDetailsType", nameof(movie));
         }

@@ -100,7 +100,7 @@ public sealed class LocalDatabaseService
         }
 
         foreach (var movie in mediaItems.Where(value =>
-                     value.MediaType == (int)MediaType.Movie &&
+                     (value.MediaType == (int)MediaType.Movie || value.MediaType == (int)MediaType.Cartoon) &&
                      !string.IsNullOrWhiteSpace(value.StudioId) &&
                      !studioCredits.Any(credit =>
                          credit.MediaItemId == value.Id &&
@@ -180,7 +180,7 @@ public sealed class LocalDatabaseService
                 var role = ((MediaType)item.MediaType) switch
                 {
                     MediaType.Book or MediaType.Manga or MediaType.Comic => ContributionRole.Author,
-                    MediaType.Movie or MediaType.Series => ContributionRole.Director,
+                    MediaType.Movie or MediaType.Series or MediaType.Cartoon or MediaType.AnimatedSeries => ContributionRole.Director,
                     MediaType.Game => ContributionRole.Developer,
                     _ => ContributionRole.Other
                 };

@@ -162,6 +162,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
                 OnPropertyChanged(nameof(ShowPublicationFields));
                 OnPropertyChanged(nameof(PublicationDetailsSectionTitle));
                 OnPropertyChanged(nameof(ShowMovieFields));
+                OnPropertyChanged(nameof(MovieDetailsSectionTitle));
                 OnPropertyChanged(nameof(ShowScreenProductionFields));
                 OnPropertyChanged(nameof(ShowEpisodicFields));
                 OnPropertyChanged(nameof(ShowGraphicPublicationFields));
@@ -171,7 +172,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
         }
     }
 
-    public bool ShowCastField => SelectedMediaType?.Value == MediaType.Series;
+    public bool ShowCastField => SelectedMediaType?.Value is MediaType.Series or MediaType.AnimatedSeries;
 
     public bool ShowLegacyCreditFields => !ShowScreenProductionFields;
 
@@ -327,7 +328,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public string CreatorLabel => SelectedMediaType?.Value switch
     {
-        MediaType.Movie or MediaType.Series => T("Edit.Label.Creator.Director"),
+        MediaType.Movie or MediaType.Series or MediaType.Cartoon or MediaType.AnimatedSeries => T("Edit.Label.Creator.Director"),
         MediaType.Book or MediaType.Manga or MediaType.Comic => T("Edit.Label.Creator.Author"),
         MediaType.Game => T("Edit.Label.Creator.Developer"),
         MediaType.Anime => T("Edit.Label.Creator.Studio"),
@@ -336,7 +337,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
 
     public string CreatorPlaceholder => T("Edit.Placeholder.Creator");
 
-    public string PublisherLabel => SelectedMediaType?.Value is MediaType.Movie or MediaType.Series or MediaType.Anime
+    public string PublisherLabel => SelectedMediaType?.Value is MediaType.Movie or MediaType.Series or MediaType.Anime or MediaType.Cartoon or MediaType.AnimatedSeries
         ? T("Edit.Label.Studio")
         : T("Edit.Label.Publisher");
 
@@ -787,7 +788,7 @@ public partial class EditMediaItemViewModel : BaseViewModel
         var selectedStatus = SelectedStatus?.Value ?? MediaStatus.Planned;
 
         MediaTypes.Clear();
-        foreach (var mediaType in Enum.GetValues<MediaType>())
+        foreach (var mediaType in MediaPresentation.OrderedMediaTypes)
         {
             MediaTypes.Add(new LocalizedOption<MediaType>(mediaType, T($"MediaType.{mediaType}")));
         }

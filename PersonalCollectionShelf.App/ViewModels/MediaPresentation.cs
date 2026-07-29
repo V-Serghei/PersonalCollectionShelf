@@ -5,6 +5,20 @@ namespace PersonalCollectionShelf.App.ViewModels;
 
 internal static class MediaPresentation
 {
+    public static IReadOnlyList<MediaType> OrderedMediaTypes { get; } =
+    [
+        MediaType.Movie,
+        MediaType.Cartoon,
+        MediaType.Series,
+        MediaType.AnimatedSeries,
+        MediaType.Anime,
+        MediaType.Book,
+        MediaType.Manga,
+        MediaType.Comic,
+        MediaType.Game,
+        MediaType.Other
+    ];
+
     public static Color GetMediaTypeColor(MediaType mediaType)
     {
         return mediaType switch
@@ -16,6 +30,8 @@ internal static class MediaPresentation
             MediaType.Comic => Color.FromArgb("#F0C040"),
             MediaType.Game => Color.FromArgb("#C47CF0"),
             MediaType.Anime => Color.FromArgb("#F07CB8"),
+            MediaType.Cartoon => Color.FromArgb("#FF9F43"),
+            MediaType.AnimatedSeries => Color.FromArgb("#4DD0E1"),
             _ => Color.FromArgb("#9D7FF4")
         };
     }

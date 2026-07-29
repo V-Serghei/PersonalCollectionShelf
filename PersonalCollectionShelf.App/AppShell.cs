@@ -30,12 +30,14 @@ public sealed class AppShell : Shell
     private static readonly (MediaType Type, string Color)[] SidebarCategories =
     [
         (MediaType.Movie, "#E07C54"),
+        (MediaType.Cartoon, "#FF9F43"),
         (MediaType.Series, "#5BA4F0"),
+        (MediaType.AnimatedSeries, "#4DD0E1"),
+        (MediaType.Anime, "#F07CB8"),
         (MediaType.Book, "#7CCC8A"),
         (MediaType.Manga, "#F0C040"),
         (MediaType.Comic, "#6FD8C8"),
-        (MediaType.Game, "#C47CF0"),
-        (MediaType.Anime, "#F07CB8")
+        (MediaType.Game, "#C47CF0")
     ];
 
     public AppShell(

@@ -27,7 +27,7 @@ public partial class EditMediaItemViewModel
     private string _gameEngine = string.Empty;
     private string _gameRegion = string.Empty;
 
-    public bool ShowEpisodicFields => SelectedMediaType?.Value is MediaType.Series or MediaType.Anime;
+    public bool ShowEpisodicFields => SelectedMediaType?.Value is MediaType.Series or MediaType.Anime or MediaType.AnimatedSeries;
     public bool ShowGraphicPublicationFields => SelectedMediaType?.Value is MediaType.Manga or MediaType.Comic;
     public bool ShowGameFields => SelectedMediaType?.Value == MediaType.Game;
 

@@ -9,5 +9,7 @@ public enum MediaType
     Comic = 5,
     Game = 6,
     Anime = 7,
-    Other = 8
+    Other = 8,
+    Cartoon = 9,
+    AnimatedSeries = 10
 }

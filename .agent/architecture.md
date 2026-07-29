@@ -24,8 +24,8 @@ Important decisions:
 - Firebase classes are placeholders only and must not include credentials or real project configuration yet.
 - View models use CommunityToolkit.Mvvm and should stay thin.
 - Visible UI text is loaded from JSON localization files through `JsonLocalizationService`.
-- Book- and movie-specific metadata use separate 1:1 detail entities instead of expanding the shared `MediaItem` table.
-- Series/anime use `EpisodicDetails`, manga/comics use `GraphicPublicationDetails`, and games use
+- Book- and movie/cartoon-specific metadata use separate 1:1 detail entities instead of expanding the shared `MediaItem` table.
+- Series/animated series/anime use `EpisodicDetails`, manga/comics use `GraphicPublicationDetails`, and games use
   `GameDetails`; cross-type people, studio, tag, collection, and relation graphs remain shared.
 - MAUI pages use compact layouts below 700 device-independent pixels; phones use an overlay Shell flyout while wider devices keep the locked sidebar.
 - Android phones open detail and editor pages modally through `AppNavigation` because the MAUI 10 Shell fragment renderer can fail when pushing global routes after activity recreation; desktop keeps Shell routes.

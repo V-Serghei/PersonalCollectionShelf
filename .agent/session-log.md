@@ -103,3 +103,6 @@
   labels, collection kinds, people roles, media types, and relationship kinds.
 - Kept Firebase behavior unchanged: configuration is still device-local, Google sign-in is not yet
   implemented, and Firestore synchronization remains a placeholder.
+- Added first-class Cartoon and AnimatedSeries media types while preserving existing enum values;
+  cartoons reuse movie metadata and credits, animated series reuse episodic metadata and screen
+  production credits, and both appear with Anime in navigation, filters, statistics, and localization.
