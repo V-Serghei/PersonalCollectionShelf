@@ -181,9 +181,9 @@
   "Validation.ProgressCurrentExceedsTotal": "Текущий прогресс не может быть больше общего прогресса.",
   "Validation.ReleaseYearRange": "Год выпуска должен быть между 1800 и 2200.",
   "Validation.NumberInvalid": "Введите корректные числовые значения.",
-  "Settings.Export.Description": "Экспорт библиотеки в JSON-файл.",
+  "Settings.Export.Description": "Полная копия библиотеки, людей, связей и фотографий. Файл можно сохранить в Google Drive.",
   "Settings.Import.ComingSoon": "Скоро",
-  "Settings.Import.Description": "Импорт объектов из JSON-экспорта.",
+  "Settings.Import.Description": "Восстановление полной копии, в том числе из файла Google Drive.",
   "Settings.Import.Goodreads.Description": "Книги, полки и рецензии",
   "Settings.Import.Letterboxd.Description": "Оценки фильмов и сериалов",
   "Settings.Import.Mal.Description": "Списки аниме и манги",
@@ -412,4 +412,44 @@
   ,"Profile.OpenSettings": "Настройки аккаунта"
   ,"Profile.OpenPeople": "Люди и участники"
   ,"People.SearchPlaceholder": "Поиск людей"
+  ,"People.CatalogSubtitle": "Авторы, актёры, режиссёры и другие участники"
+  ,"People.ResultsFormat": "Найдено людей: {0}"
+  ,"People.NoDescription": "Описание пока не добавлено"
+  ,"People.WorkCountFormat": "Работ: {0}"
+  ,"People.Sort.NameAscending": "По имени А–Я"
+  ,"People.Sort.NameDescending": "По имени Я–А"
+  ,"People.Sort.HighestRated": "Сначала с высокой оценкой"
+  ,"People.Sort.MostWorks": "Сначала больше работ"
+  ,"People.CreateTitle": "Новый человек"
+  ,"People.EditTitle": "Редактирование профиля"
+  ,"People.MiddleName": "Отчество / второе имя"
+  ,"People.PickMainPhoto": "Выбрать основное фото"
+  ,"People.PickPhotoTitle": "Выберите фотографию"
+  ,"People.AddPhoto": "Добавить фото"
+  ,"People.OpenGallery": "Открыть галерею"
+  ,"People.Gallery": "Фотографии"
+  ,"People.GalleryTitleFormat": "Галерея: {0}"
+  ,"People.GalleryEmpty": "Фотографии пока не добавлены"
+  ,"People.PrimaryPhoto": "Основное"
+  ,"People.About": "О человеке"
+  ,"People.TopWorks": "Топ-5 по моей оценке"
+  ,"People.AllWorks": "Все работы и роли"
+  ,"People.CreativeCategories": "Категории творчества"
+  ,"Common.Edit": "Редактировать"
+  ,"ContributionRole.Author": "Автор"
+  ,"ContributionRole.Translator": "Переводчик"
+  ,"ContributionRole.Illustrator": "Иллюстратор"
+  ,"ContributionRole.Editor": "Редактор"
+  ,"ContributionRole.Director": "Режиссёр"
+  ,"ContributionRole.Screenwriter": "Сценарист"
+  ,"ContributionRole.Actor": "Актёр"
+  ,"ContributionRole.Composer": "Композитор"
+  ,"ContributionRole.Artist": "Художник"
+  ,"ContributionRole.Developer": "Разработчик"
+  ,"ContributionRole.VoiceActor": "Актёр озвучивания"
+  ,"ContributionRole.Other": "Другое"
+  ,"ContributionRole.Producer": "Продюсер"
+  ,"ContributionRole.Cinematographer": "Оператор"
+  ,"ContributionRole.CastingDirector": "Кастинг-директор"
+  ,"ContributionRole.ProductionDesigner": "Художник-постановщик"
 }

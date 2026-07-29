@@ -11,20 +11,13 @@
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False">
     <Grid Padding="{OnIdiom Phone='14,10', Default='24'}" RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12">
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-            <Button
-                Command="{Binding GoBackCommand}"
-                FontSize="24"
-                HeightRequest="44"
-                Style="{StaticResource IconToggleButtonStyle}"
-                Text="&#x2190;"
-                WidthRequest="44" />
-            <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <VerticalStackLayout Spacing="1" VerticalOptions="Center">
                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="{OnIdiom Phone=24, Default=30}" LineBreakMode="TailTruncation" Text="{Binding TagBadgeText}" />
                 <Label FontSize="11" Text="{Binding Subtitle}" TextColor="{DynamicResource MutedForeground}" />
             </VerticalStackLayout>
             <Button
-                Grid.Column="2"
+                Grid.Column="1"
                 Clicked="HandleSearchClicked"
                 HeightRequest="44"
                 Style="{StaticResource IconToggleButtonStyle}"

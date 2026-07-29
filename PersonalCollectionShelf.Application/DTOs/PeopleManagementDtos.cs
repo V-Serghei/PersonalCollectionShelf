@@ -24,6 +24,7 @@ public sealed record PersonDetailsDto
     public IReadOnlyList<string> Professions { get; init; } = [];
     public IReadOnlyList<PersonRelationDto> Relations { get; init; } = [];
     public IReadOnlyList<PersonWorkDto> Works { get; init; } = [];
+    public IReadOnlyList<PersonPhotoDto> Photos { get; init; } = [];
 }
 
 public sealed record PersonWorkDto(
@@ -32,7 +33,27 @@ public sealed record PersonWorkDto(
     MediaType MediaType,
     ContributionRole Role,
     string? Details,
-    string? CreditedAs);
+    string? CreditedAs,
+    decimal? Rating,
+    string? CoverUrl,
+    int? ReleaseYear);
+
+public sealed record PersonPhotoDto(
+    Guid Id,
+    string FilePath,
+    string? Caption,
+    bool IsPrimary,
+    int SortOrder);
+
+public sealed record PersonCatalogDto(
+    Guid Id,
+    string Name,
+    string? PhotoPath,
+    string? Tagline,
+    string? Country,
+    IReadOnlyList<PersonWorkDto> TopWorks,
+    int WorkCount,
+    decimal? AverageRating);
 
 public sealed record SavePersonRequest
 {
@@ -78,4 +99,13 @@ public sealed record SavePersonRelationRequest
     public DateTime? StartDate { get; init; }
     public DateTime? EndDate { get; init; }
     public string? Notes { get; init; }
+}
+
+public sealed record AddPersonPhotoRequest
+{
+    public Guid? Id { get; init; }
+    public string UserId { get; init; } = string.Empty;
+    public Guid PersonId { get; init; }
+    public string FilePath { get; init; } = string.Empty;
+    public string? Caption { get; init; }
 }

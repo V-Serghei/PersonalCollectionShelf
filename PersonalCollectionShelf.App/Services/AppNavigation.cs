@@ -41,6 +41,20 @@ internal static class AppNavigation
     public static Task OpenTagAsync(string tagName) =>
         Shell.Current.GoToAsync($"{nameof(TagDetailsPage)}?tag={Uri.EscapeDataString(tagName)}");
 
+    public static Task OpenPersonAsync(Guid personId) =>
+        Shell.Current.GoToAsync($"{nameof(PersonDetailsPage)}?id={personId}");
+
+    public static Task OpenPersonEditorAsync(Guid? personId = null)
+    {
+        var route = personId.HasValue
+            ? $"{nameof(PersonEditorPage)}?id={personId.Value}"
+            : nameof(PersonEditorPage);
+        return Shell.Current.GoToAsync(route);
+    }
+
+    public static Task OpenPersonGalleryAsync(Guid personId) =>
+        Shell.Current.GoToAsync($"{nameof(PersonGalleryPage)}?id={personId}");
+
     public static Task OpenCategoriesAsync() =>
         OpenUtilityPageAsync(
             () => App.Services.GetRequiredService<CategoryManagementPage>(),

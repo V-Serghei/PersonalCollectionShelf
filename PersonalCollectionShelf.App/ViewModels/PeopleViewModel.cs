@@ -1,131 +1,108 @@
 using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.Input;
 using PersonalCollectionShelf.Application.DTOs;
 using PersonalCollectionShelf.Application.Interfaces;
 using PersonalCollectionShelf.App.Models;
 using PersonalCollectionShelf.App.Services;
-using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.App.ViewModels;
 
+public sealed record PersonCardViewModel(
+    Guid Id,
+    string Name,
+    string PhotoPath,
+    bool HasPhoto,
+    bool HasDefaultPhoto,
+    string Initial,
+    string Subtitle,
+    string RoleSummary,
+    IReadOnlyList<PersonWorkDto> TopWorks,
+    string WorkCountText,
+    string AverageRatingText,
+    bool HasRating);
+
 public partial class PeopleViewModel : BaseViewModel
 {
-    private readonly IPersonService _personService;
-    private readonly IPeopleManagementService _peopleManagementService;
-    private readonly IAuthService _authService;
-    private string _userId = "local-user";
-    private IReadOnlyList<PersonDto> _allPeople = [];
+    private const string ViewPreferenceKey = "people.viewMode";
+    private readonly IPeopleManagementService _people;
+    private readonly IAuthService _auth;
+    private IReadOnlyList<PersonCatalogDto> _catalog = [];
+    private string _searchText = string.Empty;
+    private bool _isSearchVisible;
+    private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewPreferenceKey, "grid") != "list";
+    private LocalizedOption<PeopleSortOption>? _selectedSortOption;
 
-    [ObservableProperty] public partial PersonDto? SelectedPerson { get; set; }
-    [ObservableProperty] public partial string Name { get; set; } = string.Empty;
-    [ObservableProperty] public partial string FirstName { get; set; } = string.Empty;
-    [ObservableProperty] public partial string MiddleName { get; set; } = string.Empty;
-    [ObservableProperty] public partial string LastName { get; set; } = string.Empty;
-    [ObservableProperty] public partial string PenName { get; set; } = string.Empty;
-    [ObservableProperty] public partial string SortName { get; set; } = string.Empty;
-    [ObservableProperty] public partial string BirthYear { get; set; } = string.Empty;
-    [ObservableProperty] public partial string DeathYear { get; set; } = string.Empty;
-    [ObservableProperty] public partial string Country { get; set; } = string.Empty;
-    [ObservableProperty] public partial string PlaceOfBirth { get; set; } = string.Empty;
-    [ObservableProperty] public partial string Gender { get; set; } = string.Empty;
-    [ObservableProperty] public partial string OfficialWebsite { get; set; } = string.Empty;
-    [ObservableProperty] public partial string Tagline { get; set; } = string.Empty;
-    [ObservableProperty] public partial string Description { get; set; } = string.Empty;
-    [ObservableProperty] public partial string Notes { get; set; } = string.Empty;
-    [ObservableProperty] public partial string NewProfession { get; set; } = string.Empty;
-    [ObservableProperty] public partial PersonDto? SelectedRelatedPerson { get; set; }
-    [ObservableProperty] public partial LocalizedOption<PersonRelationKind>? SelectedRelationKind { get; set; }
-    [ObservableProperty] public partial string RelationNotes { get; set; } = string.Empty;
-    [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
-    [ObservableProperty] public partial bool IsSearchVisible { get; set; }
-    [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
-
-    private Guid? _editingId;
-
-    public PeopleViewModel(
-        IPersonService personService,
-        IPeopleManagementService peopleManagementService,
-        IAuthService authService,
-        ILocalizationService localizationService) : base(localizationService)
+    public PeopleViewModel(IPeopleManagementService people, IAuthService auth, ILocalizationService localization)
+        : base(localization)
     {
-        _personService = personService;
-        _peopleManagementService = peopleManagementService;
-        _authService = authService;
-        InitializeRelationKinds();
+        _people = people;
+        _auth = auth;
+        ReloadSortOptions();
     }
 
-    public ObservableCollection<PersonDto> People { get; } = [];
-    public ObservableCollection<PersonDto> RelatedPeople { get; } = [];
-    public ObservableCollection<string> Professions { get; } = [];
-    public ObservableCollection<PersonRelationDto> Relations { get; } = [];
-    public ObservableCollection<PersonWorkDto> Works { get; } = [];
-    public ObservableCollection<LocalizedOption<PersonRelationKind>> RelationKinds { get; } = [];
+    public ObservableCollection<PersonCardViewModel> People { get; } = [];
+    public ObservableCollection<LocalizedOption<PeopleSortOption>> SortOptions { get; } = [];
 
     public string PageTitle => T("People.Title");
-    public string BackText => T("Common.Back");
+    public string Subtitle => T("People.CatalogSubtitle");
     public string NewPersonText => T("People.New");
-    public string SaveText => T("Common.Save");
-    public string ProfileSectionTitle => T("People.Profile");
-    public string ProfessionsSectionTitle => T("People.Professions");
-    public string RelationsSectionTitle => T("People.Relations");
-    public string WorksSectionTitle => T("People.Works");
-    public string AddText => T("Common.Add");
     public string EmptyText => T("People.Empty");
-    public string NameLabel => T("People.Name");
-    public string PenNameLabel => T("People.PenName");
-    public string FirstNameLabel => T("People.FirstName");
-    public string LastNameLabel => T("People.LastName");
-    public string SortNameLabel => T("People.SortName");
-    public string BirthYearLabel => T("People.BirthYear");
-    public string DeathYearLabel => T("People.DeathYear");
-    public string CountryLabel => T("People.Country");
-    public string PlaceOfBirthLabel => T("People.PlaceOfBirth");
-    public string GenderLabel => T("People.Gender");
-    public string WebsiteLabel => T("People.Website");
-    public string TaglineLabel => T("People.Tagline");
-    public string DescriptionLabel => T("People.Description");
-    public string NotesLabel => T("People.Notes");
-    public string ProfessionPlaceholder => T("People.ProfessionPlaceholder");
-    public string RelatedPersonLabel => T("People.RelatedPerson");
-    public string RelationKindLabel => T("People.RelationKind");
     public string SearchPlaceholder => T("People.SearchPlaceholder");
+    public string ResultsText => string.Format(T("People.ResultsFormat"), People.Count);
 
-    partial void OnSearchTextChanged(string value) => ApplyPeopleFilter();
-
-    partial void OnSelectedPersonChanged(PersonDto? value)
+    public string SearchText
     {
-        if (value is not null)
+        get => _searchText;
+        set
         {
-            _ = LoadPersonAsync(value.Id);
+            if (SetProperty(ref _searchText, value)) ApplyFilter();
+        }
+    }
+
+    public bool IsSearchVisible
+    {
+        get => _isSearchVisible;
+        set => SetProperty(ref _isSearchVisible, value);
+    }
+
+    public bool IsGridView
+    {
+        get => _isGridView;
+        private set
+        {
+            if (!SetProperty(ref _isGridView, value)) return;
+            OnPropertyChanged(nameof(IsListView));
+            Microsoft.Maui.Storage.Preferences.Set(ViewPreferenceKey, value ? "grid" : "list");
+        }
+    }
+
+    public bool IsListView => !IsGridView;
+
+    public LocalizedOption<PeopleSortOption>? SelectedSortOption
+    {
+        get => _selectedSortOption;
+        set
+        {
+            if (SetProperty(ref _selectedSortOption, value)) ApplyFilter();
         }
     }
 
     [RelayCommand]
     public async Task LoadAsync()
     {
-        _userId = await _authService.GetCurrentUserIdAsync() ?? "local-user";
-        var selectedId = _editingId;
-        _allPeople = await _personService.SearchAsync(_userId, null, 500);
-        ApplyPeopleFilter();
-        RefreshRelatedPeople();
-        if (selectedId.HasValue)
+        if (IsBusy) return;
+        IsBusy = true;
+        try
         {
-            SelectedPerson = People.FirstOrDefault(value => value.Id == selectedId.Value);
+            var userId = await _auth.GetCurrentUserIdAsync() ?? "local-user";
+            _catalog = await _people.GetCatalogAsync(userId);
+            ApplyFilter();
         }
-        else if (People.Count == 0)
+        finally
         {
-            NewPerson();
+            IsBusy = false;
         }
-    }
-
-    [RelayCommand]
-    private void NewPerson()
-    {
-        _editingId = null;
-        SelectedPerson = null;
-        ClearForm();
-        StatusMessage = string.Empty;
     }
 
     [RelayCommand]
@@ -136,204 +113,79 @@ public partial class PeopleViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task SaveAsync()
-    {
-        if (string.IsNullOrWhiteSpace(Name))
-        {
-            StatusMessage = T("People.Validation.Name");
-            return;
-        }
-
-        if (!TryParseYear(BirthYear, out var birthYear) || !TryParseYear(DeathYear, out var deathYear))
-        {
-            StatusMessage = T("People.Validation.Year");
-            return;
-        }
-
-        IsBusy = true;
-        try
-        {
-            var saved = await _peopleManagementService.SaveAsync(new SavePersonRequest
-            {
-                Id = _editingId,
-                UserId = _userId,
-                Name = Name,
-                FirstName = FirstName,
-                MiddleName = MiddleName,
-                LastName = LastName,
-                PenName = PenName,
-                SortName = SortName,
-                BirthYear = birthYear,
-                DeathYear = deathYear,
-                Country = Country,
-                PlaceOfBirth = PlaceOfBirth,
-                Gender = Gender,
-                OfficialWebsite = OfficialWebsite,
-                Tagline = Tagline,
-                Description = Description,
-                Notes = Notes,
-                Professions = Professions.ToList()
-            });
-            _editingId = saved.Id;
-            await LoadAsync();
-            StatusMessage = T("People.Saved");
-        }
-        catch (Exception exception)
-        {
-            StatusMessage = exception.Message;
-            await CrashReporter.ReportAsync(exception, "PeopleViewModel.SaveAsync");
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
+    private void SetGridView() => IsGridView = true;
 
     [RelayCommand]
-    private void AddProfession()
-    {
-        var value = NewProfession.Trim();
-        if (value.Length > 0 && !Professions.Contains(value, StringComparer.OrdinalIgnoreCase))
-        {
-            Professions.Add(value);
-        }
-        NewProfession = string.Empty;
-    }
+    private void SetListView() => IsGridView = false;
 
     [RelayCommand]
-    private void RemoveProfession(string value) => Professions.Remove(value);
+    private Task NewPersonAsync() => AppNavigation.OpenPersonEditorAsync();
 
     [RelayCommand]
-    private async Task AddRelationAsync()
-    {
-        if (!_editingId.HasValue)
-        {
-            StatusMessage = T("People.RelationSaveFirst");
-            return;
-        }
-        if (SelectedRelatedPerson is null || SelectedRelationKind is null)
-        {
-            StatusMessage = T("People.RelationRequired");
-            return;
-        }
+    private Task OpenPersonAsync(PersonCardViewModel person) => AppNavigation.OpenPersonAsync(person.Id);
 
-        await _peopleManagementService.SaveRelationAsync(new SavePersonRelationRequest
-        {
-            UserId = _userId,
-            PersonId = _editingId.Value,
-            RelatedPersonId = SelectedRelatedPerson.Id,
-            Kind = SelectedRelationKind.Value,
-            InverseKind = Inverse(SelectedRelationKind.Value),
-            Notes = RelationNotes
-        });
-        SelectedRelatedPerson = null;
-        RelationNotes = string.Empty;
-        await LoadPersonAsync(_editingId.Value);
-    }
-
-    [RelayCommand]
-    private async Task RemoveRelationAsync(PersonRelationDto relation)
-    {
-        await _peopleManagementService.RemoveRelationAsync(_userId, relation.Id);
-        Relations.Remove(relation);
-    }
-
-    [RelayCommand]
-    private Task OpenWorkAsync(PersonWorkDto work) => AppNavigation.OpenMediaDetailsAsync(work.MediaItemId);
-
-    [RelayCommand]
-    private Task GoBackAsync() => AppNavigation.CloseAsync();
-
-    private async Task LoadPersonAsync(Guid id)
-    {
-        var details = await _peopleManagementService.GetAsync(_userId, id);
-        if (details is null)
-        {
-            return;
-        }
-        _editingId = details.Id;
-        Name = details.Name;
-        FirstName = details.FirstName ?? string.Empty;
-        MiddleName = details.MiddleName ?? string.Empty;
-        LastName = details.LastName ?? string.Empty;
-        PenName = details.PenName ?? string.Empty;
-        SortName = details.SortName ?? string.Empty;
-        BirthYear = details.BirthYear?.ToString() ?? string.Empty;
-        DeathYear = details.DeathYear?.ToString() ?? string.Empty;
-        Country = details.Country ?? string.Empty;
-        PlaceOfBirth = details.PlaceOfBirth ?? string.Empty;
-        Gender = details.Gender ?? string.Empty;
-        OfficialWebsite = details.OfficialWebsite ?? string.Empty;
-        Tagline = details.Tagline ?? string.Empty;
-        Description = details.Description ?? string.Empty;
-        Notes = details.Notes ?? string.Empty;
-        Replace(Professions, details.Professions);
-        Replace(Relations, details.Relations);
-        Replace(Works, details.Works);
-        RefreshRelatedPeople();
-    }
-
-    private void ClearForm()
-    {
-        Name = FirstName = MiddleName = LastName = PenName = SortName = string.Empty;
-        BirthYear = DeathYear = Country = PlaceOfBirth = Gender = OfficialWebsite = string.Empty;
-        Tagline = Description = Notes = NewProfession = RelationNotes = string.Empty;
-        SelectedRelatedPerson = null;
-        Professions.Clear();
-        Relations.Clear();
-        Works.Clear();
-        RefreshRelatedPeople();
-    }
-
-    private void ApplyPeopleFilter()
+    private void ApplyFilter()
     {
         var term = SearchText.Trim();
-        Replace(People, _allPeople.Where(value => term.Length == 0 ||
-            value.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-            (!string.IsNullOrWhiteSpace(value.Tagline) && value.Tagline.Contains(term, StringComparison.OrdinalIgnoreCase))));
+        IEnumerable<PersonCatalogDto> filtered = _catalog;
+        if (term.Length > 0)
+        {
+            filtered = filtered.Where(person =>
+                person.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrWhiteSpace(person.Tagline) && person.Tagline.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(person.Country) && person.Country.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                person.TopWorks.Any(work => work.Title.Contains(term, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        filtered = SelectedSortOption?.Value switch
+        {
+            PeopleSortOption.NameDescending => filtered.OrderByDescending(person => person.Name, StringComparer.OrdinalIgnoreCase),
+            PeopleSortOption.HighestRated => filtered.OrderByDescending(person => person.AverageRating ?? -1).ThenBy(person => person.Name, StringComparer.OrdinalIgnoreCase),
+            PeopleSortOption.MostWorks => filtered.OrderByDescending(person => person.WorkCount).ThenBy(person => person.Name, StringComparer.OrdinalIgnoreCase),
+            _ => filtered.OrderBy(person => person.Name, StringComparer.OrdinalIgnoreCase)
+        };
+
+        People.Clear();
+        foreach (var person in filtered)
+        {
+            var hasPhoto = IsUsablePhoto(person.PhotoPath);
+            var roles = person.TopWorks.Select(work => T($"ContributionRole.{work.Role}"))
+                .Distinct(StringComparer.OrdinalIgnoreCase).Take(3);
+            People.Add(new PersonCardViewModel(
+                person.Id,
+                person.Name,
+                hasPhoto ? person.PhotoPath! : string.Empty,
+                hasPhoto,
+                !hasPhoto,
+                string.IsNullOrWhiteSpace(person.Name) ? "?" : char.ToUpperInvariant(person.Name[0]).ToString(),
+                person.Tagline ?? person.Country ?? T("People.NoDescription"),
+                string.Join("  •  ", roles),
+                person.TopWorks,
+                string.Format(T("People.WorkCountFormat"), person.WorkCount),
+                person.AverageRating?.ToString("0.0", CultureInfo.CurrentCulture) ?? string.Empty,
+                person.AverageRating.HasValue));
+        }
+        OnPropertyChanged(nameof(ResultsText));
     }
 
-    private void RefreshRelatedPeople() => Replace(RelatedPeople, _allPeople.Where(value => value.Id != _editingId));
-
-    private void InitializeRelationKinds()
+    private void ReloadSortOptions()
     {
-        RelationKinds.Clear();
-        foreach (var kind in Enum.GetValues<PersonRelationKind>())
+        var selected = SelectedSortOption?.Value ?? PeopleSortOption.NameAscending;
+        SortOptions.Clear();
+        foreach (var option in Enum.GetValues<PeopleSortOption>())
         {
-            RelationKinds.Add(new LocalizedOption<PersonRelationKind>(kind, T($"PersonRelationKind.{kind}")));
+            SortOptions.Add(new LocalizedOption<PeopleSortOption>(option, T($"People.Sort.{option}")));
         }
-        SelectedRelationKind = RelationKinds.FirstOrDefault(value => value.Value == PersonRelationKind.Collaborator);
+        SelectedSortOption = SortOptions.First(option => option.Value == selected);
     }
 
     protected override void RefreshLocalizedProperties()
     {
+        ReloadSortOptions();
         base.RefreshLocalizedProperties();
-        var selectedKind = SelectedRelationKind?.Value;
-        InitializeRelationKinds();
-        SelectedRelationKind = RelationKinds.FirstOrDefault(value => value.Value == selectedKind) ?? RelationKinds.FirstOrDefault();
     }
 
-    private static PersonRelationKind Inverse(PersonRelationKind kind) => kind switch
-    {
-        PersonRelationKind.Parent => PersonRelationKind.Child,
-        PersonRelationKind.Child => PersonRelationKind.Parent,
-        PersonRelationKind.Mentor => PersonRelationKind.Student,
-        PersonRelationKind.Student => PersonRelationKind.Mentor,
-        _ => kind
-    };
-
-    private static bool TryParseYear(string value, out int? year)
-    {
-        year = null;
-        if (string.IsNullOrWhiteSpace(value)) return true;
-        if (!int.TryParse(value, out var parsed) || parsed is < 1 or > 2200) return false;
-        year = parsed;
-        return true;
-    }
-
-    private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> source)
-    {
-        target.Clear();
-        foreach (var item in source) target.Add(item);
-    }
+    private static bool IsUsablePhoto(string? path) =>
+        !string.IsNullOrWhiteSpace(path) &&
+        (Uri.TryCreate(path, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https" || File.Exists(path));
 }

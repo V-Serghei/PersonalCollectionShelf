@@ -9,6 +9,38 @@ namespace PersonalCollectionShelf.Tests.Infrastructure;
 public sealed class PeopleAndCategoryPersistenceTests
 {
     [Fact]
+    public async Task Person_photo_gallery_and_primary_photo_round_trip()
+    {
+        var path = TempPath("person-photos");
+        var database = new LocalDatabaseService(path);
+        try
+        {
+            var service = new PeopleManagementService(
+                new PersonRepository(database),
+                new ProfessionRepository(database),
+                new PersonRelationRepository(database),
+                new LocalDatabaseTransactionRunner(database),
+                photos: new PersonPhotoRepository(database));
+            var person = await service.SaveAsync(new SavePersonRequest { UserId = "user-1", Name = "Greta Gerwig" });
+            var first = await service.AddPhotoAsync(new AddPersonPhotoRequest { UserId = "user-1", PersonId = person.Id, FilePath = "first.jpg" });
+            var second = await service.AddPhotoAsync(new AddPersonPhotoRequest { UserId = "user-1", PersonId = person.Id, FilePath = "second.jpg" });
+
+            await service.SetPrimaryPhotoAsync("user-1", person.Id, second.Id);
+            var reloaded = await service.GetAsync("user-1", person.Id);
+
+            Assert.Equal(2, reloaded!.Photos.Count);
+            Assert.Equal("second.jpg", reloaded.PhotoPath);
+            Assert.Equal(second.Id, reloaded.Photos.Single(photo => photo.IsPrimary).Id);
+            Assert.NotEqual(first.Id, second.Id);
+        }
+        finally
+        {
+            await database.Connection.CloseAsync();
+            TryDelete(path);
+        }
+    }
+
+    [Fact]
     public async Task Person_professions_and_bidirectional_relations_round_trip()
     {
         var path = TempPath("people");

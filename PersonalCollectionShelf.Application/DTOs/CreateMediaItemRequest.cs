@@ -4,6 +4,8 @@ namespace PersonalCollectionShelf.Application.DTOs;
 
 public sealed record CreateMediaItemRequest
 {
+    public Guid? Id { get; init; }
+
     public string UserId { get; init; } = string.Empty;
 
     public string Title { get; init; } = string.Empty;

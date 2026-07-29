@@ -73,6 +73,9 @@ public sealed class AppShell : Shell
         Routing.RegisterRoute(nameof(EditMediaItemPage), typeof(EditMediaItemPage));
         Routing.RegisterRoute(nameof(CategoryManagementPage), typeof(CategoryManagementPage));
         Routing.RegisterRoute(nameof(TagDetailsPage), typeof(TagDetailsPage));
+        Routing.RegisterRoute(nameof(PersonDetailsPage), typeof(PersonDetailsPage));
+        Routing.RegisterRoute(nameof(PersonEditorPage), typeof(PersonEditorPage));
+        Routing.RegisterRoute(nameof(PersonGalleryPage), typeof(PersonGalleryPage));
 
         FlyoutContentTemplate = new DataTemplate(BuildFlyoutContent);
         Navigated += HandleNavigated;

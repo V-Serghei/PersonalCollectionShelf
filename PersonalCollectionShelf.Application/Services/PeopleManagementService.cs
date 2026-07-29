@@ -11,8 +11,42 @@ public sealed class PeopleManagementService(
     IPersonRelationRepository relations,
     ITransactionRunner? transactionRunner = null,
     IMediaContributionRepository? contributions = null,
-    IMediaItemRepository? mediaItems = null) : IPeopleManagementService
+    IMediaItemRepository? mediaItems = null,
+    IPersonPhotoRepository? photos = null) : IPeopleManagementService
 {
+    public async Task<IReadOnlyList<PersonCatalogDto>> GetCatalogAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var allPeople = await people.SearchAsync(userId, null, 500, cancellationToken);
+        var itemsById = mediaItems is null
+            ? new Dictionary<Guid, MediaItem>()
+            : (await mediaItems.GetAllAsync(userId, cancellationToken)).ToDictionary(item => item.Id);
+        var creditsByPerson = contributions is null
+            ? new Dictionary<Guid, IReadOnlyList<MediaContribution>>()
+            : (await contributions.GetAllAsync(userId, cancellationToken))
+                .GroupBy(credit => credit.PersonId)
+                .ToDictionary(group => group.Key, group => (IReadOnlyList<MediaContribution>)group.ToList());
+
+        return allPeople.Select(person =>
+        {
+            var works = creditsByPerson.GetValueOrDefault(person.Id, [])
+                .Where(credit => itemsById.ContainsKey(credit.MediaItemId))
+                .Select(credit => ToWorkDto(credit, itemsById[credit.MediaItemId]))
+                .OrderByDescending(work => work.Rating ?? -1)
+                .ThenBy(work => work.Title, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var ratings = works.Where(work => work.Rating.HasValue).Select(work => work.Rating!.Value).ToList();
+            return new PersonCatalogDto(
+                person.Id,
+                person.Name,
+                person.PhotoPath,
+                person.Tagline,
+                person.Country,
+                works.Where(work => work.Rating.HasValue).Take(5).ToList(),
+                works.Count,
+                ratings.Count == 0 ? null : ratings.Average());
+        }).OrderBy(person => person.Name, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
     public async Task<PersonDetailsDto?> GetAsync(string userId, Guid id, CancellationToken cancellationToken = default)
     {
         var person = await people.GetByIdAsync(id, userId, cancellationToken);
@@ -61,12 +95,81 @@ public sealed class PeopleManagementService(
     public Task RemoveRelationAsync(string userId, Guid relationId, CancellationToken cancellationToken = default) =>
         relations.RemoveAsync(relationId, userId, cancellationToken);
 
+    public async Task<PersonPhotoDto> AddPhotoAsync(AddPersonPhotoRequest request, CancellationToken cancellationToken = default)
+    {
+        if (photos is null || string.IsNullOrWhiteSpace(request.FilePath))
+        {
+            throw new InvalidOperationException("Photo storage is not available.");
+        }
+
+        var person = await people.GetByIdAsync(request.PersonId, request.UserId, cancellationToken)
+            ?? throw new InvalidOperationException("Person was not found.");
+        var existing = await photos.GetForPersonAsync(person.Id, person.UserId, cancellationToken);
+        if (request.Id.HasValue)
+        {
+            var duplicate = existing.FirstOrDefault(photo => photo.Id == request.Id.Value);
+            if (duplicate is not null) return ToPhotoDto(duplicate);
+        }
+        var photo = await photos.AddAsync(new PersonPhoto
+        {
+            Id = request.Id ?? Guid.NewGuid(),
+            UserId = person.UserId,
+            PersonId = person.Id,
+            FilePath = request.FilePath.Trim(),
+            Caption = Normalize(request.Caption),
+            IsPrimary = existing.Count == 0,
+            SortOrder = existing.Count,
+            CreatedAt = DateTime.UtcNow
+        }, cancellationToken);
+
+        if (photo.IsPrimary)
+        {
+            person.PhotoPath = photo.FilePath;
+            await people.UpdateAsync(person, cancellationToken);
+        }
+        return ToPhotoDto(photo);
+    }
+
+    public async Task RemovePhotoAsync(string userId, Guid personId, Guid photoId, CancellationToken cancellationToken = default)
+    {
+        if (photos is null) return;
+        var person = await people.GetByIdAsync(personId, userId, cancellationToken)
+            ?? throw new InvalidOperationException("Person was not found.");
+        var existing = await photos.GetForPersonAsync(personId, userId, cancellationToken);
+        var removed = existing.FirstOrDefault(photo => photo.Id == photoId);
+        if (removed is null) return;
+
+        await photos.RemoveAsync(photoId, userId, cancellationToken);
+        if (removed.IsPrimary)
+        {
+            var replacement = existing.FirstOrDefault(photo => photo.Id != photoId);
+            if (replacement is not null)
+            {
+                await photos.SetPrimaryAsync(personId, replacement.Id, userId, cancellationToken);
+            }
+            person.PhotoPath = replacement?.FilePath;
+            await people.UpdateAsync(person, cancellationToken);
+        }
+    }
+
+    public async Task SetPrimaryPhotoAsync(string userId, Guid personId, Guid photoId, CancellationToken cancellationToken = default)
+    {
+        if (photos is null) return;
+        var person = await people.GetByIdAsync(personId, userId, cancellationToken)
+            ?? throw new InvalidOperationException("Person was not found.");
+        var photo = (await photos.GetForPersonAsync(personId, userId, cancellationToken)).FirstOrDefault(value => value.Id == photoId)
+            ?? throw new InvalidOperationException("Photo was not found.");
+        await photos.SetPrimaryAsync(personId, photoId, userId, cancellationToken);
+        person.PhotoPath = photo.FilePath;
+        await people.UpdateAsync(person, cancellationToken);
+    }
+
     private async Task<PersonDetailsDto> SaveCoreAsync(SavePersonRequest request, CancellationToken cancellationToken)
     {
         var userId = request.UserId.Trim();
         var existing = request.Id.HasValue ? await people.GetByIdAsync(request.Id.Value, userId, cancellationToken) : null;
         var now = DateTime.UtcNow;
-        var person = existing ?? new Person { Id = Guid.NewGuid(), UserId = userId, CreatedAt = now };
+        var person = existing ?? new Person { Id = request.Id ?? Guid.NewGuid(), UserId = userId, CreatedAt = now };
         person.Name = request.Name.Trim();
         person.FirstName = Normalize(request.FirstName);
         person.MiddleName = Normalize(request.MiddleName);
@@ -115,10 +218,17 @@ public sealed class PeopleManagementService(
                 var mediaItem = await mediaItems.GetByIdAsync(contribution.MediaItemId, person.UserId, cancellationToken);
                 if (mediaItem is not null)
                 {
-                    works.Add(new PersonWorkDto(mediaItem.Id, mediaItem.Title, mediaItem.MediaType,
-                        contribution.Role, contribution.Details, contribution.CreditedAs));
+                    works.Add(ToWorkDto(contribution, mediaItem));
                 }
             }
+        }
+
+        var photoDtos = photos is null
+            ? new List<PersonPhotoDto>()
+            : (await photos.GetForPersonAsync(person.Id, person.UserId, cancellationToken)).Select(ToPhotoDto).ToList();
+        if (photoDtos.Count == 0 && !string.IsNullOrWhiteSpace(person.PhotoPath))
+        {
+            photoDtos.Add(new PersonPhotoDto(Guid.Empty, person.PhotoPath, null, true, 0));
         }
 
         return new PersonDetailsDto
@@ -142,9 +252,28 @@ public sealed class PeopleManagementService(
             Notes = person.Notes,
             Professions = professionNames,
             Relations = relationDtos,
-            Works = works.OrderBy(value => value.Title).ToList()
+            Works = works.OrderBy(value => value.Title).ToList(),
+            Photos = photoDtos
         };
     }
+
+    private static PersonWorkDto ToWorkDto(MediaContribution contribution, MediaItem mediaItem) => new(
+        mediaItem.Id,
+        mediaItem.Title,
+        mediaItem.MediaType,
+        contribution.Role,
+        contribution.Details,
+        contribution.CreditedAs,
+        mediaItem.Rating,
+        mediaItem.CoverUrl,
+        mediaItem.ReleaseYear);
+
+    private static PersonPhotoDto ToPhotoDto(PersonPhoto photo) => new(
+        photo.Id,
+        photo.FilePath,
+        photo.Caption,
+        photo.IsPrimary,
+        photo.SortOrder);
 
     private static PersonRelationDto ToRelationDto(PersonRelation relation, Person relatedPerson, Guid perspectivePersonId)
     {

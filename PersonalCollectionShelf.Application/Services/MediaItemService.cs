@@ -120,7 +120,7 @@ public sealed class MediaItemService : IMediaItemService
             cancellationToken);
         var mediaItem = new MediaItem
         {
-            Id = Guid.NewGuid(),
+            Id = request.Id ?? Guid.NewGuid(),
             UserId = userId,
             Title = request.Title.Trim(),
             OriginalTitle = Normalize(request.OriginalTitle),

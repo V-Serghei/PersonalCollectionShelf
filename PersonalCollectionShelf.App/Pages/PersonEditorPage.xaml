@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.PersonEditorPage"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:PersonEditorViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+    <ScrollView x:Name="EditorScroll">
+        <VerticalStackLayout Padding="{OnIdiom Phone='16,14,16,40', Default='28'}" MaximumWidthRequest="820" Spacing="16">
+            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="28" Text="{Binding PageTitle}" />
+
+            <Border Padding="18" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProfileSectionTitle}" />
+                    <HorizontalStackLayout Spacing="16">
+                        <Border HeightRequest="116" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 14" WidthRequest="96">
+                            <Grid>
+                                <Image Aspect="AspectFill" IsVisible="{Binding HasPhoto}" Source="{Binding PhotoPath}" />
+                                <Label FontAttributes="Bold" FontSize="32" HorizontalTextAlignment="Center" IsVisible="{Binding HasDefaultPhoto}" Text="{Binding Initial}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout Spacing="8" VerticalOptions="Center">
+                            <Button Command="{Binding PickPhotoCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding PickPhotoText}" />
+                            <Label FontSize="11" Text="{Binding PhotoPath}" TextColor="{DynamicResource MutedForeground}" LineBreakMode="MiddleTruncation" MaxLines="1" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+
+                    <VerticalStackLayout Spacing="4"><Label Text="{Binding NameLabel}" /><Entry Text="{Binding Name}" /></VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Entry Placeholder="{Binding FirstNameLabel}" Text="{Binding FirstName}" />
+                        <Entry Grid.Column="1" Placeholder="{Binding LastNameLabel}" Text="{Binding LastName}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Entry Placeholder="{Binding MiddleNameLabel}" Text="{Binding MiddleName}" />
+                        <Entry Grid.Column="1" Placeholder="{Binding PenNameLabel}" Text="{Binding PenName}" />
+                    </Grid>
+                    <Entry Placeholder="{Binding SortNameLabel}" Text="{Binding SortName}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Entry Keyboard="Numeric" Placeholder="{Binding BirthYearLabel}" Text="{Binding BirthYear}" />
+                        <Entry Grid.Column="1" Keyboard="Numeric" Placeholder="{Binding DeathYearLabel}" Text="{Binding DeathYear}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Entry Placeholder="{Binding CountryLabel}" Text="{Binding Country}" />
+                        <Entry Grid.Column="1" Placeholder="{Binding PlaceOfBirthLabel}" Text="{Binding PlaceOfBirth}" />
+                    </Grid>
+                    <Entry Placeholder="{Binding GenderLabel}" Text="{Binding Gender}" />
+                    <Entry Keyboard="Url" Placeholder="{Binding WebsiteLabel}" Text="{Binding OfficialWebsite}" />
+                    <Entry Placeholder="{Binding TaglineLabel}" Text="{Binding Tagline}" />
+                    <Editor AutoSize="TextChanges" MinimumHeightRequest="90" Placeholder="{Binding DescriptionLabel}" Text="{Binding Description}" />
+                    <Editor AutoSize="TextChanges" MinimumHeightRequest="80" Placeholder="{Binding NotesLabel}" Text="{Binding Notes}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="18" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProfessionsSectionTitle}" />
+                    <FlexLayout BindableLayout.ItemsSource="{Binding Professions}" Direction="Row" Wrap="Wrap">
+                        <BindableLayout.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,0,7,7" Padding="9,4" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 10"><HorizontalStackLayout Spacing="5"><Label Text="{Binding .}" /><Button Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonEditorPage}}, Path=ViewModel.RemoveProfessionCommand, x:DataType={x:Type pages:PersonEditorPage}}" CommandParameter="{Binding .}" FontSize="11" Padding="3,0" Text="&#xD7;" /></HorizontalStackLayout></Border></DataTemplate></BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Entry Placeholder="{Binding ProfessionPlaceholder}" ReturnCommand="{Binding AddProfessionCommand}" Text="{Binding NewProfession}" />
+                        <Button Grid.Column="1" Command="{Binding AddProfessionCommand}" Text="{Binding AddText}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border IsVisible="{Binding CanManageRelations}" Padding="18" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RelationsSectionTitle}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Relations}" Spacing="6">
+                        <BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:PersonRelationDto"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label FontAttributes="Bold" Text="{Binding RelatedPersonName}" /><Label FontSize="11" Text="{Binding Kind}" TextColor="{DynamicResource MutedForeground}" /></VerticalStackLayout><Button Grid.Column="1" Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonEditorPage}}, Path=ViewModel.RemoveRelationCommand, x:DataType={x:Type pages:PersonEditorPage}}" CommandParameter="{Binding .}" Style="{StaticResource LinkButtonStyle}" Text="&#xD7;" /></Grid></DataTemplate></BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <Picker ItemsSource="{Binding RelatedPeople}" SelectedItem="{Binding SelectedRelatedPerson}" Title="{Binding RelatedPersonLabel}" />
+                    <Picker ItemsSource="{Binding RelationKinds}" SelectedItem="{Binding SelectedRelationKind}" Title="{Binding RelationKindLabel}" />
+                    <Entry Placeholder="{Binding NotesLabel}" Text="{Binding RelationNotes}" />
+                    <Button Command="{Binding AddRelationCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding AddText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="{Binding StatusMessage}" TextColor="{DynamicResource MutedForeground}" />
+            <Button Command="{Binding SaveCommand}" IsEnabled="{Binding IsNotBusy}" Text="{Binding SaveText}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

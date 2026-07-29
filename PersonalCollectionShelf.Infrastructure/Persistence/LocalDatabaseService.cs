@@ -53,6 +53,7 @@ public sealed class LocalDatabaseService
 
             await Connection.CreateTableAsync<MediaItemRecord>();
             await Connection.CreateTableAsync<PersonRecord>();
+            await Connection.CreateTableAsync<PersonPhotoRecord>();
             await Connection.CreateTableAsync<StudioRecord>();
             await Connection.CreateTableAsync<MediaItemCastMemberRecord>();
             await Connection.CreateTableAsync<MediaCategoryRecord>();

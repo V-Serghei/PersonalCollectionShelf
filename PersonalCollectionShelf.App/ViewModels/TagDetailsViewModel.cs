@@ -138,9 +138,6 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
     }
 
     [RelayCommand]
-    private Task GoBackAsync() => Shell.Current.GoToAsync("..");
-
-    [RelayCommand]
     private void ToggleSearch()
     {
         IsSearchVisible = !IsSearchVisible;

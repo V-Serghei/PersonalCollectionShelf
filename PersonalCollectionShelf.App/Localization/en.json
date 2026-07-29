@@ -181,9 +181,9 @@
   "Validation.ProgressCurrentExceedsTotal": "Current progress cannot be greater than total progress.",
   "Validation.ReleaseYearRange": "Release year must be between 1800 and 2200.",
   "Validation.NumberInvalid": "Enter valid numeric values.",
-  "Settings.Export.Description": "Export your library to a JSON file.",
+  "Settings.Export.Description": "Back up the library, people, relationships, and photos. The file can be saved to Google Drive.",
   "Settings.Import.ComingSoon": "Coming soon",
-  "Settings.Import.Description": "Import items from a JSON export.",
+  "Settings.Import.Description": "Restore a complete backup, including a file selected from Google Drive.",
   "Settings.Import.Goodreads.Description": "Books, shelves, and reviews",
   "Settings.Import.Letterboxd.Description": "Movies and TV series ratings",
   "Settings.Import.Mal.Description": "Anime and manga lists",
@@ -412,4 +412,44 @@
   ,"Profile.OpenSettings": "Account settings"
   ,"Profile.OpenPeople": "People and contributors"
   ,"People.SearchPlaceholder": "Search people"
+  ,"People.CatalogSubtitle": "Authors, actors, directors, and other contributors"
+  ,"People.ResultsFormat": "People found: {0}"
+  ,"People.NoDescription": "No description yet"
+  ,"People.WorkCountFormat": "Works: {0}"
+  ,"People.Sort.NameAscending": "Name A–Z"
+  ,"People.Sort.NameDescending": "Name Z–A"
+  ,"People.Sort.HighestRated": "Highest rated first"
+  ,"People.Sort.MostWorks": "Most works first"
+  ,"People.CreateTitle": "New person"
+  ,"People.EditTitle": "Edit profile"
+  ,"People.MiddleName": "Middle name"
+  ,"People.PickMainPhoto": "Choose main photo"
+  ,"People.PickPhotoTitle": "Choose a photo"
+  ,"People.AddPhoto": "Add photo"
+  ,"People.OpenGallery": "Open gallery"
+  ,"People.Gallery": "Photos"
+  ,"People.GalleryTitleFormat": "Gallery: {0}"
+  ,"People.GalleryEmpty": "No photos yet"
+  ,"People.PrimaryPhoto": "Primary"
+  ,"People.About": "About"
+  ,"People.TopWorks": "My top 5 rated works"
+  ,"People.AllWorks": "All works and roles"
+  ,"People.CreativeCategories": "Creative categories"
+  ,"Common.Edit": "Edit"
+  ,"ContributionRole.Author": "Author"
+  ,"ContributionRole.Translator": "Translator"
+  ,"ContributionRole.Illustrator": "Illustrator"
+  ,"ContributionRole.Editor": "Editor"
+  ,"ContributionRole.Director": "Director"
+  ,"ContributionRole.Screenwriter": "Screenwriter"
+  ,"ContributionRole.Actor": "Actor"
+  ,"ContributionRole.Composer": "Composer"
+  ,"ContributionRole.Artist": "Artist"
+  ,"ContributionRole.Developer": "Developer"
+  ,"ContributionRole.VoiceActor": "Voice actor"
+  ,"ContributionRole.Other": "Other"
+  ,"ContributionRole.Producer": "Producer"
+  ,"ContributionRole.Cinematographer": "Cinematographer"
+  ,"ContributionRole.CastingDirector": "Casting director"
+  ,"ContributionRole.ProductionDesigner": "Production designer"
 }

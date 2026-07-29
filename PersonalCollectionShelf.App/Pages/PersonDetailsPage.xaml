@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.PersonDetailsPage"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:PersonDetailsViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+    <ScrollView>
+        <VerticalStackLayout Padding="{OnIdiom Phone='16,14,16,40', Default='28'}" MaximumWidthRequest="920" Spacing="16">
+            <Border Padding="18" Style="{StaticResource CardBorderStyle}">
+                <Grid ColumnDefinitions="120,*,Auto" ColumnSpacing="18">
+                    <Border HeightRequest="154" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 14" WidthRequest="120">
+                        <Grid><Image Aspect="AspectFill" IsVisible="{Binding HasPhoto}" Source="{Binding PhotoPath}" /><Label FontAttributes="Bold" FontSize="40" HorizontalTextAlignment="Center" IsVisible="{Binding HasDefaultPhoto}" Text="{Binding Initial}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" /></Grid>
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="26" Text="{Binding Name}" />
+                        <Label FontSize="13" Text="{Binding Tagline}" TextColor="{DynamicResource Primary}" />
+                        <Label FontSize="11" Text="{Binding YearsText}" TextColor="{DynamicResource MutedForeground}" />
+                        <Label FontSize="11" Text="{Binding LocationText}" TextColor="{DynamicResource MutedForeground}" />
+                        <Label FontSize="11" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding RoleSummary}" />
+                        <Label FontSize="11" Text="{Binding WorkCountText}" TextColor="{DynamicResource MutedForeground}" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="2" Spacing="8">
+                        <Button Command="{Binding EditCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding EditText}" />
+                        <Button Command="{Binding AddPhotoCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding AddPhotoText}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <Border Padding="18" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AboutTitle}" />
+                    <Label LineHeight="1.25" Text="{Binding Biography}" />
+                    <Label FontSize="12" IsVisible="{Binding HasWebsite}" Text="{Binding Website}" TextColor="{DynamicResource Primary}" />
+                    <Label FontSize="12" IsVisible="{Binding HasNotes}" Text="{Binding Notes}" TextColor="{DynamicResource MutedForeground}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border Padding="16" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="9"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProfessionsTitle}" /><FlexLayout BindableLayout.ItemsSource="{Binding Professions}" Direction="Row" Wrap="Wrap"><BindableLayout.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,0,6,6" Padding="8,4" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9"><Label FontSize="11" Text="{Binding .}" /></Border></DataTemplate></BindableLayout.ItemTemplate></FlexLayout></VerticalStackLayout></Border>
+                <Border Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="9"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CategoriesTitle}" /><Label FontSize="12" LineBreakMode="WordWrap" Text="{Binding CategorySummary}" TextColor="{DynamicResource Primary}" /></VerticalStackLayout></Border>
+            </Grid>
+
+            <Border Padding="18" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding GalleryTitle}" /><Button Grid.Column="1" Command="{Binding OpenGalleryCommand}" IsVisible="{Binding HasPhotos}" Style="{StaticResource LinkButtonStyle}" Text="{Binding GalleryText}" /></Grid>
+                    <CollectionView HeightRequest="146" ItemsSource="{Binding Photos}" SelectionMode="None">
+                        <CollectionView.ItemsLayout><LinearItemsLayout ItemSpacing="10" Orientation="Horizontal" /></CollectionView.ItemsLayout>
+                        <CollectionView.EmptyView><Label Text="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonDetailsPage}}, Path=ViewModel.AddPhotoText, x:DataType={x:Type pages:PersonDetailsPage}}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate><DataTemplate x:DataType="viewModels:PersonPhotoViewModel"><VerticalStackLayout Spacing="4"><Border HeightRequest="104" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 9" WidthRequest="82"><Image Aspect="AspectFill" Source="{Binding FilePath}" /></Border><HorizontalStackLayout Spacing="2"><Button Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonDetailsPage}}, Path=ViewModel.SetPrimaryPhotoCommand, x:DataType={x:Type pages:PersonDetailsPage}}" CommandParameter="{Binding .}" FontSize="10" Padding="5,1" Style="{StaticResource LinkButtonStyle}" Text="★" /><Button Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonDetailsPage}}, Path=ViewModel.RemovePhotoCommand, x:DataType={x:Type pages:PersonDetailsPage}}" CommandParameter="{Binding .}" FontSize="10" Padding="5,1" Style="{StaticResource LinkButtonStyle}" Text="×" /></HorizontalStackLayout></VerticalStackLayout></DataTemplate></CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="18" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TopWorksTitle}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding TopWorks}" Spacing="7">
+                        <BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:PersonWorkDto"><Button Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonDetailsPage}}, Path=ViewModel.OpenWorkCommand, x:DataType={x:Type pages:PersonDetailsPage}}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}"><Button.Text><MultiBinding StringFormat="{}{0}  ★ {1}  ·  {2}"><Binding Path="Title" /><Binding Path="Rating" /><Binding Path="Role" /></MultiBinding></Button.Text></Button></DataTemplate></BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="18" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AllWorksTitle}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Works}" Spacing="7">
+                        <BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:PersonWorkDto"><Grid Padding="9" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8"><Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonDetailsPage}}, Path=ViewModel.OpenWorkCommand, x:DataType={x:Type pages:PersonDetailsPage}}" CommandParameter="{Binding .}" /></Grid.GestureRecognizers><VerticalStackLayout><Label FontAttributes="Bold" Text="{Binding Title}" /><Label FontSize="10" Text="{Binding Role}" TextColor="{DynamicResource MutedForeground}" /></VerticalStackLayout><Label Grid.Column="1" Text="{Binding MediaType}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" /><Label Grid.Column="2" Text="{Binding Rating, StringFormat='★ {0}'}" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" /></Grid></DataTemplate></BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="18" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RelationsTitle}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Relations}" Spacing="7"><BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:PersonRelationDto"><Button Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonDetailsPage}}, Path=ViewModel.OpenRelatedPersonCommand, x:DataType={x:Type pages:PersonDetailsPage}}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}"><Button.Text><MultiBinding StringFormat="{}{0}  ·  {1}"><Binding Path="RelatedPersonName" /><Binding Path="Kind" /></MultiBinding></Button.Text></Button></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

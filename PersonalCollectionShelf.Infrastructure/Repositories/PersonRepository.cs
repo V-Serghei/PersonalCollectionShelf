@@ -84,7 +84,7 @@ public sealed class PersonRepository(LocalDatabaseService databaseService) : IPe
                 record.SortName?.Contains(term, StringComparison.OrdinalIgnoreCase) == true ||
                 record.PenName?.Contains(term, StringComparison.OrdinalIgnoreCase) == true)
             .OrderBy(record => record.Name)
-            .Take(Math.Clamp(limit, 1, 100))
+            .Take(Math.Clamp(limit, 1, 500))
             .Select(ToDomain)
             .ToList();
     }

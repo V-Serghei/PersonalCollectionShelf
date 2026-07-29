@@ -408,6 +408,15 @@ public sealed class TagRepository(LocalDatabaseService databaseService) : ITagRe
 
 public sealed class MediaContributionRepository(LocalDatabaseService databaseService) : IMediaContributionRepository
 {
+    public async Task<IReadOnlyList<MediaContribution>> GetAllAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        var records = await databaseService.Connection.Table<MediaContributionRecord>()
+            .Where(record => record.UserId == userId)
+            .ToListAsync();
+        return records.Select(ToDomain).ToList();
+    }
+
     public async Task<IReadOnlyList<MediaContribution>> GetForItemAsync(Guid mediaItemId, string userId, CancellationToken cancellationToken = default)
     {
         await databaseService.InitializeAsync(cancellationToken);

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="PersonalCollectionShelf.App.Pages.PersonGalleryPage" x:Name="Root" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages" xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels" x:DataType="viewModels:PersonGalleryViewModel" BackgroundColor="{DynamicResource PageBackground}" Shell.NavBarIsVisible="False">
+    <Grid Padding="16" RowDefinitions="Auto,*,130" RowSpacing="14">
+        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="26" Text="{Binding PageTitle}" />
+        <Border Grid.Row="1" BackgroundColor="Black" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 12">
+            <Grid><Image Aspect="AspectFit" Source="{Binding SelectedPhoto.FilePath}" /><Label HorizontalTextAlignment="Center" IsVisible="False" Text="{Binding EmptyText}" TextColor="White" VerticalTextAlignment="Center"><Label.Triggers><DataTrigger Binding="{Binding SelectedPhoto}" TargetType="Label" Value="{x:Null}"><Setter Property="IsVisible" Value="True" /></DataTrigger></Label.Triggers></Label></Grid>
+        </Border>
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Photos}" SelectionMode="None"><CollectionView.ItemsLayout><LinearItemsLayout ItemSpacing="10" Orientation="Horizontal" /></CollectionView.ItemsLayout><CollectionView.ItemTemplate><DataTemplate x:DataType="viewModels:PersonPhotoViewModel"><Border HeightRequest="120" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 9" WidthRequest="90"><Border.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonGalleryPage}}, Path=ViewModel.SelectPhotoCommand, x:DataType={x:Type pages:PersonGalleryPage}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers><Image Aspect="AspectFill" Source="{Binding FilePath}" /></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    </Grid>
+</ContentPage>

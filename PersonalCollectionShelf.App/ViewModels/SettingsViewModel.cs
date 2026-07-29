@@ -17,6 +17,7 @@ public partial class SettingsViewModel : BaseViewModel
 {
     private readonly ISyncService _syncService;
     private readonly IMediaItemService _mediaItemService;
+    private readonly IPeopleManagementService _peopleManagementService;
     private readonly IAuthService _authService;
     private readonly IAppearanceService _appearanceService;
     private bool _suppressLanguageChange;
@@ -36,6 +37,7 @@ public partial class SettingsViewModel : BaseViewModel
     public SettingsViewModel(
         ISyncService syncService,
         IMediaItemService mediaItemService,
+        IPeopleManagementService peopleManagementService,
         IAuthService authService,
         ILocalizationService localizationService,
         IAppearanceService appearanceService)
@@ -43,6 +45,7 @@ public partial class SettingsViewModel : BaseViewModel
     {
         _syncService = syncService;
         _mediaItemService = mediaItemService;
+        _peopleManagementService = peopleManagementService;
         _authService = authService;
         _appearanceService = appearanceService;
         _isDarkTheme = _appearanceService.IsDarkTheme;
@@ -302,9 +305,11 @@ public partial class SettingsViewModel : BaseViewModel
     {
         var userId = await GetCurrentUserIdAsync();
         var items = await _mediaItemService.GetLibraryAsync(userId);
+        var people = await BuildPersonExportsAsync(userId);
         var document = new LibraryExportDocument
         {
-            Items = items
+            Items = items,
+            People = people
         };
 
         var exportsDirectory = Path.Combine(FileSystem.AppDataDirectory, "exports");
@@ -360,6 +365,77 @@ public partial class SettingsViewModel : BaseViewModel
         var imported = 0;
         var updated = 0;
 
+        foreach (var exportedPerson in document.People)
+        {
+            var person = exportedPerson.Person;
+            var saved = await _peopleManagementService.SaveAsync(new SavePersonRequest
+            {
+                Id = person.Id,
+                UserId = userId,
+                Name = person.Name,
+                FirstName = person.FirstName,
+                MiddleName = person.MiddleName,
+                LastName = person.LastName,
+                PenName = person.PenName,
+                SortName = person.SortName,
+                BirthYear = person.BirthYear,
+                DeathYear = person.DeathYear,
+                Country = person.Country,
+                PlaceOfBirth = person.PlaceOfBirth,
+                Gender = person.Gender,
+                OfficialWebsite = person.OfficialWebsite,
+                Tagline = person.Tagline,
+                Description = person.Description,
+                Notes = person.Notes,
+                Professions = person.Professions
+            });
+
+            foreach (var portablePhoto in exportedPerson.Photos)
+            {
+                if (string.IsNullOrWhiteSpace(portablePhoto.DataBase64)) continue;
+                var extension = NormalizePhotoExtension(portablePhoto.Extension);
+                var directory = Path.Combine(FileSystem.AppDataDirectory, "person-photos");
+                Directory.CreateDirectory(directory);
+                var photoPath = Path.Combine(directory, $"{portablePhoto.Id:N}{extension}");
+                if (!File.Exists(photoPath))
+                {
+                    await File.WriteAllBytesAsync(photoPath, Convert.FromBase64String(portablePhoto.DataBase64));
+                }
+                await _peopleManagementService.AddPhotoAsync(new AddPersonPhotoRequest
+                {
+                    Id = portablePhoto.Id,
+                    UserId = userId,
+                    PersonId = saved.Id,
+                    FilePath = photoPath,
+                    Caption = portablePhoto.Caption
+                });
+                if (portablePhoto.IsPrimary)
+                {
+                    await _peopleManagementService.SetPrimaryPhotoAsync(userId, saved.Id, portablePhoto.Id);
+                }
+            }
+        }
+
+        var importedRelations = new HashSet<Guid>();
+        foreach (var exportedPerson in document.People)
+        {
+            foreach (var relation in exportedPerson.Person.Relations.Where(relation => importedRelations.Add(relation.Id)))
+            {
+                await _peopleManagementService.SaveRelationAsync(new SavePersonRelationRequest
+                {
+                    Id = relation.Id,
+                    UserId = userId,
+                    PersonId = exportedPerson.Person.Id,
+                    RelatedPersonId = relation.RelatedPersonId,
+                    Kind = relation.Kind,
+                    InverseKind = relation.InverseKind,
+                    StartDate = relation.StartDate,
+                    EndDate = relation.EndDate,
+                    Notes = relation.Notes
+                });
+            }
+        }
+
         foreach (var item in document.Items)
         {
             var existing = item.Id == Guid.Empty
@@ -379,6 +455,38 @@ public partial class SettingsViewModel : BaseViewModel
         }
 
         StatusMessage = string.Format(T("Settings.Import.Completed"), imported, updated);
+    }
+
+    private async Task<IReadOnlyList<PersonExportDocument>> BuildPersonExportsAsync(string userId)
+    {
+        var result = new List<PersonExportDocument>();
+        foreach (var summary in await _peopleManagementService.GetCatalogAsync(userId))
+        {
+            var person = await _peopleManagementService.GetAsync(userId, summary.Id);
+            if (person is null) continue;
+            var photos = new List<PortablePersonPhoto>();
+            foreach (var photo in person.Photos)
+            {
+                if (!File.Exists(photo.FilePath)) continue;
+                photos.Add(new PortablePersonPhoto
+                {
+                    Id = photo.Id == Guid.Empty ? Guid.NewGuid() : photo.Id,
+                    Caption = photo.Caption,
+                    IsPrimary = photo.IsPrimary,
+                    SortOrder = photo.SortOrder,
+                    Extension = NormalizePhotoExtension(Path.GetExtension(photo.FilePath)),
+                    DataBase64 = Convert.ToBase64String(await File.ReadAllBytesAsync(photo.FilePath))
+                });
+            }
+            result.Add(new PersonExportDocument { Person = person, Photos = photos });
+        }
+        return result;
+    }
+
+    private static string NormalizePhotoExtension(string? extension)
+    {
+        var normalized = extension?.ToLowerInvariant();
+        return normalized is ".jpg" or ".jpeg" or ".png" or ".webp" ? normalized : ".jpg";
     }
 
     [RelayCommand]
@@ -490,6 +598,7 @@ public partial class SettingsViewModel : BaseViewModel
     {
         return new CreateMediaItemRequest
         {
+            Id = item.Id,
             UserId = userId,
             Title = item.Title,
             OriginalTitle = item.OriginalTitle,
