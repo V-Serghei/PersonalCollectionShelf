@@ -201,6 +201,8 @@
   "Edit.Label.Editors": "Редакторы",
   "Edit.Action.AddPerson": "Добавить человека",
   "Edit.Action.CreatePerson": "Создать и добавить",
+  "Edit.Validation.PersonNameRequired": "Сначала введите имя нового человека.",
+  "Edit.Error.CreatePerson": "Не удалось создать человека. Попробуйте ещё раз.",
   "Edit.Placeholder.SearchPerson": "Найдите человека или введите новое имя",
   "Edit.Contributor.Author": "Добавить автора",
   "Edit.Contributor.Translator": "Добавить переводчика",
@@ -452,4 +454,42 @@
   ,"ContributionRole.Cinematographer": "Оператор"
   ,"ContributionRole.CastingDirector": "Кастинг-директор"
   ,"ContributionRole.ProductionDesigner": "Художник-постановщик"
+  ,"Dashboard.Greeting.Morning": "Доброе утро"
+  ,"Dashboard.Greeting.Afternoon": "Добрый день"
+  ,"Dashboard.Greeting.Evening": "Добрый вечер"
+  ,"Dashboard.SubtitleFormat": "В процессе: {0} · запланировано: {1}"
+  ,"Dashboard.Continue": "Продолжить"
+  ,"Dashboard.RecentlyAdded": "Недавно добавленные"
+  ,"Dashboard.CategoryOverview": "Обзор категорий"
+  ,"Dashboard.SeeAll": "Показать все"
+  ,"Dashboard.FullStatistics": "Вся статистика"
+  ,"Dashboard.ItemCountFormat": "Объектов: {0}"
+  ,"Statistics.AverageRating": "Средняя оценка"
+  ,"Statistics.Completion": "Завершено"
+  ,"Statistics.Collection": "Коллекция"
+  ,"Statistics.MonthlyActivity": "Активность по месяцам"
+  ,"Statistics.ByCategory": "По категориям"
+  ,"Statistics.ByStatus": "По статусам"
+  ,"Statistics.Items": "объектов"
+  ,"Statistics.CompletionFormat": "Завершено: {0} из {1}"
+  ,"Statistics.CategoriesFormat": "Категорий: {0}"
+  ,"Settings.Appearance.Title": "Оформление"
+  ,"Settings.Accent.Title": "Цвет акцента"
+  ,"Settings.Accent.Description": "Настройте цвет выделения интерфейса"
+  ,"Settings.Background.Title": "Фон"
+  ,"Settings.Background.CustomImage": "Собственное фоновое изображение"
+  ,"Settings.Background.ChooseImage": "Выбрать изображение..."
+  ,"Settings.Background.Remove": "Удалить"
+  ,"Settings.Background.Blur": "Размытие"
+  ,"Settings.Background.None": "Фон не выбран"
+  ,"Settings.DataImport.Title": "Данные и импорт"
+  ,"Settings.Theme.ModeDescription": "Переключение между светлой и тёмной темой"
+  ,"Settings.Theme.Dark": "Тёмная"
+  ,"Settings.Theme.Light": "Светлая"
+  ,"Settings.Appearance.DarkEnabled": "Тёмная тема включена"
+  ,"Settings.Appearance.LightEnabled": "Светлая тема включена"
+  ,"Settings.Appearance.BackgroundUpdated": "Фоновое изображение обновлено"
+  ,"Settings.Appearance.BackgroundLoadError": "Не удалось загрузить фоновое изображение"
+  ,"Settings.Appearance.BackgroundCleared": "Фоновое изображение удалено"
+  ,"Settings.Appearance.AccentUpdated": "Цвет акцента обновлён"
 }

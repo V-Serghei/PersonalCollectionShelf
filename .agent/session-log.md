@@ -90,3 +90,16 @@
   Series/Universes now expose search from a compact button and collapse it when not needed.
 - Added People to the primary sidebar and a clickable profile footer backed by a dedicated profile
   page with account/library summary and links to contributors and account settings.
+
+## 2026-07-29
+
+- Shortened the Android launcher label to `Shelf` and explicitly connected the generated regular
+  and round launcher icon resources in the Android manifest.
+- Made the person picker's create-and-add action report missing names and failures, show progress,
+  and reliably attach the created person to the pending contribution role.
+- Reworked Android focus-aware form positioning so a manual scroll cancels a pending automatic
+  move; entering text can request positioning again without an animated scroll fighting the user.
+- Removed hardcoded English from Dashboard, Statistics, and appearance settings; localized month
+  labels, collection kinds, people roles, media types, and relationship kinds.
+- Kept Firebase behavior unchanged: configuration is still device-local, Google sign-in is not yet
+  implemented, and Firestore synchronization remains a placeholder.

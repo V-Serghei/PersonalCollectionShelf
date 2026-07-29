@@ -16,7 +16,7 @@
             BackgroundColor="{DynamicResource PageBackground}"
             ColumnDefinitions="*,Auto"
             ColumnSpacing="10">
-            <Button Grid.Column="1" Command="{Binding CreateMediaItemCommand}" Text="+  Add Item" />
+            <Button Grid.Column="1" Command="{Binding CreateMediaItemCommand}" Text="{Binding AddItemText}" />
         </Grid>
 
         <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
@@ -30,7 +30,7 @@
                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
 
                 <VerticalStackLayout Spacing="8">
-                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="APPEARANCE" />
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AppearanceSectionTitle}" />
                     <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="0">
                             <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
@@ -46,8 +46,8 @@
 
                             <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
-                                    <Label FontAttributes="Bold" FontSize="14" Text="Accent Color" />
-                                    <Label FontSize="12" Text="Personalize your highlight color" TextColor="{DynamicResource Primary}" />
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccentColorTitle}" />
+                                    <Label FontSize="12" Text="{Binding AccentColorDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
                                 <HorizontalStackLayout Grid.Column="1" Spacing="7" VerticalOptions="Center">
                                     <Border BackgroundColor="#9D7FF4" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
@@ -93,23 +93,23 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="8">
-                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="BACKGROUND" />
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BackgroundSectionTitle}" />
                     <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="0">
                             <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
-                                    <Label FontAttributes="Bold" FontSize="14" Text="Custom background image" />
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding CustomBackgroundTitle}" />
                                     <Label FontSize="12" Text="{Binding BackgroundImageDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Button Grid.Column="1" Command="{Binding PickBackgroundImageCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="Choose image..." />
-                                <Button Grid.Column="2" Command="{Binding ClearBackgroundImageCommand}" IsVisible="{Binding HasBackgroundImage}" Style="{StaticResource DangerButtonStyle}" Text="Remove" />
+                                <Button Grid.Column="1" Command="{Binding PickBackgroundImageCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding ChooseBackgroundImageText}" />
+                                <Button Grid.Column="2" Command="{Binding ClearBackgroundImageCommand}" IsVisible="{Binding HasBackgroundImage}" Style="{StaticResource DangerButtonStyle}" Text="{Binding RemoveBackgroundText}" />
                             </Grid>
 
                             <BoxView HeightRequest="1" IsVisible="{Binding HasBackgroundImage}" Color="{DynamicResource Border}" />
 
                             <Grid Padding="16" ColumnDefinitions="*,60" ColumnSpacing="14" IsVisible="{Binding HasBackgroundImage}">
                                 <VerticalStackLayout Grid.Column="0" Spacing="8">
-                                    <Label FontAttributes="Bold" FontSize="14" Text="Blur" />
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding BackgroundBlurLabel}" />
                                     <Slider Maximum="40" Minimum="0" Value="{Binding BackgroundBlur, Mode=TwoWay}" />
                                 </VerticalStackLayout>
                                 <Label Grid.Column="1" FontSize="14" HorizontalTextAlignment="End" Text="{Binding BackgroundBlurText}" TextColor="{DynamicResource MutedForeground}" VerticalOptions="Center" />
@@ -175,7 +175,7 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="8">
-                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="DATA &amp; IMPORT" />
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding DataImportSectionTitle}" />
                     <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="0">
                             <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">

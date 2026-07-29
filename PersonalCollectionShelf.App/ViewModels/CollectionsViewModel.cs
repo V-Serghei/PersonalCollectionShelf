@@ -6,12 +6,14 @@ using PersonalCollectionShelf.App.Services;
 
 namespace PersonalCollectionShelf.App.ViewModels;
 
+public sealed record CollectionCardViewModel(Guid Id, string Name, string KindLabel, IReadOnlyList<CollectionItemDto> Items);
+
 public partial class CollectionsViewModel(ICollectionExplorerService explorer, IAuthService auth, ILocalizationService localization) : BaseViewModel(localization)
 {
     private IReadOnlyList<CollectionExplorerDto> _allCollections = [];
     private string _searchText = string.Empty;
     private bool _isSearchVisible;
-    public ObservableCollection<CollectionExplorerDto> Collections { get; } = [];
+    public ObservableCollection<CollectionCardViewModel> Collections { get; } = [];
     public string PageTitle => T("Collections.Title");
     public string EmptyText => T("Collections.Empty");
     public string SearchPlaceholder => T("Collections.SearchPlaceholder");
@@ -40,8 +42,18 @@ public partial class CollectionsViewModel(ICollectionExplorerService explorer, I
                      term.Length == 0 || value.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                      value.Items.Any(item => item.Title.Contains(term, StringComparison.OrdinalIgnoreCase))))
         {
-            Collections.Add(collection);
+            Collections.Add(new CollectionCardViewModel(
+                collection.Id,
+                collection.Name,
+                T($"CollectionKind.{collection.Kind}"),
+                collection.Items));
         }
+    }
+
+    protected override void RefreshLocalizedProperties()
+    {
+        base.RefreshLocalizedProperties();
+        ApplyFilter();
     }
 
     [RelayCommand]

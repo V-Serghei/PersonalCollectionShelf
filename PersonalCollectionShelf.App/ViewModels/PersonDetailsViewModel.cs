@@ -11,12 +11,26 @@ namespace PersonalCollectionShelf.App.ViewModels;
 
 public sealed record PersonPhotoViewModel(Guid Id, string FilePath, string Caption, bool IsPrimary, string PrimaryText);
 
+public sealed record PersonWorkViewModel(
+    Guid MediaItemId,
+    string Title,
+    string MediaTypeLabel,
+    string RoleLabel,
+    decimal? Rating);
+
+public sealed record PersonRelationViewModel(
+    Guid Id,
+    Guid RelatedPersonId,
+    string RelatedPersonName,
+    string KindLabel);
+
 public partial class PersonDetailsViewModel : BaseViewModel, IQueryAttributable
 {
     private readonly IPeopleManagementService _people;
     private readonly IAuthService _auth;
     private Guid _personId;
     private string _userId = "local-user";
+    private PersonDetailsDto? _details;
 
     [ObservableProperty] public partial string Name { get; set; } = string.Empty;
     [ObservableProperty] public partial string PhotoPath { get; set; } = string.Empty;
@@ -37,9 +51,9 @@ public partial class PersonDetailsViewModel : BaseViewModel, IQueryAttributable
 
     public ObservableCollection<string> Professions { get; } = [];
     public ObservableCollection<PersonPhotoViewModel> Photos { get; } = [];
-    public ObservableCollection<PersonWorkDto> TopWorks { get; } = [];
-    public ObservableCollection<PersonWorkDto> Works { get; } = [];
-    public ObservableCollection<PersonRelationDto> Relations { get; } = [];
+    public ObservableCollection<PersonWorkViewModel> TopWorks { get; } = [];
+    public ObservableCollection<PersonWorkViewModel> Works { get; } = [];
+    public ObservableCollection<PersonRelationViewModel> Relations { get; } = [];
 
     public string PageTitle => Name;
     public string EditText => T("Common.Edit");
@@ -75,6 +89,7 @@ public partial class PersonDetailsViewModel : BaseViewModel, IQueryAttributable
             _userId = await _auth.GetCurrentUserIdAsync() ?? "local-user";
             var person = await _people.GetAsync(_userId, _personId);
             if (person is null) return;
+            _details = person;
             Name = person.Name;
             PhotoPath = person.PhotoPath ?? person.Photos.FirstOrDefault(photo => photo.IsPrimary)?.FilePath ?? string.Empty;
             Tagline = person.Tagline ?? string.Empty;
@@ -83,14 +98,8 @@ public partial class PersonDetailsViewModel : BaseViewModel, IQueryAttributable
             YearsText = FormatYears(person.BirthYear, person.DeathYear);
             LocationText = string.Join(" • ", new[] { person.PlaceOfBirth, person.Country }.Where(value => !string.IsNullOrWhiteSpace(value)));
             Website = person.OfficialWebsite ?? string.Empty;
-            RoleSummary = string.Join("  •  ", person.Works.Select(work => T($"ContributionRole.{work.Role}")).Distinct().Take(6));
-            CategorySummary = string.Join("  •  ", person.Works.GroupBy(work => work.MediaType).OrderByDescending(group => group.Count()).Select(group => $"{T($"MediaType.{group.Key}")} {group.Count()}"));
             Replace(Professions, person.Professions);
-            Replace(Relations, person.Relations);
-            Replace(Works, person.Works.OrderByDescending(work => work.Rating ?? -1).ThenBy(work => work.Title));
-            Replace(TopWorks, person.Works.Where(work => work.Rating.HasValue).OrderByDescending(work => work.Rating).ThenBy(work => work.Title).Take(5));
-            Replace(Photos, person.Photos.Where(photo => IsUsablePhoto(photo.FilePath)).Select(photo => new PersonPhotoViewModel(
-                photo.Id, photo.FilePath, photo.Caption ?? string.Empty, photo.IsPrimary, photo.IsPrimary ? T("People.PrimaryPhoto") : string.Empty)));
+            PopulateLocalizedDetails(person);
             NotifyCalculated();
         }
         finally { IsBusy = false; }
@@ -103,10 +112,10 @@ public partial class PersonDetailsViewModel : BaseViewModel, IQueryAttributable
     private Task OpenGalleryAsync() => AppNavigation.OpenPersonGalleryAsync(_personId);
 
     [RelayCommand]
-    private Task OpenWorkAsync(PersonWorkDto work) => AppNavigation.OpenMediaDetailsAsync(work.MediaItemId);
+    private Task OpenWorkAsync(PersonWorkViewModel work) => AppNavigation.OpenMediaDetailsAsync(work.MediaItemId);
 
     [RelayCommand]
-    private Task OpenRelatedPersonAsync(PersonRelationDto relation) => AppNavigation.OpenPersonAsync(relation.RelatedPersonId);
+    private Task OpenRelatedPersonAsync(PersonRelationViewModel relation) => AppNavigation.OpenPersonAsync(relation.RelatedPersonId);
 
     [RelayCommand]
     private async Task AddPhotoAsync()
@@ -145,6 +154,47 @@ public partial class PersonDetailsViewModel : BaseViewModel, IQueryAttributable
         OnPropertyChanged(nameof(HasPhotos)); OnPropertyChanged(nameof(HasBiography)); OnPropertyChanged(nameof(HasNotes));
         OnPropertyChanged(nameof(HasWebsite)); OnPropertyChanged(nameof(Initial)); OnPropertyChanged(nameof(WorkCountText));
     }
+
+    protected override void RefreshLocalizedProperties()
+    {
+        base.RefreshLocalizedProperties();
+        if (_details is not null)
+        {
+            Biography = _details.Description ?? T("People.NoDescription");
+            PopulateLocalizedDetails(_details);
+            NotifyCalculated();
+        }
+    }
+
+    private void PopulateLocalizedDetails(PersonDetailsDto person)
+    {
+        RoleSummary = string.Join("  •  ", person.Works.Select(work => T($"ContributionRole.{work.Role}")).Distinct().Take(6));
+        CategorySummary = string.Join("  •  ", person.Works.GroupBy(work => work.MediaType).OrderByDescending(group => group.Count()).Select(group => $"{T($"MediaType.{group.Key}")} {group.Count()}"));
+        Replace(Relations, person.Relations.Select(relation => new PersonRelationViewModel(
+            relation.Id,
+            relation.RelatedPersonId,
+            relation.RelatedPersonName,
+            T($"PersonRelationKind.{relation.Kind}"))));
+        Replace(Works, person.Works
+            .OrderByDescending(work => work.Rating ?? -1)
+            .ThenBy(work => work.Title)
+            .Select(ToLocalizedWork));
+        Replace(TopWorks, person.Works
+            .Where(work => work.Rating.HasValue)
+            .OrderByDescending(work => work.Rating)
+            .ThenBy(work => work.Title)
+            .Take(5)
+            .Select(ToLocalizedWork));
+        Replace(Photos, person.Photos.Where(photo => IsUsablePhoto(photo.FilePath)).Select(photo => new PersonPhotoViewModel(
+            photo.Id, photo.FilePath, photo.Caption ?? string.Empty, photo.IsPrimary, photo.IsPrimary ? T("People.PrimaryPhoto") : string.Empty)));
+    }
+
+    private PersonWorkViewModel ToLocalizedWork(PersonWorkDto work) => new(
+        work.MediaItemId,
+        work.Title,
+        T($"MediaType.{work.MediaType}"),
+        T($"ContributionRole.{work.Role}"),
+        work.Rating);
 
     private static string FormatYears(int? birth, int? death) => birth.HasValue || death.HasValue ? $"{birth?.ToString(CultureInfo.InvariantCulture) ?? "?"} — {death?.ToString(CultureInfo.InvariantCulture) ?? "…"}" : string.Empty;
     private static bool IsUsablePhoto(string? path) => !string.IsNullOrWhiteSpace(path) && ((Uri.TryCreate(path, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https") || File.Exists(path));

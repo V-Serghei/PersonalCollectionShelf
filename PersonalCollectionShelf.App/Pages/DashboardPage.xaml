@@ -8,7 +8,7 @@
     x:DataType="viewModels:LibraryViewModel"
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
-    Title="Home">
+    Title="{Binding DashboardTitle}">
     <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
         <Grid
             x:Name="TopBar"
@@ -27,7 +27,7 @@
                     <Entry
                         Grid.Column="1"
                         BackgroundColor="Transparent"
-                        Placeholder="Search..."
+                        Placeholder="{Binding SearchPlaceholder}"
                         Text="{Binding SearchTerm}" />
                     <Border
                         Grid.Column="2"
@@ -45,7 +45,7 @@
             <Button
                 Grid.Column="1"
                 Command="{Binding CreateMediaItemCommand}"
-                Text="+  Add Item" />
+                Text="{Binding AddButtonText}" />
         </Grid>
 
         <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
@@ -74,7 +74,7 @@
                             <TapGestureRecognizer Command="{Binding OpenLibraryCommand}" />
                         </Border.GestureRecognizers>
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
-                            <Label FontAttributes="Bold" FontSize="10" Text="Total Items" TextColor="{DynamicResource Primary}" />
+                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding TotalItemsLabel}" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
                                 <Border BackgroundColor="#269D7FF4" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
                                     <Label FontAttributes="Bold" FontSize="11" HorizontalTextAlignment="Center" Text="Σ" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
@@ -102,7 +102,7 @@
                             <TapGestureRecognizer Command="{Binding OpenInProgressCommand}" />
                         </Border.GestureRecognizers>
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
-                            <Label FontAttributes="Bold" FontSize="10" Text="In Progress" TextColor="{DynamicResource Primary}" />
+                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding InProgressItemsLabel}" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
                                 <Border BackgroundColor="#2260A5FA" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
                                     <Label FontSize="11" HorizontalTextAlignment="Center" Text="▶" TextColor="{StaticResource Info}" VerticalTextAlignment="Center" />
@@ -116,7 +116,7 @@
                             <TapGestureRecognizer Command="{Binding OpenPlannedCommand}" />
                         </Border.GestureRecognizers>
                         <Grid RowDefinitions="Auto,*" RowSpacing="7">
-                            <Label FontAttributes="Bold" FontSize="10" Text="Wishlist" TextColor="{DynamicResource Primary}" />
+                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding WishlistItemsLabel}" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
                                 <Border BackgroundColor="#22FBBF24" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
                                     <Label FontSize="15" HorizontalTextAlignment="Center" Text="☆" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />

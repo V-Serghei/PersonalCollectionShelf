@@ -19,10 +19,10 @@
         <CollectionView Grid.Row="2" ItemsSource="{Binding Collections}" SelectionMode="None">
             <CollectionView.EmptyView><Label Margin="0,36" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="dto:CollectionExplorerDto">
+                <DataTemplate x:DataType="viewModels:CollectionCardViewModel">
                     <Border Margin="0,0,0,12" Padding="16" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="10">
-                            <Grid ColumnDefinitions="*,Auto"><Label FontAttributes="Bold" FontSize="18" Text="{Binding Name}" /><Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 10"><Label FontSize="11" Text="{Binding Kind}" /></Border></Grid>
+                            <Grid ColumnDefinitions="*,Auto"><Label FontAttributes="Bold" FontSize="18" Text="{Binding Name}" /><Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 10"><Label FontSize="11" Text="{Binding KindLabel}" /></Border></Grid>
                             <VerticalStackLayout BindableLayout.ItemsSource="{Binding Items}" Spacing="7"><BindableLayout.ItemTemplate><DataTemplate x:DataType="dto:CollectionItemDto"><Button Command="{Binding Source={x:Reference Root}, Path=ViewModel.OpenItemCommand, x:DataType={x:Type pages:CollectionsPage}}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}"><Button.Text><MultiBinding StringFormat="{}{0}  {1}"><Binding Path="Position" /><Binding Path="Title" /></MultiBinding></Button.Text></Button></DataTemplate></BindableLayout.ItemTemplate></VerticalStackLayout>
                         </VerticalStackLayout>
                     </Border>

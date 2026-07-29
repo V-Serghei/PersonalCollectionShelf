@@ -270,23 +270,39 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     public string WishlistItemsLabel => T("MediaStatus.Planned");
 
-    public string DashboardTitle => $"{GetGreeting()}, Alex";
+    public string DashboardTitle => GetGreeting();
 
-    public string DashboardSubtitle => $"You have {InProgressItemCount} items in progress - {WishlistItemCount} in wishlist";
+    public string DashboardSubtitle => string.Format(T("Dashboard.SubtitleFormat"), InProgressItemCount, WishlistItemCount);
 
-    public string ContinueSectionTitle => "Continue";
+    public string ContinueSectionTitle => T("Dashboard.Continue");
 
-    public string RecentlyAddedSectionTitle => "Recently Added";
+    public string RecentlyAddedSectionTitle => T("Dashboard.RecentlyAdded");
 
     public string FavoritesSectionTitle => T("Library.QuickFilter.Favorites");
 
-    public string CategoryOverviewTitle => "Category Overview";
+    public string CategoryOverviewTitle => T("Dashboard.CategoryOverview");
 
-    public string SeeAllText => "See all";
+    public string SeeAllText => T("Dashboard.SeeAll");
 
-    public string FullStatsText => "Full Stats";
+    public string FullStatsText => T("Dashboard.FullStatistics");
 
-    public string LibraryCountText => $"{TotalItemCount} items";
+    public string LibraryCountText => string.Format(T("Dashboard.ItemCountFormat"), TotalItemCount);
+
+    public string StatisticsTitle => T("Shell.Statistics");
+
+    public string AverageRatingLabel => T("Statistics.AverageRating");
+
+    public string CompletionLabel => T("Statistics.Completion");
+
+    public string CollectionLabel => T("Statistics.Collection");
+
+    public string MonthlyActivityTitle => T("Statistics.MonthlyActivity");
+
+    public string ByCategoryTitle => T("Statistics.ByCategory");
+
+    public string ByStatusTitle => T("Statistics.ByStatus");
+
+    public string StatisticsItemsLabel => T("Statistics.Items");
 
     public string AverageRatingText
     {
@@ -316,15 +332,16 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         }
     }
 
-    public string CompletionSubtitle => $"{CompletedItemCount} of {TotalItemCount} items";
+    public string CompletionSubtitle => string.Format(T("Statistics.CompletionFormat"), CompletedItemCount, TotalItemCount);
 
-    public string CollectionSubtitle => $"across {CategorySummaries.Count(summary => summary.Count > 0)} categories";
+    public string CollectionSubtitle => string.Format(T("Statistics.CategoriesFormat"), CategorySummaries.Count(summary => summary.Count > 0));
 
     protected override void RefreshLocalizedProperties()
     {
         base.RefreshLocalizedProperties();
         ReloadFilterOptions();
         PopulateMediaItems(_visibleItems);
+        PopulateDashboardCollections(_visibleItems);
     }
 
     private void OnSelectedMediaTypeFilterChanged(LocalizedOption<MediaType?>? value)
@@ -762,7 +779,8 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         {
             var month = new DateTime(now.Year, now.Month, 1).AddMonths(-offset);
             var count = items.Count(item => item.CreatedAt.Year == month.Year && item.CreatedAt.Month == month.Month);
-            MonthlyActivity.Add(new MonthlyActivityPoint(month.ToString("MMM", CultureInfo.InvariantCulture), count));
+            var culture = CultureInfo.GetCultureInfo(LocalizationService.CurrentLanguage);
+            MonthlyActivity.Add(new MonthlyActivityPoint(month.ToString("MMM", culture), count));
         }
     }
 
@@ -890,14 +908,14 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         return await _authService.GetCurrentUserIdAsync() ?? "local-user";
     }
 
-    private static string GetGreeting()
+    private string GetGreeting()
     {
         var hour = DateTime.Now.Hour;
         return hour switch
         {
-            < 12 => "Good morning",
-            < 18 => "Good afternoon",
-            _ => "Good evening"
+            < 12 => T("Dashboard.Greeting.Morning"),
+            < 18 => T("Dashboard.Greeting.Afternoon"),
+            _ => T("Dashboard.Greeting.Evening")
         };
     }
 }

@@ -68,7 +68,7 @@
                     x:Name="LibrarySearch"
                     Grid.Column="0"
                     IsVisible="False"
-                    Placeholder="Search your library..."
+                Placeholder="{Binding SearchPlaceholder}"
                     SearchCommand="{Binding LoadCommand}"
                     Text="{Binding SearchTerm}" />
                 <Picker

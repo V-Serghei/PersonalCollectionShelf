@@ -11,7 +11,8 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
-    <ApplicationTitle>PersonalCollectionShelf</ApplicationTitle>
+    <ApplicationTitle>Personal Collection Shelf</ApplicationTitle>
+    <ApplicationTitle Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">Shelf</ApplicationTitle>
     <ApplicationId>com.personalcollectionshelf.app</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>

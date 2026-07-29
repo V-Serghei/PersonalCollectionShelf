@@ -24,6 +24,7 @@ public partial class SettingsViewModel : BaseViewModel
     private bool _isDarkTheme;
     private double _backgroundBlur;
     private string _statusMessageKey = "Sync.Status.NotConfigured";
+    private string? _appearanceStatusKey;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
@@ -91,16 +92,16 @@ public partial class SettingsViewModel : BaseViewModel
             if (SetProperty(ref _isDarkTheme, value))
             {
                 _appearanceService.SetTheme(value);
-                AppearanceStatusMessage = value ? "Dark theme enabled" : "Light theme enabled";
+                SetAppearanceStatus(value ? "Settings.Appearance.DarkEnabled" : "Settings.Appearance.LightEnabled");
                 OnPropertyChanged(nameof(ThemeModeDescription));
                 OnPropertyChanged(nameof(ThemeSwitchLabel));
             }
         }
     }
 
-    public string ThemeModeDescription => "Switch between light and dark mode";
+    public string ThemeModeDescription => T("Settings.Theme.ModeDescription");
 
-    public string ThemeSwitchLabel => IsDarkTheme ? "Dark" : "Light";
+    public string ThemeSwitchLabel => T(IsDarkTheme ? "Settings.Theme.Dark" : "Settings.Theme.Light");
 
     public double BackgroundBlur
     {
@@ -136,6 +137,26 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     public string PageTitle => T("Settings.Title");
+
+    public string AddItemText => T("Library.AddButton");
+
+    public string AppearanceSectionTitle => T("Settings.Appearance.Title");
+
+    public string AccentColorTitle => T("Settings.Accent.Title");
+
+    public string AccentColorDescription => T("Settings.Accent.Description");
+
+    public string BackgroundSectionTitle => T("Settings.Background.Title");
+
+    public string CustomBackgroundTitle => T("Settings.Background.CustomImage");
+
+    public string ChooseBackgroundImageText => T("Settings.Background.ChooseImage");
+
+    public string RemoveBackgroundText => T("Settings.Background.Remove");
+
+    public string BackgroundBlurLabel => T("Settings.Background.Blur");
+
+    public string DataImportSectionTitle => T("Settings.DataImport.Title");
 
     public string AccountSectionTitle => T("Settings.Account.Title");
 
@@ -272,6 +293,14 @@ public partial class SettingsViewModel : BaseViewModel
         {
             AccountStatusMessage = T(_accountStatusKey);
         }
+
+        if (_appearanceStatusKey is not null)
+        {
+            AppearanceStatusMessage = T(_appearanceStatusKey);
+        }
+
+        InitializeLanguageOptions();
+        UpdateBackgroundImageDescription();
     }
 
     private void OnSelectedLanguageOptionChanged(LocalizedOption<string>? value)
@@ -526,11 +555,11 @@ public partial class SettingsViewModel : BaseViewModel
             }
 
             UpdateBackgroundImageDescription();
-            AppearanceStatusMessage = "Background image updated";
+            SetAppearanceStatus("Settings.Appearance.BackgroundUpdated");
         }
         catch (Exception exception)
         {
-            AppearanceStatusMessage = "Could not load background image";
+            SetAppearanceStatus("Settings.Appearance.BackgroundLoadError");
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.PickBackgroundImageAsync");
         }
     }
@@ -540,14 +569,14 @@ public partial class SettingsViewModel : BaseViewModel
     {
         _appearanceService.ClearBackgroundImage();
         UpdateBackgroundImageDescription();
-        AppearanceStatusMessage = "Background image cleared";
+        SetAppearanceStatus("Settings.Appearance.BackgroundCleared");
     }
 
     [RelayCommand]
     private void SetAccentColor(string colorHex)
     {
         _appearanceService.SetAccentColor(colorHex);
-        AppearanceStatusMessage = "Accent color updated";
+        SetAppearanceStatus("Settings.Appearance.AccentUpdated");
     }
 
     private void UpdateBackgroundImageDescription()
@@ -555,8 +584,14 @@ public partial class SettingsViewModel : BaseViewModel
         var path = _appearanceService.BackgroundImagePath;
         HasBackgroundImage = !string.IsNullOrWhiteSpace(path);
         BackgroundImageDescription = string.IsNullOrWhiteSpace(path)
-            ? "No background selected"
+            ? T("Settings.Background.None")
             : Path.GetFileName(path);
+    }
+
+    private void SetAppearanceStatus(string key)
+    {
+        _appearanceStatusKey = key;
+        AppearanceStatusMessage = T(key);
     }
 
     private void HandleAppearanceChanged(object? sender, EventArgs e)

@@ -201,6 +201,8 @@
   "Edit.Label.Editors": "Editors",
   "Edit.Action.AddPerson": "Add person",
   "Edit.Action.CreatePerson": "Create and add",
+  "Edit.Validation.PersonNameRequired": "Enter the new person's name first.",
+  "Edit.Error.CreatePerson": "The person could not be created. Please try again.",
   "Edit.Placeholder.SearchPerson": "Search people or enter a new name",
   "Edit.Contributor.Author": "Add author",
   "Edit.Contributor.Translator": "Add translator",
@@ -452,4 +454,42 @@
   ,"ContributionRole.Cinematographer": "Cinematographer"
   ,"ContributionRole.CastingDirector": "Casting director"
   ,"ContributionRole.ProductionDesigner": "Production designer"
+  ,"Dashboard.Greeting.Morning": "Good morning"
+  ,"Dashboard.Greeting.Afternoon": "Good afternoon"
+  ,"Dashboard.Greeting.Evening": "Good evening"
+  ,"Dashboard.SubtitleFormat": "In progress: {0} · planned: {1}"
+  ,"Dashboard.Continue": "Continue"
+  ,"Dashboard.RecentlyAdded": "Recently added"
+  ,"Dashboard.CategoryOverview": "Category overview"
+  ,"Dashboard.SeeAll": "See all"
+  ,"Dashboard.FullStatistics": "Full statistics"
+  ,"Dashboard.ItemCountFormat": "{0} items"
+  ,"Statistics.AverageRating": "Average rating"
+  ,"Statistics.Completion": "Completion"
+  ,"Statistics.Collection": "Collection"
+  ,"Statistics.MonthlyActivity": "Monthly activity"
+  ,"Statistics.ByCategory": "By category"
+  ,"Statistics.ByStatus": "By status"
+  ,"Statistics.Items": "items"
+  ,"Statistics.CompletionFormat": "{0} of {1} items completed"
+  ,"Statistics.CategoriesFormat": "{0} categories"
+  ,"Settings.Appearance.Title": "Appearance"
+  ,"Settings.Accent.Title": "Accent color"
+  ,"Settings.Accent.Description": "Personalize your highlight color"
+  ,"Settings.Background.Title": "Background"
+  ,"Settings.Background.CustomImage": "Custom background image"
+  ,"Settings.Background.ChooseImage": "Choose image..."
+  ,"Settings.Background.Remove": "Remove"
+  ,"Settings.Background.Blur": "Blur"
+  ,"Settings.Background.None": "No background selected"
+  ,"Settings.DataImport.Title": "Data & import"
+  ,"Settings.Theme.ModeDescription": "Switch between light and dark mode"
+  ,"Settings.Theme.Dark": "Dark"
+  ,"Settings.Theme.Light": "Light"
+  ,"Settings.Appearance.DarkEnabled": "Dark theme enabled"
+  ,"Settings.Appearance.LightEnabled": "Light theme enabled"
+  ,"Settings.Appearance.BackgroundUpdated": "Background image updated"
+  ,"Settings.Appearance.BackgroundLoadError": "Could not load background image"
+  ,"Settings.Appearance.BackgroundCleared": "Background image cleared"
+  ,"Settings.Appearance.AccentUpdated": "Accent color updated"
 }

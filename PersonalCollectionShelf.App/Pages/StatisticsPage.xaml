@@ -7,7 +7,7 @@
     x:DataType="viewModels:LibraryViewModel"
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False"
-    Title="Statistics">
+    Title="{Binding StatisticsTitle}">
     <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
         <Grid
             x:Name="TopBar"
@@ -19,13 +19,13 @@
             <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                     <Label FontSize="15" Text="⌕" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
-                    <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="Search..." Text="{Binding SearchTerm}" />
+                    <Entry Grid.Column="1" BackgroundColor="Transparent" Placeholder="{Binding SearchPlaceholder}" Text="{Binding SearchTerm}" />
                     <Border Grid.Column="2" Padding="6,2" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Border}" StrokeShape="RoundRectangle 4" StrokeThickness="1" VerticalOptions="Center">
                         <Label FontSize="10" Text="⌘K" TextColor="{DynamicResource MutedForeground}" />
                     </Border>
                 </Grid>
             </Border>
-            <Button Grid.Column="1" Command="{Binding CreateMediaItemCommand}" Text="+  Add Item" />
+            <Button Grid.Column="1" Command="{Binding CreateMediaItemCommand}" Text="{Binding AddButtonText}" />
         </Grid>
 
         <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
@@ -36,26 +36,26 @@
                 HorizontalOptions="Fill"
                 MaximumWidthRequest="800"
                 Spacing="28">
-                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="Statistics" />
+                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding StatisticsTitle}" />
 
                 <Grid x:Name="SummaryGrid" ColumnDefinitions="*,*,*" ColumnSpacing="14">
                     <Border x:Name="RatingCard" Grid.Column="0" Padding="18" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="7">
-                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="AVG RATING" />
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AverageRatingLabel}" />
                             <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="34" Text="{Binding AverageRatingText}" />
                             <Label FontSize="13" Text="★ ★ ★ ★ ☆" TextColor="{StaticResource Warning}" />
                         </VerticalStackLayout>
                     </Border>
                     <Border x:Name="CompletionCard" Grid.Column="1" Padding="18" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="7">
-                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="COMPLETION" />
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CompletionLabel}" />
                             <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="34" Text="{Binding CompletionPercentText}" />
                             <Label FontSize="12" Text="{Binding CompletionSubtitle}" TextColor="{DynamicResource Primary}" />
                         </VerticalStackLayout>
                     </Border>
                     <Border x:Name="CollectionCard" Grid.Column="2" Padding="18" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="7">
-                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="COLLECTION" />
+                            <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CollectionLabel}" />
                             <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="34" Text="{Binding TotalItemCount}" />
                             <Label FontSize="12" Text="{Binding CollectionSubtitle}" TextColor="{DynamicResource Primary}" />
                         </VerticalStackLayout>
@@ -64,7 +64,7 @@
 
                 <Border Padding="18" Style="{StaticResource CardBorderStyle}">
                     <VerticalStackLayout Spacing="14">
-                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="Monthly Activity" />
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding MonthlyActivityTitle}" />
                         <GraphicsView x:Name="MonthlyChart" HeightRequest="210" />
                     </VerticalStackLayout>
                 </Border>
@@ -72,13 +72,13 @@
                 <Grid x:Name="BreakdownGrid" ColumnDefinitions="*,*" ColumnSpacing="14">
                     <Border x:Name="CategoryChartCard" Grid.Column="0" Padding="18" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="14">
-                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="By Category" />
+                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding ByCategoryTitle}" />
                             <GraphicsView x:Name="DonutChart" HeightRequest="220" />
                         </VerticalStackLayout>
                     </Border>
                     <Border x:Name="StatusChartCard" Grid.Column="1" Padding="18" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="14">
-                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="By Status" />
+                            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding ByStatusTitle}" />
                             <GraphicsView x:Name="BarChart" HeightRequest="220" />
                         </VerticalStackLayout>
                     </Border>

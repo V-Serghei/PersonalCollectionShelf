@@ -51,7 +51,7 @@ public partial class PersonEditorViewModel : BaseViewModel, IQueryAttributable
 
     public ObservableCollection<string> Professions { get; } = [];
     public ObservableCollection<PersonDto> RelatedPeople { get; } = [];
-    public ObservableCollection<PersonRelationDto> Relations { get; } = [];
+    public ObservableCollection<PersonRelationViewModel> Relations { get; } = [];
     public ObservableCollection<LocalizedOption<PersonRelationKind>> RelationKinds { get; } = [];
 
     public string PageTitle => _personId.HasValue ? T("People.EditTitle") : T("People.CreateTitle");
@@ -125,7 +125,7 @@ public partial class PersonEditorViewModel : BaseViewModel, IQueryAttributable
         Notes = details.Notes ?? string.Empty;
         PhotoPath = details.PhotoPath ?? string.Empty;
         Replace(Professions, details.Professions);
-        Replace(Relations, details.Relations);
+        Replace(Relations, details.Relations.Select(ToLocalizedRelation));
     }
 
     [RelayCommand]
@@ -209,7 +209,7 @@ public partial class PersonEditorViewModel : BaseViewModel, IQueryAttributable
     }
 
     [RelayCommand]
-    private async Task RemoveRelationAsync(PersonRelationDto relation)
+    private async Task RemoveRelationAsync(PersonRelationViewModel relation)
     {
         await _people.RemoveRelationAsync(_userId, relation.Id);
         Relations.Remove(relation);
@@ -221,6 +221,31 @@ public partial class PersonEditorViewModel : BaseViewModel, IQueryAttributable
         foreach (var kind in Enum.GetValues<PersonRelationKind>()) RelationKinds.Add(new LocalizedOption<PersonRelationKind>(kind, T($"PersonRelationKind.{kind}")));
         SelectedRelationKind = RelationKinds.FirstOrDefault(option => option.Value == PersonRelationKind.Collaborator);
     }
+
+    protected override void RefreshLocalizedProperties()
+    {
+        base.RefreshLocalizedProperties();
+        InitializeRelationKinds();
+        if (_personId.HasValue)
+        {
+            _ = ReloadRelationsAsync();
+        }
+    }
+
+    private async Task ReloadRelationsAsync()
+    {
+        var details = await _people.GetAsync(_userId, _personId!.Value);
+        if (details is not null)
+        {
+            Replace(Relations, details.Relations.Select(ToLocalizedRelation));
+        }
+    }
+
+    private PersonRelationViewModel ToLocalizedRelation(PersonRelationDto relation) => new(
+        relation.Id,
+        relation.RelatedPersonId,
+        relation.RelatedPersonName,
+        T($"PersonRelationKind.{relation.Kind}"));
 
     private static PersonRelationKind Inverse(PersonRelationKind kind) => kind switch
     {

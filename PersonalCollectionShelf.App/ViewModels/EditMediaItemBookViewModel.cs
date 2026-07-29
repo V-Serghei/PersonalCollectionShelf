@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.Input;
 using PersonalCollectionShelf.Application.DTOs;
 using PersonalCollectionShelf.App.Models;
+using PersonalCollectionShelf.App.Services;
 using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.App.ViewModels;
@@ -34,6 +35,8 @@ public partial class EditMediaItemViewModel
     private string _newGenreText = string.Empty;
     private bool _isPersonPickerOpen;
     private string _personSearchText = string.Empty;
+    private string _personPickerStatusMessage = string.Empty;
+    private bool _isCreatingPerson;
     private string _subtitle = string.Empty;
     private string _edition = string.Empty;
     private string _editionNumber = string.Empty;
@@ -92,10 +95,28 @@ public partial class EditMediaItemViewModel
         {
             if (SetProperty(ref _personSearchText, value))
             {
+                PersonPickerStatusMessage = string.Empty;
                 _ = RefreshPersonSearchAsync(++_personSearchVersion);
             }
         }
     }
+    public string PersonPickerStatusMessage
+    {
+        get => _personPickerStatusMessage;
+        private set => SetProperty(ref _personPickerStatusMessage, value);
+    }
+    public bool IsCreatingPerson
+    {
+        get => _isCreatingPerson;
+        private set
+        {
+            if (SetProperty(ref _isCreatingPerson, value))
+            {
+                OnPropertyChanged(nameof(IsNotCreatingPerson));
+            }
+        }
+    }
+    public bool IsNotCreatingPerson => !IsCreatingPerson;
 
     public string Subtitle { get => _subtitle; set => SetProperty(ref _subtitle, value); }
     public string Edition { get => _edition; set => SetProperty(ref _edition, value); }
@@ -264,6 +285,7 @@ public partial class EditMediaItemViewModel
         _pendingContributionRole = Enum.TryParse<ContributionRole>(role, out var parsed) ? parsed : ContributionRole.Author;
         OnPropertyChanged(nameof(PersonPickerTitle));
         PersonSearchText = string.Empty;
+        PersonPickerStatusMessage = string.Empty;
         IsPersonPickerOpen = true;
         await RefreshPersonSearchAsync(++_personSearchVersion);
     }
@@ -289,15 +311,30 @@ public partial class EditMediaItemViewModel
     [RelayCommand]
     private async Task CreatePersonAsync()
     {
-        var name = PersonSearchText.Trim();
+        var name = PersonSearchText?.Trim() ?? string.Empty;
         if (name.Length == 0)
         {
+            PersonPickerStatusMessage = T("Edit.Validation.PersonNameRequired");
             return;
         }
 
-        var userId = await GetCurrentUserIdAsync();
-        var person = await _personService.CreateAsync(userId, name);
-        SelectPerson(person);
+        IsCreatingPerson = true;
+        PersonPickerStatusMessage = string.Empty;
+        try
+        {
+            var userId = await GetCurrentUserIdAsync();
+            var person = await _personService.CreateAsync(userId, name);
+            SelectPerson(person);
+        }
+        catch (Exception exception)
+        {
+            PersonPickerStatusMessage = T("Edit.Error.CreatePerson");
+            await CrashReporter.ReportAsync(exception, "EditMediaItemViewModel.CreatePersonAsync");
+        }
+        finally
+        {
+            IsCreatingPerson = false;
+        }
     }
 
     [RelayCommand]

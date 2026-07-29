@@ -252,7 +252,7 @@ public partial class StatisticsPage : ContentPage
             canvas.DrawString(total.ToString(CultureInfo.InvariantCulture), dirtyRect.Center.X - 50, dirtyRect.Center.Y - 16, 100, 22, HorizontalAlignment.Center, VerticalAlignment.Center);
             canvas.FontSize = 10;
             canvas.FontColor = Color.FromArgb("#8179A3");
-            canvas.DrawString("items", dirtyRect.Center.X - 50, dirtyRect.Center.Y + 8, 100, 14, HorizontalAlignment.Center, VerticalAlignment.Center);
+            canvas.DrawString(viewModel.StatisticsItemsLabel, dirtyRect.Center.X - 50, dirtyRect.Center.Y + 8, 100, 14, HorizontalAlignment.Center, VerticalAlignment.Center);
 
             canvas.RestoreState();
         }

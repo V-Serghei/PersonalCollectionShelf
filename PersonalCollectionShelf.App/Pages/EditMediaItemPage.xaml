@@ -584,7 +584,11 @@
                         <CollectionView HeightRequest="220" ItemsSource="{Binding PersonSearchResults}">
                             <CollectionView.ItemTemplate><DataTemplate x:DataType="dto:PersonDto"><Button Command="{Binding Source={RelativeSource AncestorType={x:Type pages:EditMediaItemPage}}, Path=ViewModel.SelectPersonCommand, x:DataType={x:Type pages:EditMediaItemPage}}" CommandParameter="{Binding .}" HorizontalOptions="Fill" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding Name}" /></DataTemplate></CollectionView.ItemTemplate>
                         </CollectionView>
-                        <Button Command="{Binding CreatePersonCommand}" Text="{Binding CreatePersonText}" />
+                        <Grid>
+                            <Button Command="{Binding CreatePersonCommand}" IsEnabled="{Binding IsNotCreatingPerson}" Text="{Binding CreatePersonText}" />
+                            <ActivityIndicator HorizontalOptions="End" IsRunning="{Binding IsCreatingPerson}" IsVisible="{Binding IsCreatingPerson}" Margin="0,0,14,0" VerticalOptions="Center" />
+                        </Grid>
+                        <Label FontSize="12" Text="{Binding PersonPickerStatusMessage}" TextColor="{StaticResource Danger}" />
                         <BoxView x:Name="PersonPickerKeyboardSpacer" HeightRequest="0" InputTransparent="True" Opacity="0" />
                     </VerticalStackLayout>
                 </ScrollView>
