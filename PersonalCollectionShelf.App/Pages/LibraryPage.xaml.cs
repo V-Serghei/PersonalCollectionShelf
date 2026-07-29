@@ -18,9 +18,17 @@ public partial class LibraryPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+        AttachFreeScrolling(GridLibraryList);
+        AttachFreeScrolling(ListLibraryList);
     }
 
     public LibraryViewModel ViewModel => (LibraryViewModel)BindingContext;
+
+    private static void AttachFreeScrolling(CollectionView collectionView)
+    {
+        collectionView.HandlerChanged += (_, _) => CollectionViewScrollTuner.EnableFreeScrolling(collectionView);
+        collectionView.Loaded += (_, _) => CollectionViewScrollTuner.EnableFreeScrolling(collectionView);
+    }
 
     private async void HandleSearchClicked(object? sender, EventArgs e)
     {

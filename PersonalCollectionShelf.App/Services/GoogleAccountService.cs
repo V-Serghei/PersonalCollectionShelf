@@ -41,6 +41,9 @@ public sealed class GoogleAccountService(
                 cancellationToken);
             if (!result.Succeeded)
             {
+                CrashReporter.LogMessage(
+                    "GoogleAccountService.FirebaseSignIn",
+                    $"Firebase Google sign-in failed with localization key: {result.ErrorKey ?? "Auth.Error.Unknown"}");
                 return result;
             }
 
@@ -53,6 +56,7 @@ public sealed class GoogleAccountService(
         }
         catch (Exception exception) when (exception is HttpRequestException or IOException or JsonException)
         {
+            CrashReporter.Log(exception, "GoogleAccountService.SignInAsync");
             return AuthResultDto.Failure("Auth.Error.Network");
         }
     }
@@ -74,13 +78,14 @@ public sealed class GoogleAccountService(
             return null;
         }
 
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        var refreshFields = new Dictionary<string, string>
         {
             ["client_id"] = options.GoogleClientId,
             ["refresh_token"] = refreshToken,
             ["grant_type"] = "refresh_token"
-        });
-        using var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
+        };
+        AddClientSecret(refreshFields);
+        using var response = await PostFormWithTransientRetryAsync(TokenEndpoint, refreshFields, cancellationToken);
         response.EnsureSuccessStatusCode();
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
         accessToken = document.RootElement.GetProperty("access_token").GetString();
@@ -150,17 +155,27 @@ public sealed class GoogleAccountService(
             throw new OperationCanceledException("Google authorization was cancelled.");
         }
 
-        using var tokenContent = new FormUrlEncodedContent(new Dictionary<string, string>
+        var tokenFields = new Dictionary<string, string>
         {
             ["client_id"] = options.GoogleClientId,
             ["code"] = code,
             ["code_verifier"] = codeVerifier,
             ["redirect_uri"] = redirectUri,
             ["grant_type"] = "authorization_code"
-        });
-        using var tokenResponse = await httpClient.PostAsync(TokenEndpoint, tokenContent, cancellationToken);
-        tokenResponse.EnsureSuccessStatusCode();
-        using var tokenDocument = JsonDocument.Parse(await tokenResponse.Content.ReadAsStringAsync(cancellationToken));
+        };
+        AddClientSecret(tokenFields);
+        using var tokenResponse = await PostFormWithTransientRetryAsync(TokenEndpoint, tokenFields, cancellationToken);
+        var tokenJson = await tokenResponse.Content.ReadAsStringAsync(cancellationToken);
+        if (!tokenResponse.IsSuccessStatusCode)
+        {
+            var oauthError = ReadOAuthError(tokenJson);
+            CrashReporter.LogMessage(
+                "GoogleAccountService.TokenExchange",
+                $"Google token endpoint returned HTTP {(int)tokenResponse.StatusCode} ({tokenResponse.StatusCode}); error={oauthError}.");
+            throw new IOException($"Google OAuth token exchange failed: {oauthError}.");
+        }
+
+        using var tokenDocument = JsonDocument.Parse(tokenJson);
         var root = tokenDocument.RootElement;
         return new GoogleAuthorization(
             root.GetProperty("access_token").GetString()!,
@@ -188,6 +203,54 @@ public sealed class GoogleAccountService(
                 pair => Uri.UnescapeDataString(pair[0]),
                 pair => Uri.UnescapeDataString(pair.Length > 1 ? pair[1].Replace('+', ' ') : string.Empty),
                 StringComparer.Ordinal);
+    }
+
+    private static string ReadOAuthError(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            var code = root.TryGetProperty("error", out var error) ? error.GetString() : null;
+            var description = root.TryGetProperty("error_description", out var details) ? details.GetString() : null;
+            return string.IsNullOrWhiteSpace(description)
+                ? code ?? "unknown"
+                : $"{code ?? "unknown"}: {description}";
+        }
+        catch (JsonException)
+        {
+            return "invalid_response";
+        }
+    }
+
+    private void AddClientSecret(IDictionary<string, string> fields)
+    {
+        if (!string.IsNullOrWhiteSpace(options.GoogleClientSecret))
+        {
+            fields["client_secret"] = options.GoogleClientSecret;
+        }
+    }
+
+    private async Task<HttpResponseMessage> PostFormWithTransientRetryAsync(
+        string url,
+        IReadOnlyDictionary<string, string> fields,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; ; attempt++)
+        {
+            try
+            {
+                using var content = new FormUrlEncodedContent(fields);
+                return await httpClient.PostAsync(url, content, cancellationToken);
+            }
+            catch (HttpRequestException exception) when (attempt < 3)
+            {
+                CrashReporter.LogMessage(
+                    "GoogleAccountService.TransientNetworkRetry",
+                    $"Google request failed before receiving a response; retry {attempt + 1}/3. {exception.GetType().Name}: {exception.Message}");
+                await Task.Delay(TimeSpan.FromMilliseconds(500 * Math.Pow(2, attempt)), cancellationToken);
+            }
+        }
     }
 
     private static string Base64Url(byte[] value) =>

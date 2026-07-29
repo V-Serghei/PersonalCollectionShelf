@@ -81,6 +81,9 @@ public partial class SettingsViewModel : BaseViewModel
     private string _appearanceStatusMessage = string.Empty;
     private string _backgroundImageDescription = string.Empty;
     private bool _hasBackgroundImage;
+    private bool _isSyncing;
+    private bool _isDriveBackupRunning;
+    private bool _isDriveRestoreRunning;
 
     public LocalizedOption<string>? SelectedLanguageOption
     {
@@ -98,6 +101,45 @@ public partial class SettingsViewModel : BaseViewModel
     {
         get => _statusMessage;
         set => SetProperty(ref _statusMessage, value);
+    }
+
+    public bool IsSyncing
+    {
+        get => _isSyncing;
+        private set
+        {
+            if (SetProperty(ref _isSyncing, value))
+            {
+                OnPropertyChanged(nameof(IsNotSyncing));
+                OnPropertyChanged(nameof(SyncNowButtonText));
+            }
+        }
+    }
+
+    public bool IsNotSyncing => !IsSyncing;
+
+    public bool IsDriveBackupRunning
+    {
+        get => _isDriveBackupRunning;
+        private set
+        {
+            if (SetProperty(ref _isDriveBackupRunning, value))
+            {
+                OnPropertyChanged(nameof(DriveBackupButtonText));
+            }
+        }
+    }
+
+    public bool IsDriveRestoreRunning
+    {
+        get => _isDriveRestoreRunning;
+        private set
+        {
+            if (SetProperty(ref _isDriveRestoreRunning, value))
+            {
+                OnPropertyChanged(nameof(DriveRestoreButtonText));
+            }
+        }
     }
 
     public bool IsDarkTheme
@@ -270,11 +312,15 @@ public partial class SettingsViewModel : BaseViewModel
 
     public string SyncDescription => T("Settings.Sync.Description");
 
-    public string SyncNowButtonText => T("Settings.Sync.Button");
+    public string SyncNowButtonText => T(IsSyncing ? "Sync.Status.InProgressButton" : "Settings.Sync.Button");
 
-    public string DriveBackupButtonText => T("Settings.DriveBackup.Button");
+    public string DriveBackupButtonText => T(IsDriveBackupRunning
+        ? "Settings.DriveBackup.InProgressButton"
+        : "Settings.DriveBackup.Button");
 
-    public string DriveRestoreButtonText => T("Settings.DriveRestore.Button");
+    public string DriveRestoreButtonText => T(IsDriveRestoreRunning
+        ? "Settings.DriveRestore.InProgressButton"
+        : "Settings.DriveRestore.Button");
 
     public string DriveBackupDescription => T("Settings.DriveBackup.Description");
 
@@ -348,28 +394,45 @@ public partial class SettingsViewModel : BaseViewModel
     {
         if (IsBusy) return;
         IsBusy = true;
+        IsSyncing = true;
+        SetSyncStatus("Sync.Status.Started");
+        CrashReporter.LogMessage("SettingsViewModel.SyncNowAsync", "Synchronization started.");
         try
         {
+            await Task.Yield();
+            SetSyncStatus("Sync.Status.DataInProgress");
             await _syncService.RequestSyncAsync();
             if (await _googleAccountService.GetDriveAccessTokenAsync() is not null)
             {
+                SetSyncStatus("Sync.Status.DriveInProgress");
                 var backup = await BuildExportDocumentAsync(compressImages: true);
                 await _driveBackupService.UploadBackupAsync(
                     $"personal-collection-shelf-{DateTime.UtcNow:yyyyMMdd-HHmmss}.zip",
                     CreateBackupArchive(backup));
+                SetSyncStatus("Sync.Status.CompletedWithDrive");
             }
-            _statusMessageKey = "Sync.Status.Requested";
-            StatusMessage = T(_statusMessageKey);
+            else
+            {
+                SetSyncStatus("Sync.Status.CompletedWithoutDrive");
+            }
+            CrashReporter.LogMessage("SettingsViewModel.SyncNowAsync", "Synchronization completed.");
         }
         catch (Exception exception)
         {
-            StatusMessage = T("Sync.Status.Failed");
+            SetSyncStatus("Sync.Status.Failed");
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.SyncNowAsync");
         }
         finally
         {
+            IsSyncing = false;
             IsBusy = false;
         }
+    }
+
+    private void SetSyncStatus(string key)
+    {
+        _statusMessageKey = key;
+        StatusMessage = T(key);
     }
 
     [RelayCommand]
@@ -377,21 +440,28 @@ public partial class SettingsViewModel : BaseViewModel
     {
         if (IsBusy) return;
         IsBusy = true;
+        IsDriveBackupRunning = true;
+        SetSyncStatus("Settings.DriveBackup.Preparing");
+        CrashReporter.LogMessage("SettingsViewModel.BackupToDriveAsync", "Google Drive backup started.");
         try
         {
+            await Task.Yield();
             var document = await BuildExportDocumentAsync(compressImages: true);
             var archive = CreateBackupArchive(document);
             var name = $"personal-collection-shelf-{DateTime.UtcNow:yyyyMMdd-HHmmss}.zip";
+            SetSyncStatus("Settings.DriveBackup.Uploading");
             await _driveBackupService.UploadBackupAsync(name, archive);
-            StatusMessage = T("Settings.DriveBackup.Completed");
+            SetSyncStatus("Settings.DriveBackup.Completed");
+            CrashReporter.LogMessage("SettingsViewModel.BackupToDriveAsync", "Google Drive backup completed.");
         }
         catch (Exception exception)
         {
-            StatusMessage = T("Settings.DriveBackup.Failed");
+            SetSyncStatus("Settings.DriveBackup.Failed");
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.BackupToDriveAsync");
         }
         finally
         {
+            IsDriveBackupRunning = false;
             IsBusy = false;
         }
     }
@@ -526,12 +596,16 @@ public partial class SettingsViewModel : BaseViewModel
             T("Common.Cancel"));
         if (!confirmed) return;
         IsBusy = true;
+        IsDriveRestoreRunning = true;
+        SetSyncStatus("Settings.DriveRestore.Downloading");
+        CrashReporter.LogMessage("SettingsViewModel.RestoreFromDriveAsync", "Google Drive restore started.");
         try
         {
+            await Task.Yield();
             var backup = await _driveBackupService.DownloadLatestBackupAsync();
             if (backup is null)
             {
-                StatusMessage = T("Settings.DriveRestore.NotFound");
+                SetSyncStatus("Settings.DriveRestore.NotFound");
                 return;
             }
 
@@ -558,16 +632,19 @@ public partial class SettingsViewModel : BaseViewModel
 
             var document = JsonSerializer.Deserialize<LibraryExportDocument>(json, JsonOptions)
                 ?? throw new InvalidDataException("Backup data is invalid.");
+            SetSyncStatus("Settings.DriveRestore.Importing");
             await ImportDocumentAsync(document);
-            StatusMessage = T("Settings.DriveRestore.Completed");
+            SetSyncStatus("Settings.DriveRestore.Completed");
+            CrashReporter.LogMessage("SettingsViewModel.RestoreFromDriveAsync", "Google Drive restore completed.");
         }
         catch (Exception exception)
         {
-            StatusMessage = T("Settings.DriveRestore.Failed");
+            SetSyncStatus("Settings.DriveRestore.Failed");
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.RestoreFromDriveAsync");
         }
         finally
         {
+            IsDriveRestoreRunning = false;
             IsBusy = false;
         }
     }

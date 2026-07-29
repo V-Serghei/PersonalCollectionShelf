@@ -10,6 +10,8 @@ public sealed class FirebaseOptions
 
     public string GoogleClientId { get; init; } = string.Empty;
 
+    public string GoogleClientSecret { get; init; } = string.Empty;
+
     public bool IsConfigured => !string.IsNullOrWhiteSpace(ApiKey) && !string.IsNullOrWhiteSpace(ProjectId);
 
     public bool IsGoogleConfigured => IsConfigured && !string.IsNullOrWhiteSpace(GoogleClientId);
@@ -36,7 +38,8 @@ public sealed class FirebaseOptions
                 {
                     ApiKey = document.ApiKey ?? string.Empty,
                     ProjectId = document.ProjectId ?? string.Empty,
-                    GoogleClientId = document.GoogleClientId ?? string.Empty
+                    GoogleClientId = document.GoogleClientId ?? string.Empty,
+                    GoogleClientSecret = document.GoogleClientSecret ?? string.Empty
                 };
         }
         catch (Exception exception) when (exception is IOException or JsonException)
@@ -57,5 +60,7 @@ public sealed class FirebaseOptions
         public string? ProjectId { get; set; }
 
         public string? GoogleClientId { get; set; }
+
+        public string? GoogleClientSecret { get; set; }
     }
 }

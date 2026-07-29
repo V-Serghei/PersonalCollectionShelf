@@ -14,11 +14,13 @@ namespace PersonalCollectionShelf.App.ViewModels;
 public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 {
     private const string ViewModePreferenceKey = "library.viewMode";
+    private const int LibraryPageSize = 80;
 
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
     private IReadOnlyList<MediaItemDto> _allItems = [];
     private IReadOnlyList<MediaItemDto> _visibleItems = [];
+    private IReadOnlyList<MediaItemListItemViewModel> _preparedMediaItems = [];
     private CancellationTokenSource? _searchDelayCancellation;
     private bool _suppressFilterReload;
     private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewModePreferenceKey, "grid") != "list";
@@ -508,6 +510,21 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     }
 
     [RelayCommand]
+    private void LoadMore()
+    {
+        if (MediaItems.Count >= _preparedMediaItems.Count)
+        {
+            return;
+        }
+
+        var targetCount = Math.Min(MediaItems.Count + LibraryPageSize, _preparedMediaItems.Count);
+        for (var index = MediaItems.Count; index < targetCount; index++)
+        {
+            MediaItems.Add(_preparedMediaItems[index]);
+        }
+    }
+
+    [RelayCommand]
     private async Task CreateMediaItemAsync()
     {
         try
@@ -704,10 +721,31 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         var itemList = items.ToList();
 
-        MediaItems.Clear();
-        foreach (var item in SortItems(itemList))
+        var preparedItems = SortItems(itemList).Select(ToListItem).ToList();
+        var canUpdateInPlace = MediaItems.Count <= preparedItems.Count &&
+                               MediaItems.Select(item => item.Id)
+                                   .SequenceEqual(preparedItems.Take(MediaItems.Count).Select(item => item.Id));
+
+        _preparedMediaItems = preparedItems;
+        if (canUpdateInPlace)
         {
-            MediaItems.Add(ToListItem(item));
+            for (var index = 0; index < MediaItems.Count; index++)
+            {
+                if (MediaItems[index] != preparedItems[index])
+                {
+                    MediaItems[index] = preparedItems[index];
+                }
+            }
+
+            if (MediaItems.Count == 0)
+            {
+                LoadMore();
+            }
+        }
+        else
+        {
+            MediaItems.Clear();
+            LoadMore();
         }
 
         PopulateDashboardCollections(itemList);

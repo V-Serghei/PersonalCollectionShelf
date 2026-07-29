@@ -41,9 +41,9 @@
 
         <Grid Grid.Row="3">
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-            <CollectionView IsVisible="{Binding IsGridView}" ItemSizingStrategy="MeasureAllItems" ItemsSource="{Binding People}" SelectionMode="None">
+            <CollectionView x:Name="GridPeopleList" IsVisible="{Binding IsGridView}" ItemsUpdatingScrollMode="KeepScrollOffset" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding People}" RemainingItemsThreshold="15" RemainingItemsThresholdReachedCommand="{Binding LoadMorePeopleCommand}" SelectionMode="None">
                 <CollectionView.ItemsLayout>
-                    <GridItemsLayout HorizontalItemSpacing="8" Orientation="Vertical" Span="{OnIdiom Phone=3, Tablet=4, Desktop=5}" VerticalItemSpacing="10" />
+                    <GridItemsLayout HorizontalItemSpacing="8" Orientation="Vertical" SnapPointsAlignment="Start" SnapPointsType="None" Span="{OnIdiom Phone=3, Tablet=4, Desktop=5}" VerticalItemSpacing="10" />
                 </CollectionView.ItemsLayout>
                 <CollectionView.EmptyView><Label Margin="0,40" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
@@ -74,7 +74,10 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <CollectionView IsVisible="{Binding IsListView}" ItemSizingStrategy="MeasureAllItems" ItemsSource="{Binding People}" SelectionMode="None">
+            <CollectionView x:Name="ListPeopleList" IsVisible="{Binding IsListView}" ItemsUpdatingScrollMode="KeepScrollOffset" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding People}" RemainingItemsThreshold="15" RemainingItemsThresholdReachedCommand="{Binding LoadMorePeopleCommand}" SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" SnapPointsAlignment="Start" SnapPointsType="None" />
+                </CollectionView.ItemsLayout>
                 <CollectionView.EmptyView><Label Margin="0,40" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:PersonCardViewModel">

@@ -24,10 +24,13 @@ public sealed record PersonCardViewModel(
 
 public partial class PeopleViewModel : BaseViewModel
 {
+    private const int PeoplePageSize = 90;
     private const string ViewPreferenceKey = "people.viewMode";
     private readonly IPeopleManagementService _people;
     private readonly IAuthService _auth;
     private IReadOnlyList<PersonCatalogDto> _catalog = [];
+    private IReadOnlyList<PersonCatalogDto> _preparedPeople = [];
+    private int _filteredCount;
     private string _searchText = string.Empty;
     private bool _isSearchVisible;
     private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewPreferenceKey, "grid") != "list";
@@ -49,7 +52,7 @@ public partial class PeopleViewModel : BaseViewModel
     public string NewPersonText => T("People.New");
     public string EmptyText => T("People.Empty");
     public string SearchPlaceholder => T("People.SearchPlaceholder");
-    public string ResultsText => string.Format(T("People.ResultsFormat"), People.Count);
+    public string ResultsText => string.Format(T("People.ResultsFormat"), _filteredCount);
 
     public string SearchText
     {
@@ -124,6 +127,16 @@ public partial class PeopleViewModel : BaseViewModel
     [RelayCommand]
     private Task OpenPersonAsync(PersonCardViewModel person) => AppNavigation.OpenPersonAsync(person.Id);
 
+    [RelayCommand]
+    private void LoadMorePeople()
+    {
+        var targetCount = Math.Min(People.Count + PeoplePageSize, _preparedPeople.Count);
+        for (var index = People.Count; index < targetCount; index++)
+        {
+            People.Add(ToCard(_preparedPeople[index]));
+        }
+    }
+
     private void ApplyFilter()
     {
         var term = SearchText.Trim();
@@ -145,27 +158,47 @@ public partial class PeopleViewModel : BaseViewModel
             _ => filtered.OrderBy(person => person.Name, StringComparer.OrdinalIgnoreCase)
         };
 
-        People.Clear();
-        foreach (var person in filtered)
+        _preparedPeople = filtered.ToArray();
+        _filteredCount = _preparedPeople.Count;
+
+        var retainedCount = Math.Min(People.Count, _preparedPeople.Count);
+        var canRetainVisibleCards = retainedCount > 0 &&
+            People.Take(retainedCount).Select(person => person.Id)
+                .SequenceEqual(_preparedPeople.Take(retainedCount).Select(person => person.Id));
+
+        if (canRetainVisibleCards)
         {
-            var hasPhoto = IsUsablePhoto(person.PhotoPath);
-            var roles = person.TopWorks.Select(work => T($"ContributionRole.{work.Role}"))
-                .Distinct(StringComparer.OrdinalIgnoreCase).Take(3);
-            People.Add(new PersonCardViewModel(
-                person.Id,
-                person.Name,
-                hasPhoto ? person.PhotoPath! : string.Empty,
-                hasPhoto,
-                !hasPhoto,
-                string.IsNullOrWhiteSpace(person.Name) ? "?" : char.ToUpperInvariant(person.Name[0]).ToString(),
-                person.Tagline ?? person.Country ?? T("People.NoDescription"),
-                string.Join("  •  ", roles),
-                person.TopWorks,
-                string.Format(T("People.WorkCountFormat"), person.WorkCount),
-                person.AverageRating?.ToString("0.0", CultureInfo.CurrentCulture) ?? string.Empty,
-                person.AverageRating.HasValue));
+            for (var index = 0; index < retainedCount; index++)
+            {
+                People[index] = ToCard(_preparedPeople[index]);
+            }
+        }
+        else
+        {
+            People.Clear();
+            LoadMorePeople();
         }
         OnPropertyChanged(nameof(ResultsText));
+    }
+
+    private PersonCardViewModel ToCard(PersonCatalogDto person)
+    {
+        var hasPhoto = IsUsablePhoto(person.PhotoPath);
+        var roles = person.TopWorks.Select(work => T($"ContributionRole.{work.Role}"))
+            .Distinct(StringComparer.OrdinalIgnoreCase).Take(3);
+        return new PersonCardViewModel(
+            person.Id,
+            person.Name,
+            hasPhoto ? person.PhotoPath! : string.Empty,
+            hasPhoto,
+            !hasPhoto,
+            string.IsNullOrWhiteSpace(person.Name) ? "?" : char.ToUpperInvariant(person.Name[0]).ToString(),
+            person.Tagline ?? person.Country ?? T("People.NoDescription"),
+            string.Join("  •  ", roles),
+            person.TopWorks,
+            string.Format(T("People.WorkCountFormat"), person.WorkCount),
+            person.AverageRating?.ToString("0.0", CultureInfo.CurrentCulture) ?? string.Empty,
+            person.AverageRating.HasValue);
     }
 
     private void ReloadSortOptions()

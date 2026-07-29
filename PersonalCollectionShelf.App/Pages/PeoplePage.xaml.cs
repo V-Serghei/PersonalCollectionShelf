@@ -12,9 +12,17 @@ public partial class PeoplePage : ContentPage
     {
         InitializeComponent();
         BindingContext = viewModel;
+        AttachFreeScrolling(GridPeopleList);
+        AttachFreeScrolling(ListPeopleList);
     }
 
     public PeopleViewModel ViewModel => (PeopleViewModel)BindingContext;
+
+    private static void AttachFreeScrolling(CollectionView collectionView)
+    {
+        collectionView.HandlerChanged += (_, _) => CollectionViewScrollTuner.EnableFreeScrolling(collectionView);
+        collectionView.Loaded += (_, _) => CollectionViewScrollTuner.EnableFreeScrolling(collectionView);
+    }
 
     protected override async void OnAppearing()
     {

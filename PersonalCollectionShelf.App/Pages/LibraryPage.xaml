@@ -119,15 +119,21 @@
                 IsRefreshing="{Binding IsBusy}">
                 <Grid>
                 <CollectionView
+                    x:Name="GridLibraryList"
                     BackgroundColor="{DynamicResource PageBackground}"
                     IsVisible="{Binding IsGridView}"
-                    ItemSizingStrategy="MeasureAllItems"
+                    ItemsUpdatingScrollMode="KeepScrollOffset"
+                    ItemSizingStrategy="MeasureFirstItem"
                     ItemsSource="{Binding MediaItems}"
+                    RemainingItemsThreshold="12"
+                    RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
                     SelectionMode="None">
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout
                             HorizontalItemSpacing="14"
                             Orientation="Vertical"
+                            SnapPointsAlignment="Start"
+                            SnapPointsType="None"
                             Span="{OnIdiom Phone=2, Tablet=5, Desktop=6}"
                             VerticalItemSpacing="16" />
                     </CollectionView.ItemsLayout>
@@ -176,12 +182,21 @@
                 </CollectionView>
 
                 <CollectionView
+                    x:Name="ListLibraryList"
                     BackgroundColor="{DynamicResource PageBackground}"
                     IsVisible="{Binding IsListView}"
+                    ItemsUpdatingScrollMode="KeepScrollOffset"
+                    ItemSizingStrategy="MeasureFirstItem"
                     ItemsSource="{Binding MediaItems}"
+                    RemainingItemsThreshold="12"
+                    RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
                     SelectionMode="None">
                     <CollectionView.ItemsLayout>
-                        <LinearItemsLayout ItemSpacing="8" Orientation="Vertical" />
+                        <LinearItemsLayout
+                            ItemSpacing="8"
+                            Orientation="Vertical"
+                            SnapPointsAlignment="Start"
+                            SnapPointsType="None" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.EmptyView>
                         <Border Margin="0,50,0,0" Padding="28" HorizontalOptions="Fill" MaximumWidthRequest="340" Style="{StaticResource CardBorderStyle}">
