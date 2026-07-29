@@ -11,6 +11,8 @@ internal static class CollectionViewScrollTuner
             // continuous RecyclerView motion instead of stopping at item boundaries.
             recyclerView.SetOnFlingListener(null);
             recyclerView.NestedScrollingEnabled = true;
+            recyclerView.SetItemViewCacheSize(16);
+            recyclerView.SetItemAnimator(null);
         }
 #endif
     }

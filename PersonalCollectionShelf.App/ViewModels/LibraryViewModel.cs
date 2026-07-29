@@ -39,7 +39,13 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         ReloadFilterOptions();
     }
 
-    public ObservableCollection<MediaItemListItemViewModel> MediaItems { get; } = [];
+    private ObservableCollection<MediaItemListItemViewModel> _mediaItems = [];
+
+    public ObservableCollection<MediaItemListItemViewModel> MediaItems
+    {
+        get => _mediaItems;
+        private set => SetProperty(ref _mediaItems, value);
+    }
 
     public ObservableCollection<MediaItemListItemViewModel> InProgressItems { get; } = [];
 
@@ -84,6 +90,18 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     public int GridColumnCount => Math.Clamp(
         Microsoft.Maui.Storage.Preferences.Get(GridColumnCountPreferenceKey, 2), 1, 4);
 
+    public double GridPosterHeight => GridColumnCount switch
+    {
+        1 => 420,
+        2 => 230,
+        3 => 155,
+        _ => 118
+    };
+
+    public bool UseCompactGridCard => GridColumnCount >= 3;
+
+    public bool UseFullGridCard => !UseCompactGridCard;
+
     public bool IsFilterPanelVisible
     {
         get => _isFilterPanelVisible;
@@ -116,7 +134,13 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     public void CollapseFilters() => IsFilterPanelVisible = false;
 
-    public void RefreshDisplayPreferences() => OnPropertyChanged(nameof(GridColumnCount));
+    public void RefreshDisplayPreferences()
+    {
+        OnPropertyChanged(nameof(GridColumnCount));
+        OnPropertyChanged(nameof(GridPosterHeight));
+        OnPropertyChanged(nameof(UseCompactGridCard));
+        OnPropertyChanged(nameof(UseFullGridCard));
+    }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
@@ -720,6 +744,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             type,
             MediaPresentation.GetMediaTypeColor(item.MediaType),
             status,
+            GetStatusIcon(item.Status),
             MediaPresentation.GetStatusForegroundColor(item.Status),
             MediaPresentation.GetStatusBackgroundColor(item.Status),
             $"{type} - {status}",
@@ -732,6 +757,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             item.Rating?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             item.Rating.HasValue,
             item.ReleaseYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            item.ReleaseYear.HasValue,
             hasCoverUrl ? item.CoverUrl ?? string.Empty : string.Empty,
             hasCoverUrl,
             !hasCoverUrl,
@@ -751,7 +777,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
                                    .SequenceEqual(preparedItems.Take(MediaItems.Count).Select(item => item.Id));
 
         _preparedMediaItems = preparedItems;
-        if (canUpdateInPlace)
+        if (canUpdateInPlace && MediaItems.Count == preparedItems.Count)
         {
             for (var index = 0; index < MediaItems.Count; index++)
             {
@@ -761,20 +787,27 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
                 }
             }
 
-            if (MediaItems.Count == 0)
-            {
-                LoadMore();
-            }
         }
         else
         {
-            MediaItems.Clear();
-            LoadMore();
+            MediaItems = new ObservableCollection<MediaItemListItemViewModel>(preparedItems);
         }
 
         PopulateDashboardCollections(itemList);
         RefreshCollectionSummary();
     }
+
+    private static string GetStatusIcon(MediaStatus status) => status switch
+    {
+        MediaStatus.Completed => "✓",
+        MediaStatus.InProgress => "▶",
+        MediaStatus.Planned => "○",
+        MediaStatus.OnHold => "Ⅱ",
+        MediaStatus.Dropped => "×",
+        MediaStatus.Rewatching => "↻",
+        MediaStatus.Rereading => "↻",
+        _ => "•"
+    };
 
     private IEnumerable<MediaItemDto> SortItems(IEnumerable<MediaItemDto> items)
     {
