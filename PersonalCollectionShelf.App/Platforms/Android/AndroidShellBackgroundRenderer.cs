@@ -1,44 +1,48 @@
 #if ANDROID
 using Android.Graphics;
 using Android.Graphics.Drawables;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
 using PersonalCollectionShelf.App.Services;
 
 namespace PersonalCollectionShelf.App.Platforms.Android;
 
-internal static class AndroidPageBackgroundMapper
+/// <summary>
+/// Draws one aspect-preserving background below the complete Shell content.
+/// Shell pages can be cached and attached in any order without having to own
+/// or refresh their own bitmap drawable.
+/// </summary>
+internal static class AndroidShellBackgroundRenderer
 {
     private static readonly object BitmapLock = new();
     private static string? _loadedPath;
     private static Bitmap? _loadedBitmap;
 
-    public static void Apply(PageHandler handler, IContentView view)
+    public static void Apply(Shell shell, IAppearanceService appearance)
     {
-        if (view is Page page && AppNavigation.RequiresOpaqueModalBackground(page))
+        if (shell.Handler?.PlatformView is not global::Android.Views.View platformView)
         {
-            handler.PlatformView.SetBackgroundColor(page.BackgroundColor.ToPlatform());
             return;
         }
 
-        var path = App.Services.GetService<IAppearanceService>()?.BackgroundImagePath;
+        var path = appearance.BackgroundImagePath;
         if (string.IsNullOrWhiteSpace(path))
         {
-            if (view is VisualElement element)
-            {
-                handler.PlatformView.SetBackgroundColor(element.BackgroundColor.ToPlatform());
-            }
+            platformView.SetBackgroundColor(shell.BackgroundColor.ToPlatform());
             return;
         }
 
         var bitmap = GetBitmap(path);
         if (bitmap is null)
         {
+            platformView.SetBackgroundColor(shell.BackgroundColor.ToPlatform());
             return;
         }
 
-        handler.PlatformView.Background = new AspectFillBitmapDrawable(bitmap);
+        var fallback = Microsoft.Maui.Controls.Application.Current?.Resources.TryGetValue("Background", out var value) == true &&
+                       value is Microsoft.Maui.Graphics.Color color
+            ? color
+            : Microsoft.Maui.Graphics.Color.FromArgb("#201C2D");
+        platformView.Background = new AspectFillBitmapDrawable(bitmap, fallback.ToPlatform());
     }
 
     private static Bitmap? GetBitmap(string path)
@@ -63,7 +67,9 @@ internal static class AndroidPageBackgroundMapper
         }
     }
 
-    private sealed class AspectFillBitmapDrawable(Bitmap bitmap) : Drawable
+    private sealed class AspectFillBitmapDrawable(
+        Bitmap bitmap,
+        global::Android.Graphics.Color fallback) : Drawable
     {
         private readonly global::Android.Graphics.Paint _paint =
             new(PaintFlags.AntiAlias | PaintFlags.FilterBitmap | PaintFlags.Dither);
@@ -76,6 +82,7 @@ internal static class AndroidPageBackgroundMapper
                 return;
             }
 
+            canvas.DrawColor(fallback);
             var scale = Math.Max(
                 bounds.Width() / (float)bitmap.Width,
                 bounds.Height() / (float)bitmap.Height);
@@ -98,7 +105,7 @@ internal static class AndroidPageBackgroundMapper
             _paint.SetColorFilter(colorFilter);
 #pragma warning restore CS0672
 
-        public override int Opacity => (int)Format.Translucent;
+        public override int Opacity => (int)Format.Opaque;
     }
 }
 #endif

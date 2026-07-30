@@ -149,6 +149,14 @@ public partial class CollectionDetailsViewModel : BaseViewModel, IQueryAttributa
             var cover = MediaPresentation.HasValidCoverUrl(item.CoverUrl)
                 ? _thumbnailCache.GetDisplaySource(item.CoverUrl)
                 : string.Empty;
+            if (string.IsNullOrWhiteSpace(cover) &&
+                MediaPresentation.HasValidCoverUrl(item.CoverUrl))
+            {
+                // A newly seen local cover may not have a generated UI
+                // thumbnail yet. Show the original immediately and replace it
+                // after the background thumbnail pass finishes.
+                cover = item.CoverUrl!;
+            }
             Items.Add(new CollectionDetailItemViewModel(
                 item.MediaItemId,
                 item.Title,
@@ -172,7 +180,11 @@ public partial class CollectionDetailsViewModel : BaseViewModel, IQueryAttributa
                 .ToDictionary(group => group.Key, group => _thumbnailCache.GetDisplaySource(group.First().CoverUrl));
             foreach (var item in Items)
             {
-                if (sourceLookup.TryGetValue(item.Id, out var source)) item.SetCoverSource(source);
+                if (sourceLookup.TryGetValue(item.Id, out var source) &&
+                    !string.IsNullOrWhiteSpace(source))
+                {
+                    item.SetCoverSource(source);
+                }
             }
             OnPropertyChanged(nameof(Items));
         });

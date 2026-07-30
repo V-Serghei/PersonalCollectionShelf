@@ -89,6 +89,10 @@ public sealed class AppShell : Shell
         Navigated += HandleNavigated;
         _localizationService.LanguageChanged += HandleLanguageChanged;
         _appearanceService.AppearanceChanged += HandleAppearanceChanged;
+#if ANDROID
+        HandlerChanged += (_, _) =>
+            Platforms.Android.AndroidShellBackgroundRenderer.Apply(this, _appearanceService);
+#endif
         ApplyLocalization();
     }
 
@@ -505,9 +509,8 @@ public sealed class AppShell : Shell
         FlyoutBackgroundColor = SidebarColor;
         BackgroundColor = backgroundPath is null ? AppBackgroundColor : Colors.Transparent;
 #if ANDROID
-        // Android ContentPages use an aspect-preserving native drawable. The
-        // Shell image renderer stretches bitmaps and would briefly show a
-        // distorted copy during navigation.
+        // The native root Shell owns one aspect-preserving drawable below all
+        // cached section pages.
         BackgroundImageSource = null;
 #else
         BackgroundImageSource = CreateBackgroundImageSource(backgroundPath);
@@ -518,6 +521,9 @@ public sealed class AppShell : Shell
         Shell.SetTitleColor(this, ForegroundColor);
         Shell.SetUnselectedColor(this, SecondaryForegroundColor);
         Shell.SetDisabledColor(this, MutedForegroundColor);
+#if ANDROID
+        Platforms.Android.AndroidShellBackgroundRenderer.Apply(this, _appearanceService);
+#endif
     }
 
     private static ImageSource? CreateBackgroundImageSource(string? path) =>
