@@ -404,7 +404,6 @@ public partial class SettingsViewModel : BaseViewModel
             AppearanceStatusMessage = T(_appearanceStatusKey);
         }
 
-        InitializeLanguageOptions();
         UpdateBackgroundImageDescription();
     }
 

@@ -59,7 +59,7 @@
                     <Grid x:Name="HeroInfo" Grid.Column="1" RowDefinitions="Auto,*,Auto" RowSpacing="18">
                         <VerticalStackLayout Spacing="9">
                             <Label Style="{StaticResource PageTitleLabelStyle}" Text="{Binding PageTitle}" />
-                            <Label FontSize="15" Text="{Binding OriginalTitleValue}" TextColor="{DynamicResource MutedForeground}" />
+                            <Label FontSize="15" IsVisible="{Binding HasOriginalTitle}" Text="{Binding OriginalTitleValue}" TextColor="{DynamicResource MutedForeground}" />
                             <Label FontSize="13" Text="{Binding HeroMetaValue}" TextColor="{DynamicResource Primary}" />
                             <HorizontalStackLayout Spacing="8">
                                 <Border Padding="11,5" BackgroundColor="{Binding MediaTypeColor}" StrokeThickness="0" StrokeShape="RoundRectangle 13">
@@ -71,14 +71,20 @@
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
 
-                        <Label
-                            Grid.Row="1"
-                            FontSize="14"
-                            LineBreakMode="TailTruncation"
-                            MaxLines="4"
-                            Text="{Binding DescriptionValue}"
-                            TextColor="{DynamicResource MutedForeground}"
-                            VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Row="1" Spacing="4" VerticalOptions="Center">
+                            <Label
+                                FontSize="14"
+                                LineBreakMode="TailTruncation"
+                                MaxLines="{Binding DescriptionMaxLines}"
+                                Text="{Binding DescriptionValue}"
+                                TextColor="{DynamicResource MutedForeground}" />
+                            <Button
+                                Command="{Binding ToggleDescriptionCommand}"
+                                HorizontalOptions="Start"
+                                IsVisible="{Binding CanToggleDescription}"
+                                Style="{StaticResource LinkButtonStyle}"
+                                Text="{Binding ToggleDescriptionText}" />
+                        </VerticalStackLayout>
 
                         <HorizontalStackLayout Grid.Row="2" Spacing="10">
                             <Border
@@ -176,9 +182,6 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
-                        <VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding DescriptionLabel}" /><Label FontSize="14" Text="{Binding DescriptionValue}" /></VerticalStackLayout>
-                    </Border>
                 </VerticalStackLayout>
 
                 <VerticalStackLayout x:Name="DetailsRightColumn" Grid.Column="1" Spacing="18">

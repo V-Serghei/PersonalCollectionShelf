@@ -67,6 +67,8 @@
   "Details.NotesLabel": "Заметки",
   "Details.OriginalTitleLabel": "Оригинальное название",
   "Details.DescriptionLabel": "Описание",
+  "Details.ShowAll": "Показать всё",
+  "Details.ShowLess": "Свернуть",
   "Details.CategoryLabel": "Категория",
   "Details.TagsLabel": "Теги",
   "Details.CreatorLabel": "Автор",

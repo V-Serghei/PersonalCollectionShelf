@@ -146,3 +146,12 @@
   automatically renewed Twitch client-credentials tokens. Added combined candidate UI, provider-specific
   parsers, cover download, structured field mapping, source attribution links, generic two-rating storage,
   import/export and Firestore-compatible persistence, and one-item manual refresh.
+
+## 2026-07-30
+
+- Fixed the Settings language picker regression by keeping its option collection stable during localization
+  refresh, preventing a reentrant Picker update from freezing the UI before the preference can persist.
+- Consolidated media descriptions into the hero card: long text stays at a four-line preview with localized
+  show-all/show-less controls, and the duplicate full-description section was removed.
+- Hid the original-title line in the media hero card when no original title is stored instead of showing a
+  localized "not set" placeholder.

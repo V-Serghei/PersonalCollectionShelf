@@ -38,6 +38,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
     private MediaItemDto? _item;
 
     private string _errorMessage = string.Empty;
+    private bool _isDescriptionExpanded;
 
     public ObservableCollection<DetailsContributorViewModel> FeaturedContributors { get; } = [];
 
@@ -66,6 +67,25 @@ public partial class MediaDetailsViewModel : BaseViewModel
     }
 
     public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
+
+    public bool IsDescriptionExpanded
+    {
+        get => _isDescriptionExpanded;
+        private set
+        {
+            if (SetProperty(ref _isDescriptionExpanded, value))
+            {
+                OnPropertyChanged(nameof(DescriptionMaxLines));
+                OnPropertyChanged(nameof(ToggleDescriptionText));
+            }
+        }
+    }
+
+    public int DescriptionMaxLines => IsDescriptionExpanded ? -1 : 4;
+
+    public bool CanToggleDescription => Item?.Description?.Length > 180;
+
+    public string ToggleDescriptionText => T(IsDescriptionExpanded ? "Details.ShowLess" : "Details.ShowAll");
 
     public bool CanRefreshOnlineMetadata => Item is not null &&
         (Item.TmdbId.HasValue || (!string.IsNullOrWhiteSpace(Item.CatalogProvider) && !string.IsNullOrWhiteSpace(Item.CatalogItemId)));
@@ -210,7 +230,9 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string DetailsSectionTitle => T("Details.Title");
 
-    public string OriginalTitleValue => Item?.OriginalTitle ?? T("Common.NotSet");
+    public bool HasOriginalTitle => !string.IsNullOrWhiteSpace(Item?.OriginalTitle);
+
+    public string OriginalTitleValue => Item?.OriginalTitle ?? string.Empty;
 
     public string DescriptionValue => Item?.Description ?? T("Common.NotSet");
 
@@ -336,6 +358,9 @@ public partial class MediaDetailsViewModel : BaseViewModel
     private Task OpenAllContributorsAsync() => Item is null
         ? Task.CompletedTask
         : AppNavigation.OpenMediaContributorsAsync(Item.Id);
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
 
     public string MovieStudiosValue
     {
@@ -671,14 +696,19 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     private void RefreshItemProperties()
     {
+        IsDescriptionExpanded = false;
         PopulateFeaturedContributors();
         OnPropertyChanged(nameof(PageTitle));
         OnPropertyChanged(nameof(CanRefreshOnlineMetadata));
         OnPropertyChanged(nameof(RefreshMetadataTooltip));
         OnPropertyChanged(nameof(HasCatalogSourceUrl));
         OnPropertyChanged(nameof(CatalogSourceText));
+        OnPropertyChanged(nameof(HasOriginalTitle));
         OnPropertyChanged(nameof(OriginalTitleValue));
         OnPropertyChanged(nameof(DescriptionValue));
+        OnPropertyChanged(nameof(CanToggleDescription));
+        OnPropertyChanged(nameof(DescriptionMaxLines));
+        OnPropertyChanged(nameof(ToggleDescriptionText));
         OnPropertyChanged(nameof(CategoryValue));
         OnPropertyChanged(nameof(TagsValue));
         OnPropertyChanged(nameof(CreatorValue));

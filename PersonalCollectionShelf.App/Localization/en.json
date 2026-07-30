@@ -67,6 +67,8 @@
   "Details.NotesLabel": "Notes",
   "Details.OriginalTitleLabel": "Original title",
   "Details.DescriptionLabel": "Description",
+  "Details.ShowAll": "Show all",
+  "Details.ShowLess": "Show less",
   "Details.CategoryLabel": "Category",
   "Details.TagsLabel": "Tags",
   "Details.CreatorLabel": "Creator",
