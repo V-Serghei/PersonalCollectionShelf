@@ -220,6 +220,32 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string CreatorValue => Item?.Creator ?? T("Common.NotSet");
 
+    public DetailsContributorViewModel? CreatorContributor
+    {
+        get
+        {
+            if (Item is null) return null;
+            var primaryRole = Item.MediaType switch
+            {
+                MediaType.Book or MediaType.Manga or MediaType.Comic => ContributionRole.Author,
+                MediaType.Movie or MediaType.Series or MediaType.Cartoon or MediaType.AnimatedSeries => ContributionRole.Director,
+                MediaType.Game => ContributionRole.Developer,
+                _ => ContributionRole.Other
+            };
+            var contribution = Item.Contributions.FirstOrDefault(value => value.PersonId == Item.CreatorId) ??
+                               Item.Contributions.OrderBy(value => value.SortOrder).FirstOrDefault(value => value.Role == primaryRole);
+            return contribution is null
+                ? null
+                : new DetailsContributorViewModel(
+                    contribution.PersonId,
+                    contribution.PersonName,
+                    T($"ContributionRole.{contribution.Role}"),
+                    contribution.Details ?? string.Empty);
+        }
+    }
+
+    public bool HasCreatorContributor => CreatorContributor is not null;
+
     public string PublisherValue => Item?.Publisher ?? T("Common.NotSet");
 
     public string SerialNumberValue => Item?.SerialNumber ?? T("Common.NotSet");
@@ -228,7 +254,15 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string AuthorsValue => JoinContributors(ContributionRole.Author);
 
+    public IReadOnlyList<DetailsContributorViewModel> AuthorContributors => GetContributorLinks(ContributionRole.Author);
+
+    public bool HasAuthorContributors => AuthorContributors.Count > 0;
+
     public string TranslatorsValue => JoinContributors(ContributionRole.Translator);
+
+    public IReadOnlyList<DetailsContributorViewModel> TranslatorContributors => GetContributorLinks(ContributionRole.Translator);
+
+    public bool HasTranslatorContributors => TranslatorContributors.Count > 0;
 
     public string DirectorsLabel => T("Edit.Label.Directors");
 
@@ -292,6 +326,11 @@ public partial class MediaDetailsViewModel : BaseViewModel
     [RelayCommand]
     private Task OpenPersonAsync(DetailsContributorViewModel contributor) =>
         AppNavigation.OpenPersonAsync(contributor.PersonId);
+
+    [RelayCommand]
+    private Task OpenCreatorAsync() => CreatorContributor is null
+        ? Task.CompletedTask
+        : AppNavigation.OpenPersonAsync(CreatorContributor.PersonId);
 
     [RelayCommand]
     private Task OpenAllContributorsAsync() => Item is null
@@ -643,6 +682,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(CategoryValue));
         OnPropertyChanged(nameof(TagsValue));
         OnPropertyChanged(nameof(CreatorValue));
+        OnPropertyChanged(nameof(CreatorContributor));
+        OnPropertyChanged(nameof(HasCreatorContributor));
         OnPropertyChanged(nameof(CreatorLabel));
         OnPropertyChanged(nameof(PublisherValue));
         OnPropertyChanged(nameof(PublisherLabel));
@@ -657,7 +698,11 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(ShowGraphicPublicationDetails));
         OnPropertyChanged(nameof(ShowGameDetails));
         OnPropertyChanged(nameof(AuthorsValue));
+        OnPropertyChanged(nameof(AuthorContributors));
+        OnPropertyChanged(nameof(HasAuthorContributors));
         OnPropertyChanged(nameof(TranslatorsValue));
+        OnPropertyChanged(nameof(TranslatorContributors));
+        OnPropertyChanged(nameof(HasTranslatorContributors));
         OnPropertyChanged(nameof(DirectorsValue));
         OnPropertyChanged(nameof(ScreenwritersValue));
         OnPropertyChanged(nameof(ProducersValue));
@@ -751,6 +796,17 @@ public partial class MediaDetailsViewModel : BaseViewModel
         var values = Item?.Contributions.Where(value => value.Role == role).OrderBy(value => value.SortOrder).Select(value => value.PersonName).ToList();
         return values is null || values.Count == 0 ? T("Common.NotSet") : string.Join(", ", values);
     }
+
+    private IReadOnlyList<DetailsContributorViewModel> GetContributorLinks(ContributionRole role) =>
+        Item?.Contributions
+            .Where(value => value.Role == role)
+            .OrderBy(value => value.SortOrder)
+            .Select(value => new DetailsContributorViewModel(
+                value.PersonId,
+                value.PersonName,
+                T($"ContributionRole.{value.Role}"),
+                value.Details ?? string.Empty))
+            .ToList() ?? [];
 
     private async Task<string> GetCurrentUserIdAsync()
     {

@@ -160,7 +160,16 @@
                             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="14">
                                 <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CategoryLabel}" /><Label FontAttributes="Bold" Text="{Binding CategoryValue}" /></VerticalStackLayout></Border>
                                 <Border Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TagsLabel}" /><Label Text="{Binding TagsValue}" /></VerticalStackLayout></Border>
-                                <Border Grid.Row="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CreatorLabel}" /><Label FontAttributes="Bold" Text="{Binding CreatorValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Row="1" Padding="13" Style="{StaticResource MutedBorderStyle}">
+                                    <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCreatorCommand}" /></Border.GestureRecognizers>
+                                    <VerticalStackLayout Spacing="5">
+                                        <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CreatorLabel}" />
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label FontAttributes="Bold" Text="{Binding CreatorValue}" TextColor="{DynamicResource Primary}" />
+                                            <Label Grid.Column="1" IsVisible="{Binding HasCreatorContributor}" Text="&#x203A;" TextColor="{DynamicResource Primary}" />
+                                        </Grid>
+                                    </VerticalStackLayout>
+                                </Border>
                                 <Border Grid.Row="1" Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding PublisherLabel}" /><Label Text="{Binding PublisherValue}" /></VerticalStackLayout></Border>
                                 <Border Grid.Row="2" Grid.ColumnSpan="2" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SerialNumberLabel}" /><Label Text="{Binding SerialNumberValue}" /></VerticalStackLayout></Border>
                             </Grid>
@@ -192,8 +201,36 @@
                 <VerticalStackLayout Spacing="16">
                     <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding BookDetailsSectionTitle}" />
                     <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="14">
-                        <Border Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AuthorsLabel}" /><Label FontAttributes="Bold" Text="{Binding AuthorsValue}" /></VerticalStackLayout></Border>
-                        <Border Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TranslatorsLabel}" /><Label Text="{Binding TranslatorsValue}" /></VerticalStackLayout></Border>
+                        <Border Padding="14" Style="{StaticResource MutedBorderStyle}">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AuthorsLabel}" />
+                                <FlexLayout BindableLayout.ItemsSource="{Binding AuthorContributors}" Direction="Row" Wrap="Wrap">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="viewModels:DetailsContributorViewModel">
+                                            <Button Margin="0,0,5,5" Command="{Binding Source={RelativeSource AncestorType={x:Type pages:MediaDetailsPage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:MediaDetailsPage}}" CommandParameter="{Binding .}" Padding="7,3" Style="{StaticResource LinkButtonStyle}" Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+                                <Label FontAttributes="Bold" Text="{Binding AuthorsValue}">
+                                    <Label.Triggers><DataTrigger Binding="{Binding HasAuthorContributors}" TargetType="Label" Value="True"><Setter Property="IsVisible" Value="False" /></DataTrigger></Label.Triggers>
+                                </Label>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TranslatorsLabel}" />
+                                <FlexLayout BindableLayout.ItemsSource="{Binding TranslatorContributors}" Direction="Row" Wrap="Wrap">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="viewModels:DetailsContributorViewModel">
+                                            <Button Margin="0,0,5,5" Command="{Binding Source={RelativeSource AncestorType={x:Type pages:MediaDetailsPage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:MediaDetailsPage}}" CommandParameter="{Binding .}" Padding="7,3" Style="{StaticResource LinkButtonStyle}" Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+                                <Label Text="{Binding TranslatorsValue}">
+                                    <Label.Triggers><DataTrigger Binding="{Binding HasTranslatorContributors}" TargetType="Label" Value="True"><Setter Property="IsVisible" Value="False" /></DataTrigger></Label.Triggers>
+                                </Label>
+                            </VerticalStackLayout>
+                        </Border>
                         <Border Grid.Column="2" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding GenresLabel}" /><Label Text="{Binding GenresValue}" /></VerticalStackLayout></Border>
                         <Border Grid.Row="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BookDetailsSectionTitle}" /><Label Text="{Binding BookMetadataValue}" /></VerticalStackLayout></Border>
                         <Border Grid.Row="1" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CollectionLabel}" /><Label Text="{Binding CollectionValue}" /></VerticalStackLayout></Border>

@@ -6,42 +6,62 @@
     xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:MediaContributorsViewModel"
-    BackgroundColor="{DynamicResource PageBackground}"
+    BackgroundColor="{DynamicResource Background}"
     Shell.NavBarIsVisible="False">
-    <Grid RowDefinitions="Auto,*" Padding="{OnIdiom Phone='12', Default='24'}" RowSpacing="14">
+    <Grid
+        Padding="{OnIdiom Phone='12', Default='24'}"
+        BackgroundColor="{DynamicResource Background}"
+        RowDefinitions="Auto,*"
+        RowSpacing="14">
         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-            <Button Command="{Binding BackCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="‹" />
+            <Button Command="{Binding BackCommand}" Style="{StaticResource IconToggleButtonStyle}" Text="&#x2039;" />
             <VerticalStackLayout Grid.Column="1" Spacing="2">
                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="26" Text="{Binding PageTitle}" />
                 <Label FontSize="13" Text="{Binding Title}" TextColor="{DynamicResource Primary}" />
             </VerticalStackLayout>
         </Grid>
 
-        <CollectionView Grid.Row="1" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding Groups}" SelectionMode="None">
-            <CollectionView.EmptyView><Label Margin="0,40" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" /></CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="viewModels:MediaContributorGroupViewModel">
-                    <VerticalStackLayout Margin="0,0,0,18" Spacing="8">
-                        <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding Label}" />
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding People}" Spacing="7">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="viewModels:MediaContributorItemViewModel">
-                                    <Border Padding="13" Style="{StaticResource CardBorderStyle}">
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:MediaContributorsPage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:MediaContributorsPage}}" CommandParameter="{Binding .}" />
-                                        </Border.GestureRecognizers>
-                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                                            <Label FontAttributes="Bold" Text="{Binding Name}" />
-                                            <Label Grid.Column="1" Text="›" TextColor="{DynamicResource Primary}" />
-                                            <Label Grid.Row="1" Grid.ColumnSpan="2" FontSize="11" Text="{Binding Details}" TextColor="{DynamicResource MutedForeground}" />
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
+        <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource Background}">
+            <VerticalStackLayout
+                BindableLayout.ItemsSource="{Binding Groups}"
+                Spacing="18">
+                <BindableLayout.EmptyView>
+                    <Label Margin="0,40" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" />
+                </BindableLayout.EmptyView>
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:MediaContributorGroupViewModel">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding Label}" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding People}" Spacing="7">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="viewModels:MediaContributorItemViewModel">
+                                        <Border Padding="13" Style="{StaticResource CardBorderStyle}">
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type pages:MediaContributorsPage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:MediaContributorsPage}}"
+                                                    CommandParameter="{Binding .}" />
+                                            </Border.GestureRecognizers>
+                                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                                <Label FontAttributes="Bold" Text="{Binding Name}" />
+                                                <Label Grid.Column="1" Text="&#x203A;" TextColor="{DynamicResource Primary}" />
+                                                <Label Grid.Row="1" Grid.ColumnSpan="2" FontSize="11" Text="{Binding Details}" TextColor="{DynamicResource MutedForeground}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
-                    </VerticalStackLayout>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <ActivityIndicator
+            Grid.Row="1"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}"
+            VerticalOptions="Center"
+            ZIndex="10" />
     </Grid>
 </ContentPage>
