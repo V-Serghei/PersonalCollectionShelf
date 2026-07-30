@@ -187,6 +187,23 @@
   "Sync.Status.InProgressButton": "Synchronizing…",
   "Sync.Status.CompletedWithDrive": "Synchronization completed. Data was updated and a backup was saved to Google Drive.",
   "Sync.Status.CompletedWithoutDrive": "Data was synchronized through Firebase, but a Google Drive backup was not created.",
+  "Sync.Status.Completed": "Synchronization completed. Only changed data was sent.",
+  "Sync.Status.CompletedWithWarnings": "Data synchronized. Some images could not be uploaded and will be retried during the next synchronization.",
+  "Sync.Status.NetworkFailed": "The connection was interrupted. Completed progress was saved; try synchronization again to continue.",
+  "Sync.Progress.Preparing": "Preparing synchronization…",
+  "Sync.Progress.Assets": "Checking changed images…",
+  "Sync.Progress.Scanning": "Checking changed data…",
+  "Sync.Progress.Downloading": "Downloading cloud changes…",
+  "Sync.Progress.Applying": "Applying cloud changes…",
+  "Sync.Progress.Uploading": "Uploading changed data…",
+  "Sync.Progress.Finalizing": "Finalizing synchronization…",
+  "Sync.Progress.Complete": "Synchronization complete.",
+  "Sync.Progress.CompleteWithWarnings": "Data synchronized, but some images are waiting to be uploaded again.",
+  "Sync.Progress.Retrying": "The connection was interrupted. Retrying…",
+  "Progress.Estimating": "Estimating remaining time…",
+  "Progress.Remaining": "About {0} remaining",
+  "Progress.Done": "Done",
+  "Progress.Stopped": "Operation stopped",
   "Sync.Status.Requested": "Synchronization completed.",
   "Sync.Status.Failed": "Synchronization failed. Check the connection and Firebase configuration.",
   "Settings.DriveBackup.Button": "Back up",
@@ -427,7 +444,25 @@
   ,"Collections.Title": "Series and universes"
   ,"Collections.Empty": "No series, cycles, or universes yet."
   ,"Collections.SearchPlaceholder": "Search series, universes, and items"
+  ,"Collections.Loading": "Loading series and cover stacks…"
+  ,"Collections.Options": "List options"
+  ,"Collections.CategoryFilter": "Category"
+  ,"Collections.SortLabel": "Sort"
+  ,"Collections.ResultsFormat": "{0} series and collections"
+  ,"Collections.ItemCountFormat": "{0} items"
+  ,"Collections.DetailsTitle": "Series"
+  ,"Collections.DetailsEmpty": "There are no items in this series yet."
+  ,"Collections.LoadingDetails": "Loading series…"
+  ,"Collections.Sort.NameAscending": "Name: A–Z"
+  ,"Collections.Sort.NameDescending": "Name: Z–A"
+  ,"Collections.Sort.MostItems": "Most items"
+  ,"Collections.Sort.FewestItems": "Fewest items"
+  ,"Collections.Sort.Category": "Category"
+  ,"Collections.Sort.Kind": "Series type"
   ,"Tags.Title": "Tags"
+  ,"Tags.Options": "Tag options"
+  ,"Tags.CategoryFilter": "Category"
+  ,"Tags.Loading": "Loading tags…"
   ,"Tags.Empty": "No matching tags."
   ,"Tags.SearchPlaceholder": "Search tags and linked items"
   ,"Tags.Subtitle": "Choose a tag to see every linked item"
@@ -466,6 +501,9 @@
   ,"People.Gallery": "Photos"
   ,"People.GalleryTitleFormat": "Gallery: {0}"
   ,"People.GalleryEmpty": "No photos yet"
+  ,"People.GalleryPrevious": "Previous photo"
+  ,"People.GalleryNext": "Next photo"
+  ,"People.GalleryPositionFormat": "{0} of {1}"
   ,"People.PrimaryPhoto": "Primary"
   ,"People.About": "About"
   ,"People.TopWorks": "My top 5 rated works"
@@ -502,6 +540,9 @@
   ,"Statistics.Completion": "Completion"
   ,"Statistics.Collection": "Collection"
   ,"Statistics.MonthlyActivity": "Monthly activity"
+  ,"Statistics.MonthlyActivityHint": "Items added to the library in each month."
+  ,"Statistics.ActivityYear": "Activity year"
+  ,"Statistics.ReleaseYearRange": "Release years"
   ,"Statistics.ByCategory": "By category"
   ,"Statistics.ByStatus": "By status"
   ,"Statistics.Items": "items"
@@ -518,8 +559,8 @@
   ,"Statistics.ByCountry": "Countries of origin"
   ,"Statistics.RatingDistribution": "Personal rating distribution"
   ,"Statistics.AverageRatingByType": "Average rating by type"
-  ,"Statistics.CompletionByType": "Completion rate by type"
-  ,"Statistics.FavoritesByType": "Favorites by type"
+  ,"Statistics.Scope": "Data scope"
+  ,"Statistics.LegendValueFormat": "{0} · {1}%"
   ,"Details.FeaturedContributors": "Featured contributors"
   ,"Details.ShowAllContributors": "Show full cast and crew →"
   ,"Contributors.Title": "Cast and crew"

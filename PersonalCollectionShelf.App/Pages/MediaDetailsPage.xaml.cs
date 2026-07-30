@@ -191,4 +191,39 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
     }
 
     public MediaDetailsViewModel ViewModel => (MediaDetailsViewModel)BindingContext;
+
+    private static void HandleEditButtonPressed(object? sender, EventArgs e)
+    {
+        if (sender is Button button)
+        {
+            AnimateEditButton(button, 0.88, 70);
+        }
+    }
+
+    private static void HandleEditButtonReleased(object? sender, EventArgs e)
+    {
+        if (sender is Button button)
+        {
+            AnimateEditButton(button, 1, 110);
+        }
+    }
+
+    private async void HandleRefreshMetadataTapped(object? sender, TappedEventArgs e)
+    {
+        await RefreshMetadataButton.ScaleToAsync(0.86, 70, Easing.CubicOut);
+        await RefreshMetadataButton.ScaleToAsync(1, 120, Easing.CubicOut);
+    }
+
+    private static void AnimateEditButton(Button button, double targetScale, uint length)
+    {
+        button.AbortAnimation("EditButtonPress");
+        button.Animate(
+            "EditButtonPress",
+            value => button.Scale = value,
+            button.Scale,
+            targetScale,
+            16,
+            length,
+            Easing.CubicOut);
+    }
 }

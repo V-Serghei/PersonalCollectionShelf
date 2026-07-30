@@ -10,119 +10,60 @@
     x:DataType="viewModels:TagsViewModel"
     BackgroundColor="{DynamicResource PageBackground}"
     Shell.NavBarIsVisible="False">
-    <Grid Padding="{OnIdiom Phone='16,14', Default='24'}" RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12">
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+    <Grid Padding="{OnIdiom Phone='14,12', Default='24'}" RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
             <VerticalStackLayout Spacing="2">
                 <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
-                <Label FontSize="12" Text="{Binding Subtitle}" TextColor="{DynamicResource MutedForeground}" />
+                <Label FontSize="12" Text="{Binding ResultsText}" TextColor="{DynamicResource MutedForeground}" />
             </VerticalStackLayout>
-            <Button
-                Grid.Column="1"
-                Clicked="HandleSearchClicked"
-                HeightRequest="44"
-                Style="{StaticResource IconToggleButtonStyle}"
-                Text="&#x2315;"
-                WidthRequest="44" />
+            <Button Grid.Column="1" Command="{Binding ToggleOptionsCommand}" HeightRequest="44" Style="{StaticResource IconToggleButtonStyle}" Text="&#x22EE;" WidthRequest="44" />
         </Grid>
 
-        <Border Grid.Row="1" IsVisible="{Binding IsSearchVisible}" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
-            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Label FontSize="17" Text="&#x2315;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
-                <Entry
-                    x:Name="TagSearch"
-                    Grid.Column="1"
-                    BackgroundColor="Transparent"
-                    ClearButtonVisibility="WhileEditing"
-                    Placeholder="{Binding SearchPlaceholder}"
-                    Text="{Binding SearchText}" />
-            </Grid>
+        <Border Grid.Row="1" IsVisible="{Binding IsOptionsVisible}" Padding="14" Style="{StaticResource CardBorderStyle}">
+            <VerticalStackLayout Spacing="10">
+                <Label FontAttributes="Bold" FontSize="16" Text="{Binding OptionsText}" />
+                <Border Padding="11,0" Style="{StaticResource MutedBorderStyle}">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <Label FontSize="16" Text="&#x2315;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                        <Entry Grid.Column="1" BackgroundColor="Transparent" ClearButtonVisibility="WhileEditing" Placeholder="{Binding SearchPlaceholder}" Text="{Binding SearchText}" />
+                    </Grid>
+                </Border>
+                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CategoryFilterLabel}" />
+                <CollectionView HeightRequest="44" ItemsSource="{Binding MediaTypeFilters}" SelectionMode="None">
+                    <CollectionView.ItemsLayout><LinearItemsLayout ItemSpacing="8" Orientation="Horizontal" /></CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:DisplayOption">
+                            <Button Command="{Binding Source={RelativeSource AncestorType={x:Type pages:TagsPage}}, Path=ViewModel.SelectMediaTypeFilterCommand, x:DataType={x:Type pages:TagsPage}}" CommandParameter="{Binding .}" Style="{StaticResource PillButtonStyle}" Text="{Binding DisplayName}">
+                                <Button.Triggers><DataTrigger Binding="{Binding IsSelected}" TargetType="Button" Value="True"><Setter Property="BackgroundColor" Value="{DynamicResource Primary}" /><Setter Property="TextColor" Value="{DynamicResource PrimaryForeground}" /></DataTrigger></Button.Triggers>
+                            </Button>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <Picker HorizontalOptions="Fill" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSortOption}" Title="{Binding SortPlaceholder}" />
+            </VerticalStackLayout>
         </Border>
 
-        <CollectionView
-            Grid.Row="2"
-            HeightRequest="44"
-            ItemsSource="{Binding MediaTypeFilters}"
-            SelectionMode="None">
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout ItemSpacing="8" Orientation="Horizontal" />
-            </CollectionView.ItemsLayout>
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:DisplayOption">
-                    <Button
-                        Command="{Binding Source={RelativeSource AncestorType={x:Type pages:TagsPage}}, Path=ViewModel.SelectMediaTypeFilterCommand, x:DataType={x:Type pages:TagsPage}}"
-                        CommandParameter="{Binding .}"
-                        Style="{StaticResource PillButtonStyle}"
-                        Text="{Binding DisplayName}">
-                        <Button.Triggers>
-                            <DataTrigger Binding="{Binding IsSelected}" TargetType="Button" Value="True">
-                                <Setter Property="BackgroundColor" Value="{DynamicResource Primary}" />
-                                <Setter Property="TextColor" Value="{DynamicResource PrimaryForeground}" />
-                            </DataTrigger>
-                        </Button.Triggers>
-                    </Button>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-
-        <Grid Grid.Row="3" ColumnDefinitions="*,190" ColumnSpacing="12">
-            <Label FontSize="12" Text="{Binding ResultsText}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
-            <Picker
-                Grid.Column="1"
-                ItemsSource="{Binding SortOptions}"
-                SelectedItem="{Binding SelectedSortOption}"
-                Title="{Binding SortPlaceholder}" />
-        </Grid>
-
-        <Grid Grid.Row="4">
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-            <CollectionView
-                IsVisible="{Binding IsNotBusy}"
-                ItemSizingStrategy="MeasureAllItems"
-                ItemsSource="{Binding Tags}"
-                SelectionMode="None">
+        <Grid Grid.Row="2">
+            <VerticalStackLayout HorizontalOptions="Center" IsVisible="{Binding IsBusy}" Spacing="10" VerticalOptions="Center">
+                <ActivityIndicator HeightRequest="42" IsRunning="{Binding IsBusy}" WidthRequest="42" />
+                <Label Text="{Binding LoadingText}" TextColor="{DynamicResource MutedForeground}" />
+            </VerticalStackLayout>
+            <CollectionView x:Name="TagsList" IsVisible="{Binding IsNotBusy}" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding Tags}" SelectionMode="None">
                 <CollectionView.ItemsLayout>
-                    <GridItemsLayout
-                        HorizontalItemSpacing="12"
-                        Orientation="Vertical"
-                        Span="{OnIdiom Phone=1, Tablet=2, Desktop=2}"
-                        VerticalItemSpacing="12" />
+                    <GridItemsLayout HorizontalItemSpacing="10" Orientation="Vertical" Span="{OnIdiom Phone=2, Tablet=3, Desktop=4}" VerticalItemSpacing="10" />
                 </CollectionView.ItemsLayout>
-                <CollectionView.EmptyView>
-                    <Border Margin="0,34,0,0" Padding="24" Style="{StaticResource CardBorderStyle}">
-                        <Label HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" />
-                    </Border>
-                </CollectionView.EmptyView>
+                <CollectionView.EmptyView><Label Margin="0,36" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:TagCardViewModel">
-                        <Border Padding="16" Style="{StaticResource CardBorderStyle}">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type pages:TagsPage}}, Path=ViewModel.OpenTagCommand, x:DataType={x:Type pages:TagsPage}}"
-                                    CommandParameter="{Binding .}" />
-                            </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="7">
-                                <Border
-                                    Grid.RowSpan="2"
-                                    Padding="10,7"
-                                    BackgroundColor="{DynamicResource MutedSoft}"
-                                    Stroke="{DynamicResource Primary}"
-                                    StrokeShape="RoundRectangle 10"
-                                    StrokeThickness="1">
-                                    <Label FontAttributes="Bold" FontSize="17" Text="#" TextColor="{DynamicResource Primary}" />
+                        <Border HeightRequest="92" Padding="12" Style="{StaticResource CardBorderStyle}">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:TagsPage}}, Path=ViewModel.OpenTagCommand, x:DataType={x:Type pages:TagsPage}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="5">
+                                <Border Grid.RowSpan="2" Padding="8,5" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Primary}" StrokeShape="RoundRectangle 9">
+                                    <Label FontAttributes="Bold" FontSize="15" Text="#" TextColor="{DynamicResource Primary}" />
                                 </Border>
-                                <Label Grid.Column="1" FontAttributes="Bold" FontSize="17" LineBreakMode="TailTruncation" Text="{Binding Name}" />
-                                <Border Grid.Column="2" Padding="9,4" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 12">
-                                    <Label FontAttributes="Bold" FontSize="11" Text="{Binding ItemCount}" />
-                                </Border>
-                                <Label
-                                    Grid.Row="1"
-                                    Grid.Column="1"
-                                    Grid.ColumnSpan="2"
-                                    FontSize="11"
-                                    LineBreakMode="TailTruncation"
-                                    MaxLines="1"
-                                    Text="{Binding CategorySummary}"
-                                    TextColor="{DynamicResource MutedForeground}" />
+                                <Label Grid.Column="1" Grid.ColumnSpan="2" FontAttributes="Bold" FontSize="14" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding Name}" />
+                                <Label Grid.Row="1" Grid.Column="1" FontSize="9" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding CategorySummary}" TextColor="{DynamicResource MutedForeground}" />
+                                <Label Grid.Row="1" Grid.Column="2" FontAttributes="Bold" FontSize="10" Text="{Binding ItemCount}" TextColor="{DynamicResource Primary}" />
                             </Grid>
                         </Border>
                     </DataTemplate>

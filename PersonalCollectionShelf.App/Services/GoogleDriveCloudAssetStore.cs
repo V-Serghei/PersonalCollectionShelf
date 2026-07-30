@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using PersonalCollectionShelf.Application.Interfaces;
@@ -32,17 +33,21 @@ public sealed class GoogleDriveCloudAssetStore(
             return;
         }
 
-        var boundary = $"pcs-asset-{Guid.NewGuid():N}";
         var metadata = JsonSerializer.Serialize(new { name = objectName, parents = new[] { _folderId! } });
-        using var multipart = new MultipartContent("related", boundary)
+        var bytes = content.ToArray();
+        using var response = await SendWithRetryAsync(() =>
         {
-            new StringContent(metadata, Encoding.UTF8, "application/json"),
-            new ByteArrayContent(content.ToArray())
-        };
-        multipart.Last().Headers.ContentType = new MediaTypeHeaderValue(contentType);
-        using var request = CreateRequest(HttpMethod.Post, $"{UploadApi}/files?uploadType=multipart&fields=id", token);
-        request.Content = multipart;
-        using var response = await httpClient.SendAsync(request, cancellationToken);
+            var boundary = $"pcs-asset-{Guid.NewGuid():N}";
+            var multipart = new MultipartContent("related", boundary)
+            {
+                new StringContent(metadata, Encoding.UTF8, "application/json"),
+                new ByteArrayContent(bytes)
+            };
+            multipart.Last().Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            var request = CreateRequest(HttpMethod.Post, $"{UploadApi}/files?uploadType=multipart&fields=id", token);
+            request.Content = multipart;
+            return request;
+        }, cancellationToken);
         response.EnsureSuccessStatusCode();
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
         _fileIds[objectName] = document.RootElement.GetProperty("id").GetString()!;
@@ -161,4 +166,34 @@ public sealed class GoogleDriveCloudAssetStore(
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
     }
+
+    private async Task<HttpResponseMessage> SendWithRetryAsync(
+        Func<HttpRequestMessage> requestFactory,
+        CancellationToken cancellationToken)
+    {
+        const int maximumAttempts = 4;
+        for (var attempt = 1; ; attempt++)
+        {
+            using var request = requestFactory();
+            try
+            {
+                var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                if (attempt >= maximumAttempts || !IsTransient(response.StatusCode)) return response;
+                response.Dispose();
+            }
+            catch (Exception exception) when (attempt < maximumAttempts && IsTransient(exception, cancellationToken))
+            {
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(400 * Math.Pow(2, attempt - 1)), cancellationToken);
+        }
+    }
+
+    private static bool IsTransient(HttpStatusCode statusCode) =>
+        statusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests || (int)statusCode >= 500;
+
+    private static bool IsTransient(Exception exception, CancellationToken cancellationToken) =>
+        exception is HttpRequestException or IOException or WebException ||
+        exception is OperationCanceledException && !cancellationToken.IsCancellationRequested ||
+        exception.InnerException is not null && IsTransient(exception.InnerException, cancellationToken);
 }

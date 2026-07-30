@@ -79,6 +79,7 @@ public sealed class AppShell : Shell
         Routing.RegisterRoute(nameof(PersonDetailsPage), typeof(PersonDetailsPage));
         Routing.RegisterRoute(nameof(PersonEditorPage), typeof(PersonEditorPage));
         Routing.RegisterRoute(nameof(PersonGalleryPage), typeof(PersonGalleryPage));
+        Routing.RegisterRoute(nameof(CollectionDetailsPage), typeof(CollectionDetailsPage));
 
         FlyoutContentTemplate = new DataTemplate(BuildFlyoutContent);
         Navigated += HandleNavigated;
@@ -495,8 +496,10 @@ public sealed class AppShell : Shell
 
     private void ApplyShellColors()
     {
+        var backgroundPath = _appearanceService.BackgroundImagePath;
         FlyoutBackgroundColor = SidebarColor;
-        BackgroundColor = AppBackgroundColor;
+        BackgroundColor = backgroundPath is null ? AppBackgroundColor : Colors.Transparent;
+        BackgroundImageSource = CreateBackgroundImageSource(backgroundPath);
 
         Shell.SetBackgroundColor(this, AppBackgroundColor);
         Shell.SetForegroundColor(this, ForegroundColor);
@@ -504,6 +507,14 @@ public sealed class AppShell : Shell
         Shell.SetUnselectedColor(this, SecondaryForegroundColor);
         Shell.SetDisabledColor(this, MutedForegroundColor);
     }
+
+    private static ImageSource? CreateBackgroundImageSource(string? path) =>
+        string.IsNullOrWhiteSpace(path)
+            ? null
+            : new StreamImageSource
+            {
+                Stream = cancellationToken => Task.FromResult<Stream>(File.OpenRead(path))
+            };
 
     private void HandleNavigated(object? sender, ShellNavigatedEventArgs e)
     {

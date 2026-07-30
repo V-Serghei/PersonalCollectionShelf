@@ -125,7 +125,7 @@ public sealed class ExternalCatalogMetadataService(HttpClient httpClient, MediaM
             JoinStrings(info, "authors"),
             string.Join(" · ", new[] { ReadString(info, "publisher"), isbn }.Where(value => !string.IsNullOrWhiteSpace(value))),
             isbn,
-            ReadString(info, "canonicalVolumeLink") ?? ReadString(info, "infoLink"),
+            $"https://books.google.com/books?id={Uri.EscapeDataString(id)}",
             ReadDecimal(info, "averageRating"),
             ReadInt(info, "ratingsCount"));
     }

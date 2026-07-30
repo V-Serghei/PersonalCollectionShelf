@@ -12,6 +12,14 @@ using PersonalCollectionShelf.Domain.Enums;
 namespace PersonalCollectionShelf.App.ViewModels;
 
 public sealed record DetailsContributorViewModel(Guid PersonId, string Name, string Role, string Details);
+public sealed record ExternalSourceLinkViewModel(string Label, Uri Url);
+public sealed record ExternalRatingCardViewModel(
+    string IconText,
+    string RatingText,
+    string VotesText,
+    Color IconBackground,
+    Color IconForeground,
+    Uri? Url);
 
 public partial class MediaDetailsViewModel : BaseViewModel
 {
@@ -39,8 +47,14 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     private string _errorMessage = string.Empty;
     private bool _isDescriptionExpanded;
+    private bool _isOpeningEditor;
+    private bool _showEditorLoading;
+    private bool _isRefreshingMetadata;
+    private int _editorNavigationVersion;
 
     public ObservableCollection<DetailsContributorViewModel> FeaturedContributors { get; } = [];
+    public ObservableCollection<ExternalSourceLinkViewModel> ExternalSourceLinks { get; } = [];
+    public ObservableCollection<ExternalRatingCardViewModel> ExternalRatingCards { get; } = [];
 
     public MediaItemDto? Item
     {
@@ -68,6 +82,18 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
 
+    public bool IsOpeningEditor
+    {
+        get => _isOpeningEditor;
+        private set => SetProperty(ref _isOpeningEditor, value);
+    }
+
+    public bool ShowEditorLoading
+    {
+        get => _showEditorLoading;
+        private set => SetProperty(ref _showEditorLoading, value);
+    }
+
     public bool IsDescriptionExpanded
     {
         get => _isDescriptionExpanded;
@@ -81,7 +107,9 @@ public partial class MediaDetailsViewModel : BaseViewModel
         }
     }
 
-    public int DescriptionMaxLines => IsDescriptionExpanded ? -1 : 4;
+    // TailTruncation can collapse MaxLines=-1 to one line on Android, while 0 hides the label.
+    // A generous positive cap preserves multiline wrapping and behaves as "show all" for real descriptions.
+    public int DescriptionMaxLines => IsDescriptionExpanded ? 10_000 : 4;
 
     public bool CanToggleDescription => Item?.Description?.Length > 180;
 
@@ -92,9 +120,19 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string RefreshMetadataTooltip => T("Metadata.Action.Refresh");
 
-    public bool HasCatalogSourceUrl => Uri.TryCreate(Item?.CatalogSourceUrl, UriKind.Absolute, out _);
+    public bool IsRefreshingMetadata
+    {
+        get => _isRefreshingMetadata;
+        private set
+        {
+            if (SetProperty(ref _isRefreshingMetadata, value))
+            {
+                OnPropertyChanged(nameof(IsNotRefreshingMetadata));
+            }
+        }
+    }
 
-    public string CatalogSourceText => string.Format(T("Metadata.Source.Format"), Item?.CatalogProvider ?? T("Metadata.Source.Unknown"));
+    public bool IsNotRefreshingMetadata => !IsRefreshingMetadata;
 
     public string PageTitle => Item?.Title ?? T("Details.Title");
 
@@ -113,7 +151,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
                                       Item?.CatalogRatingPrimary.HasValue == true ||
                                       Item?.CatalogRatingSecondary.HasValue == true;
 
-    public bool HasExternalMetadata => HasExternalRatings || HasCatalogSourceUrl;
+    public bool HasExternalMetadata => HasExternalRatings || ExternalSourceLinks.Count > 0;
 
     public string ExternalRatingsValue
     {
@@ -575,10 +613,14 @@ public partial class MediaDetailsViewModel : BaseViewModel
     [RelayCommand]
     private async Task EditAsync()
     {
-        if (Item is null)
+        if (Item is null || IsOpeningEditor)
         {
             return;
         }
+
+        IsOpeningEditor = true;
+        var navigationVersion = ++_editorNavigationVersion;
+        _ = ShowEditorLoadingAfterDelayAsync(navigationVersion);
 
         try
         {
@@ -587,6 +629,20 @@ public partial class MediaDetailsViewModel : BaseViewModel
         catch (Exception exception)
         {
             await CrashReporter.ReportAsync(exception, $"MediaDetailsViewModel.EditAsync id={Item.Id}");
+        }
+        finally
+        {
+            IsOpeningEditor = false;
+            ShowEditorLoading = false;
+        }
+    }
+
+    private async Task ShowEditorLoadingAfterDelayAsync(int navigationVersion)
+    {
+        await Task.Delay(150);
+        if (IsOpeningEditor && navigationVersion == _editorNavigationVersion)
+        {
+            ShowEditorLoading = true;
         }
     }
 
@@ -619,6 +675,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
         ErrorMessage = string.Empty;
         IsBusy = true;
+        IsRefreshingMetadata = true;
         try
         {
             var userId = await GetCurrentUserIdAsync();
@@ -650,18 +707,20 @@ public partial class MediaDetailsViewModel : BaseViewModel
         }
         finally
         {
+            IsRefreshingMetadata = false;
             IsBusy = false;
         }
     }
 
     [RelayCommand]
-    private async Task OpenCatalogSourceAsync()
-    {
-        if (Uri.TryCreate(Item?.CatalogSourceUrl, UriKind.Absolute, out var uri))
-        {
-            await Launcher.Default.OpenAsync(uri);
-        }
-    }
+    private static Task OpenExternalSourceAsync(ExternalSourceLinkViewModel source) =>
+        Browser.Default.OpenAsync(source.Url, BrowserLaunchMode.SystemPreferred);
+
+    [RelayCommand]
+    private static Task OpenExternalRatingAsync(ExternalRatingCardViewModel rating) =>
+        rating.Url is null
+            ? Task.CompletedTask
+            : Browser.Default.OpenAsync(rating.Url, BrowserLaunchMode.SystemPreferred);
 
     [RelayCommand]
     private async Task DeleteAsync()
@@ -698,11 +757,11 @@ public partial class MediaDetailsViewModel : BaseViewModel
     {
         IsDescriptionExpanded = false;
         PopulateFeaturedContributors();
+        PopulateExternalSourceLinks();
+        PopulateExternalRatingCards();
         OnPropertyChanged(nameof(PageTitle));
         OnPropertyChanged(nameof(CanRefreshOnlineMetadata));
         OnPropertyChanged(nameof(RefreshMetadataTooltip));
-        OnPropertyChanged(nameof(HasCatalogSourceUrl));
-        OnPropertyChanged(nameof(CatalogSourceText));
         OnPropertyChanged(nameof(HasOriginalTitle));
         OnPropertyChanged(nameof(OriginalTitleValue));
         OnPropertyChanged(nameof(DescriptionValue));
@@ -759,6 +818,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(ExternalRatingsValue));
         OnPropertyChanged(nameof(HasExternalRatings));
         OnPropertyChanged(nameof(HasExternalMetadata));
+        OnPropertyChanged(nameof(ExternalRatingCards));
         OnPropertyChanged(nameof(RatingShort));
         OnPropertyChanged(nameof(HasRating));
         OnPropertyChanged(nameof(ProgressPercent));
@@ -781,6 +841,139 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(HasNoCoverUrl));
         OnPropertyChanged(nameof(Initial));
     }
+
+    private void PopulateExternalSourceLinks()
+    {
+        ExternalSourceLinks.Clear();
+        if (Item is null)
+        {
+            return;
+        }
+
+        if (Item.ImdbRating.HasValue &&
+            !string.IsNullOrWhiteSpace(Item.ImdbId) &&
+            Item.ImdbId.Length > 2 &&
+            Item.ImdbId.StartsWith("tt", StringComparison.OrdinalIgnoreCase) &&
+            Item.ImdbId.AsSpan(2).IndexOfAnyExceptInRange('0', '9') < 0)
+        {
+            AddExternalSourceLink("IMDb", new Uri($"https://www.imdb.com/title/{Item.ImdbId}/"));
+        }
+
+        if (Item.KinopoiskRating.HasValue && Item.KinopoiskId.HasValue)
+        {
+            AddExternalSourceLink(
+                T("Metadata.Kinopoisk"),
+                new Uri($"https://www.kinopoisk.ru/film/{Item.KinopoiskId.Value}/"));
+        }
+
+        if (BuildCatalogSourceUri(Item) is { } catalogUri)
+        {
+            AddExternalSourceLink(GetCatalogProviderDisplayName(Item.CatalogProvider), catalogUri);
+        }
+    }
+
+    private void AddExternalSourceLink(string sourceName, Uri url)
+    {
+        if (ExternalSourceLinks.Any(source => source.Url == url))
+        {
+            return;
+        }
+
+        ExternalSourceLinks.Add(new ExternalSourceLinkViewModel(
+            string.Format(T("Metadata.Source.Format"), sourceName),
+            url));
+    }
+
+    private void PopulateExternalRatingCards()
+    {
+        ExternalRatingCards.Clear();
+        if (Item is null) return;
+
+        var imdbUrl = ExternalSourceLinks.FirstOrDefault(link => link.Url.Host.Contains("imdb.com", StringComparison.OrdinalIgnoreCase))?.Url;
+        var kinopoiskUrl = ExternalSourceLinks.FirstOrDefault(link => link.Url.Host.Contains("kinopoisk.ru", StringComparison.OrdinalIgnoreCase))?.Url;
+        var catalogUrl = BuildCatalogSourceUri(Item);
+        AddExternalRatingCard("IMDb", Item.ImdbRating, Item.ImdbVoteCount, imdbUrl);
+        AddExternalRatingCard("Kinopoisk", Item.KinopoiskRating, Item.KinopoiskVoteCount, kinopoiskUrl);
+        AddExternalRatingCard(Item.CatalogRatingPrimarySource, Item.CatalogRatingPrimary, Item.CatalogRatingPrimaryCount, catalogUrl);
+        AddExternalRatingCard(Item.CatalogRatingSecondarySource, Item.CatalogRatingSecondary, Item.CatalogRatingSecondaryCount, catalogUrl);
+    }
+
+    private void AddExternalRatingCard(string? source, decimal? rating, int? votes, Uri? url)
+    {
+        if (!rating.HasValue || string.IsNullOrWhiteSpace(source)) return;
+        var normalized = source.Replace(" ", string.Empty, StringComparison.Ordinal).ToLowerInvariant();
+        var (icon, background, foreground) = normalized switch
+        {
+            "imdb" => ("IMDb", "#F5C518", "#151515"),
+            "kinopoisk" or "кинопоиск" => ("КП", "#FF6B00", "#FFFFFF"),
+            "googlebooks" => ("G", "#4285F4", "#FFFFFF"),
+            "openlibrary" => ("OL", "#2F6F8F", "#FFFFFF"),
+            "comicvine" => ("CV", "#E53935", "#FFFFFF"),
+            "rawg" => ("R", "#151515", "#FFFFFF"),
+            _ => (source.Trim()[..Math.Min(2, source.Trim().Length)].ToUpperInvariant(), "#9D7FF4", "#FFFFFF")
+        };
+        ExternalRatingCards.Add(new ExternalRatingCardViewModel(
+            icon,
+            rating.Value.ToString("0.#", CultureInfo.CurrentCulture),
+            votes.HasValue ? $"({votes.Value.ToString("N0", CultureInfo.CurrentCulture)})" : string.Empty,
+            Color.FromArgb(background),
+            Color.FromArgb(foreground),
+            url));
+    }
+
+    private static Uri? BuildCatalogSourceUri(MediaItemDto item)
+    {
+        var provider = item.CatalogProvider?.Replace(" ", string.Empty, StringComparison.Ordinal).Trim();
+        var id = item.CatalogItemId?.Trim();
+        if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(id))
+        {
+            return null;
+        }
+
+        if (provider.Equals("GoogleBooks", StringComparison.OrdinalIgnoreCase))
+        {
+            return new Uri($"https://books.google.com/books?id={Uri.EscapeDataString(id)}");
+        }
+
+        if (provider.Equals("OpenLibrary", StringComparison.OrdinalIgnoreCase))
+        {
+            var path = id.StartsWith("/", StringComparison.Ordinal)
+                ? id
+                : id.StartsWith("OL", StringComparison.OrdinalIgnoreCase) && id.EndsWith('W')
+                    ? $"/works/{id}"
+                    : null;
+            return path is null ? null : new Uri($"https://openlibrary.org{path}");
+        }
+
+        if (provider.Equals("ComicVine", StringComparison.OrdinalIgnoreCase))
+        {
+            return GetVerifiedStoredSourceUri(item.CatalogSourceUrl, "comicvine.gamespot.com", "/");
+        }
+
+        return provider.Equals("Rawg", StringComparison.OrdinalIgnoreCase)
+            ? GetVerifiedStoredSourceUri(item.CatalogSourceUrl, "rawg.io", "/games/")
+            : null;
+    }
+
+    private static Uri? GetVerifiedStoredSourceUri(string? value, string expectedHost, string pathPrefix)
+    {
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+               uri.Scheme == Uri.UriSchemeHttps &&
+               uri.Host.Equals(expectedHost, StringComparison.OrdinalIgnoreCase) &&
+               uri.AbsolutePath.StartsWith(pathPrefix, StringComparison.OrdinalIgnoreCase) &&
+               uri.AbsolutePath.Length > pathPrefix.Length
+            ? uri
+            : null;
+    }
+
+    private static string GetCatalogProviderDisplayName(string? provider) => provider?.Replace(" ", string.Empty, StringComparison.Ordinal) switch
+    {
+        "GoogleBooks" => "Google Books",
+        "OpenLibrary" => "Open Library",
+        "ComicVine" => "Comic Vine",
+        "Rawg" => "RAWG",
+        _ => provider ?? string.Empty
+    };
 
     private void PopulateFeaturedContributors()
     {

@@ -5,23 +5,46 @@ namespace PersonalCollectionShelf.App.Services;
 
 internal static class AppNavigation
 {
+    private static readonly SemaphoreSlim MediaEditorNavigationGate = new(1, 1);
     private static readonly SemaphoreSlim MediaDetailsNavigationGate = new(1, 1);
+    private static readonly SemaphoreSlim CollectionDetailsNavigationGate = new(1, 1);
 
     public static async Task OpenEditMediaItemAsync(Guid? mediaItemId = null)
     {
-        if (!UsesModalNavigation)
+        if (!await MediaEditorNavigationGate.WaitAsync(0))
         {
-            var route = mediaItemId.HasValue
-                ? $"{nameof(EditMediaItemPage)}?id={mediaItemId.Value}"
-                : nameof(EditMediaItemPage);
-            await Shell.Current.GoToAsync(route);
             return;
         }
 
-        var page = App.Services.GetRequiredService<EditMediaItemPage>();
-        page.SetNavigationTarget(mediaItemId);
-        await PushOpaqueModalAsync(page);
-        await page.LoadNavigationTargetAsync();
+        try
+        {
+            if (HasOpenMediaEditorPage())
+            {
+                return;
+            }
+
+            if (!UsesModalNavigation)
+            {
+                var route = mediaItemId.HasValue
+                    ? $"{nameof(EditMediaItemPage)}?id={mediaItemId.Value}"
+                    : nameof(EditMediaItemPage);
+                await Shell.Current.GoToAsync(route);
+                return;
+            }
+
+            var page = App.Services.GetRequiredService<EditMediaItemPage>();
+            page.SetNavigationTarget(mediaItemId);
+            await page.LoadNavigationTargetAsync();
+
+            if (!HasOpenMediaEditorPage())
+            {
+                await PushOpaqueModalAsync(page);
+            }
+        }
+        finally
+        {
+            MediaEditorNavigationGate.Release();
+        }
     }
 
     public static async Task OpenMediaDetailsAsync(Guid mediaItemId)
@@ -60,6 +83,29 @@ internal static class AppNavigation
     }
 
     public static Task OpenPeopleAsync() => Shell.Current.GoToAsync("//People");
+
+    public static async Task OpenCollectionAsync(Guid collectionId)
+    {
+        if (!await CollectionDetailsNavigationGate.WaitAsync(0)) return;
+        try
+        {
+            if (HasOpenCollectionDetailsPage()) return;
+
+            if (!UsesModalNavigation)
+            {
+                await Shell.Current.GoToAsync($"{nameof(CollectionDetailsPage)}?id={collectionId}");
+                return;
+            }
+
+            var page = App.Services.GetRequiredService<CollectionDetailsPage>();
+            page.SetNavigationTarget(collectionId);
+            await PushOpaqueModalAsync(page);
+        }
+        finally
+        {
+            CollectionDetailsNavigationGate.Release();
+        }
+    }
 
     public static Task OpenTagAsync(string tagName) =>
         Shell.Current.GoToAsync($"{nameof(TagDetailsPage)}?tag={Uri.EscapeDataString(tagName)}");
@@ -132,16 +178,24 @@ internal static class AppNavigation
 
     private static Task PushOpaqueModalAsync(Page page)
     {
+        var appearance = App.Services.GetService<IAppearanceService>();
+        var backgroundPath = appearance?.BackgroundImagePath;
         var background = Microsoft.Maui.Controls.Application.Current?.Resources.TryGetValue("Background", out var value) == true &&
                          value is Microsoft.Maui.Graphics.Color color
             ? color
             : Microsoft.Maui.Graphics.Color.FromArgb("#201C2D");
 
-        page.BackgroundColor = background;
+        page.BackgroundColor = backgroundPath is null ? background : Colors.Transparent;
         NavigationPage.SetHasNavigationBar(page, false);
         var window = new NavigationPage(page)
         {
-            BackgroundColor = background
+            BackgroundColor = backgroundPath is null ? background : Colors.Transparent,
+            BackgroundImageSource = string.IsNullOrWhiteSpace(backgroundPath)
+                ? null
+                : new StreamImageSource
+                {
+                    Stream = cancellationToken => Task.FromResult<Stream>(File.OpenRead(backgroundPath))
+                }
         };
         return Shell.Current.Navigation.PushModalAsync(window, animated: true);
     }
@@ -157,6 +211,29 @@ internal static class AppNavigation
             page is MediaDetailsPage ||
             page is NavigationPage navigationPage &&
             navigationPage.Navigation.NavigationStack.Any(candidate => candidate is MediaDetailsPage));
+    }
+
+    private static bool HasOpenMediaEditorPage()
+    {
+        if (Shell.Current.CurrentPage is EditMediaItemPage)
+        {
+            return true;
+        }
+
+        return Shell.Current.Navigation.ModalStack.Any(page =>
+            page is EditMediaItemPage ||
+            page is NavigationPage navigationPage &&
+            navigationPage.Navigation.NavigationStack.Any(candidate => candidate is EditMediaItemPage));
+    }
+
+    private static bool HasOpenCollectionDetailsPage()
+    {
+        if (Shell.Current.CurrentPage is CollectionDetailsPage) return true;
+
+        return Shell.Current.Navigation.ModalStack.Any(page =>
+            page is CollectionDetailsPage ||
+            page is NavigationPage navigationPage &&
+            navigationPage.Navigation.NavigationStack.Any(candidate => candidate is CollectionDetailsPage));
     }
 
     private static bool UsesModalNavigation =>

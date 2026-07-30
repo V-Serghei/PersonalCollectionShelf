@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 
@@ -9,6 +10,7 @@ public sealed class FirestoreRestClient(
     FirebaseOptions options,
     IFirebaseSessionProvider sessionProvider)
 {
+    private const int MaximumAttempts = 4;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public bool IsConfigured => options.IsConfigured;
@@ -47,9 +49,13 @@ public sealed class FirestoreRestClient(
                 }
             };
 
-        using var request = CreateRequest(HttpMethod.Post, url, session.IdToken);
-        request.Content = new StringContent(JsonSerializer.Serialize(query, JsonOptions), Encoding.UTF8, "application/json");
-        using var response = await httpClient.SendAsync(request, cancellationToken);
+        var requestJson = JsonSerializer.Serialize(query, JsonOptions);
+        using var response = await SendWithRetryAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Post, url, session.IdToken);
+            request.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+            return request;
+        }, cancellationToken, bufferResponse: true);
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
         response.EnsureSuccessStatusCode();
 
@@ -80,6 +86,46 @@ public sealed class FirestoreRestClient(
         var session = await RequireSessionAsync(cancellationToken);
         var documentId = CloudKey.CreateDocumentId(document.EntityType, document.EntityKey);
         var url = $"https://firestore.googleapis.com/v1/projects/{Uri.EscapeDataString(options.ProjectId)}/databases/(default)/documents/users/{Uri.EscapeDataString(session.UserId)}/libraryData/{documentId}";
+        var requestJson = JsonSerializer.Serialize(new { fields = BuildFields(document) }, JsonOptions);
+        using var response = await SendWithRetryAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Patch, url, session.IdToken);
+            request.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+            return request;
+        }, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task PutBatchAsync(
+        IReadOnlyList<CloudDocument> documents,
+        CancellationToken cancellationToken = default)
+    {
+        if (documents.Count == 0) return;
+        if (documents.Count > 500) throw new ArgumentOutOfRangeException(nameof(documents), "Firestore accepts at most 500 writes per batch.");
+
+        var session = await RequireSessionAsync(cancellationToken);
+        var projectId = options.ProjectId;
+        var url = $"https://firestore.googleapis.com/v1/projects/{Uri.EscapeDataString(projectId)}/databases/(default)/documents:commit";
+        var writes = documents.Select(document => new
+        {
+            update = new
+            {
+                name = $"projects/{projectId}/databases/(default)/documents/users/{session.UserId}/libraryData/{CloudKey.CreateDocumentId(document.EntityType, document.EntityKey)}",
+                fields = BuildFields(document)
+            }
+        });
+        var requestJson = JsonSerializer.Serialize(new { writes }, JsonOptions);
+        using var response = await SendWithRetryAsync(() =>
+        {
+            var request = CreateRequest(HttpMethod.Post, url, session.IdToken);
+            request.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+            return request;
+        }, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static Dictionary<string, object> BuildFields(CloudDocument document)
+    {
         var fields = new Dictionary<string, object>
         {
             ["entityType"] = new { stringValue = document.EntityType },
@@ -89,17 +135,44 @@ public sealed class FirestoreRestClient(
             ["isDeleted"] = new { booleanValue = document.IsDeleted },
             ["schemaVersion"] = new { integerValue = "1" }
         };
-
-        if (document.Payload is not null)
-        {
-            fields["payload"] = new { stringValue = document.Payload };
-        }
-
-        using var request = CreateRequest(HttpMethod.Patch, url, session.IdToken);
-        request.Content = new StringContent(JsonSerializer.Serialize(new { fields }, JsonOptions), Encoding.UTF8, "application/json");
-        using var response = await httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (document.Payload is not null) fields["payload"] = new { stringValue = document.Payload };
+        return fields;
     }
+
+    private async Task<HttpResponseMessage> SendWithRetryAsync(
+        Func<HttpRequestMessage> requestFactory,
+        CancellationToken cancellationToken,
+        bool bufferResponse = false)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            using var request = requestFactory();
+            try
+            {
+                var completion = bufferResponse
+                    ? HttpCompletionOption.ResponseContentRead
+                    : HttpCompletionOption.ResponseHeadersRead;
+                var response = await httpClient.SendAsync(request, completion, cancellationToken);
+                if (attempt >= MaximumAttempts || !IsTransient(response.StatusCode)) return response;
+                response.Dispose();
+            }
+            catch (Exception exception) when (attempt < MaximumAttempts && IsTransient(exception, cancellationToken))
+            {
+                // The next attempt recreates the request and its content.
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(350 * Math.Pow(2, attempt - 1)), cancellationToken);
+        }
+    }
+
+    private static bool IsTransient(HttpStatusCode statusCode) =>
+        statusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests ||
+        (int)statusCode >= 500;
+
+    private static bool IsTransient(Exception exception, CancellationToken cancellationToken) =>
+        exception is HttpRequestException or WebException or IOException ||
+        exception is OperationCanceledException && !cancellationToken.IsCancellationRequested ||
+        exception.InnerException is not null && IsTransient(exception.InnerException, cancellationToken);
 
     private async Task<FirebaseSession> RequireSessionAsync(CancellationToken cancellationToken)
     {

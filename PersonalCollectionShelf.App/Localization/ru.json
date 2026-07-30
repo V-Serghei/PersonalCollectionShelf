@@ -187,6 +187,23 @@
   "Sync.Status.InProgressButton": "Синхронизация…",
   "Sync.Status.CompletedWithDrive": "Синхронизация завершена. Данные обновлены, резервная копия сохранена на Google Диске.",
   "Sync.Status.CompletedWithoutDrive": "Данные синхронизированы через Firebase, но резервная копия Google Диска не создана.",
+  "Sync.Status.Completed": "Синхронизация завершена. Отправлены только изменённые данные.",
+  "Sync.Status.CompletedWithWarnings": "Данные синхронизированы. Некоторые изображения не удалось отправить; они будут повторно загружены при следующей синхронизации.",
+  "Sync.Status.NetworkFailed": "Соединение прервалось. Выполненный прогресс сохранён — повторите синхронизацию, чтобы продолжить.",
+  "Sync.Progress.Preparing": "Подготовка синхронизации…",
+  "Sync.Progress.Assets": "Проверяем изменённые изображения…",
+  "Sync.Progress.Scanning": "Проверяем изменённые данные…",
+  "Sync.Progress.Downloading": "Получаем изменения из облака…",
+  "Sync.Progress.Applying": "Применяем изменения из облака…",
+  "Sync.Progress.Uploading": "Отправляем изменённые данные…",
+  "Sync.Progress.Finalizing": "Завершаем синхронизацию…",
+  "Sync.Progress.Complete": "Синхронизация завершена.",
+  "Sync.Progress.CompleteWithWarnings": "Данные синхронизированы, но часть изображений ожидает повторной загрузки.",
+  "Sync.Progress.Retrying": "Соединение прервалось. Повторяем попытку…",
+  "Progress.Estimating": "Расчёт оставшегося времени…",
+  "Progress.Remaining": "Осталось примерно {0}",
+  "Progress.Done": "Готово",
+  "Progress.Stopped": "Операция остановлена",
   "Sync.Status.Requested": "Синхронизация завершена.",
   "Sync.Status.Failed": "Не удалось выполнить синхронизацию. Проверьте подключение и настройки Firebase.",
   "Settings.DriveBackup.Button": "Создать копию",
@@ -427,7 +444,25 @@
   ,"Collections.Title": "Серии и вселенные"
   ,"Collections.Empty": "Серии, циклы и вселенные пока не добавлены."
   ,"Collections.SearchPlaceholder": "Поиск серий, вселенных и произведений"
+  ,"Collections.Loading": "Загружаем серии и обложки…"
+  ,"Collections.Options": "Настройка списка"
+  ,"Collections.CategoryFilter": "Категория"
+  ,"Collections.SortLabel": "Сортировка"
+  ,"Collections.ResultsFormat": "Серий и коллекций: {0}"
+  ,"Collections.ItemCountFormat": "Произведений: {0}"
+  ,"Collections.DetailsTitle": "Серия"
+  ,"Collections.DetailsEmpty": "В этой серии пока нет произведений."
+  ,"Collections.LoadingDetails": "Загружаем серию…"
+  ,"Collections.Sort.NameAscending": "Название: А–Я"
+  ,"Collections.Sort.NameDescending": "Название: Я–А"
+  ,"Collections.Sort.MostItems": "Сначала большие"
+  ,"Collections.Sort.FewestItems": "Сначала маленькие"
+  ,"Collections.Sort.Category": "По категории"
+  ,"Collections.Sort.Kind": "По виду серии"
   ,"Tags.Title": "Теги"
+  ,"Tags.Options": "Настройки тегов"
+  ,"Tags.CategoryFilter": "Категория"
+  ,"Tags.Loading": "Загружаем теги…"
   ,"Tags.Empty": "Подходящие теги не найдены."
   ,"Tags.SearchPlaceholder": "Поиск тегов и связанных произведений"
   ,"Tags.Subtitle": "Выберите тег, чтобы открыть все связанные элементы"
@@ -466,6 +501,9 @@
   ,"People.Gallery": "Фотографии"
   ,"People.GalleryTitleFormat": "Галерея: {0}"
   ,"People.GalleryEmpty": "Фотографии пока не добавлены"
+  ,"People.GalleryPrevious": "Предыдущее фото"
+  ,"People.GalleryNext": "Следующее фото"
+  ,"People.GalleryPositionFormat": "{0} из {1}"
   ,"People.PrimaryPhoto": "Основное"
   ,"People.About": "О человеке"
   ,"People.TopWorks": "Топ-5 по моей оценке"
@@ -502,6 +540,9 @@
   ,"Statistics.Completion": "Завершено"
   ,"Statistics.Collection": "Коллекция"
   ,"Statistics.MonthlyActivity": "Активность по месяцам"
+  ,"Statistics.MonthlyActivityHint": "Количество произведений, добавленных в библиотеку за каждый месяц."
+  ,"Statistics.ActivityYear": "Год активности"
+  ,"Statistics.ReleaseYearRange": "Годы выпуска"
   ,"Statistics.ByCategory": "По категориям"
   ,"Statistics.ByStatus": "По статусам"
   ,"Statistics.Items": "объектов"
@@ -518,8 +559,8 @@
   ,"Statistics.ByCountry": "Страны происхождения"
   ,"Statistics.RatingDistribution": "Распределение личных оценок"
   ,"Statistics.AverageRatingByType": "Средняя оценка по типам"
-  ,"Statistics.CompletionByType": "Процент завершения по типам"
-  ,"Statistics.FavoritesByType": "Избранное по типам"
+  ,"Statistics.Scope": "Данные"
+  ,"Statistics.LegendValueFormat": "{0} · {1}%"
   ,"Details.FeaturedContributors": "Основные участники"
   ,"Details.ShowAllContributors": "Показать весь состав →"
   ,"Contributors.Title": "Состав и участники"

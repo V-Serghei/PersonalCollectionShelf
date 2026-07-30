@@ -18,74 +18,120 @@ public sealed class CloudAssetSyncService(
         Path.GetDirectoryName(database.DatabasePath) ?? AppContext.BaseDirectory,
         "cloud-cache");
 
-    public async Task UploadLocalChangesAsync(CancellationToken cancellationToken = default)
+    public async Task<int> UploadLocalChangesAsync(
+        Action<int, int>? progress = null,
+        CancellationToken cancellationToken = default)
     {
-        if (!await assetStore.IsAvailableAsync(cancellationToken))
+        try
         {
-            return;
+            if (!await assetStore.IsAvailableAsync(cancellationToken))
+            {
+                progress?.Invoke(0, 0);
+                return 0;
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Debug.WriteLine($"Cloud image storage is unavailable: {exception}");
+            progress?.Invoke(0, 0);
+            return 1;
         }
 
-        foreach (var candidate in await GetLocalCandidatesAsync(cancellationToken))
+        var candidates = await GetLocalCandidatesAsync(cancellationToken);
+        var states = (await database.Connection.Table<CloudAssetStateRecord>().ToListAsync())
+            .ToDictionary(state => state.Id, StringComparer.Ordinal);
+        var completed = 0;
+        var failed = 0;
+        progress?.Invoke(completed, candidates.Count);
+        foreach (var candidate in candidates)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var localPath = ResolveLocalPath(candidate.Path);
-            if (localPath is null || IsCloudCachePath(localPath))
+            try
             {
-                continue;
-            }
-
-            var state = await database.Connection.FindAsync<CloudAssetStateRecord>(candidate.Id);
-            var sourceFingerprint = GetSourceFingerprint(localPath);
-            if (state?.SourceFingerprint == sourceFingerprint &&
-                !string.IsNullOrWhiteSpace(state.CloudObjectName))
-            {
-                continue;
-            }
-
-            var compressed = await compressor.CompressAsync(localPath, cancellationToken);
-            if (state?.SourceHash == compressed.SourceHash)
-            {
-                if (!string.Equals(state.OriginalPath, candidate.Path, StringComparison.Ordinal))
+                cancellationToken.ThrowIfCancellationRequested();
+                var localPath = ResolveLocalPath(candidate.Path);
+                if (localPath is null || IsCloudCachePath(localPath))
                 {
-                    state.OriginalPath = candidate.Path;
-                    await database.Connection.UpdateAsync(state);
+                    continue;
                 }
-                continue;
+
+                states.TryGetValue(candidate.Id, out var state);
+                var sourceFingerprint = GetSourceFingerprint(localPath);
+                if (state?.SourceFingerprint == sourceFingerprint &&
+                    !string.IsNullOrWhiteSpace(state.CloudObjectName))
+                {
+                    continue;
+                }
+
+                var compressed = await compressor.CompressAsync(localPath, cancellationToken);
+                if (state?.SourceHash == compressed.SourceHash)
+                {
+                    if (!string.Equals(state.OriginalPath, candidate.Path, StringComparison.Ordinal))
+                    {
+                        state.OriginalPath = candidate.Path;
+                        await database.Connection.UpdateAsync(state);
+                    }
+                    continue;
+                }
+
+                var objectName = $"{compressed.SourceHash}.webp";
+                await assetStore.UploadAsync(objectName, compressed.Bytes, "image/webp", cancellationToken);
+                var metadata = new CloudAssetMetadata(
+                    candidate.OwnerType,
+                    candidate.OwnerId,
+                    candidate.Slot,
+                    objectName,
+                    compressed.CloudHash);
+                var payload = JsonSerializer.Serialize(metadata, JsonOptions);
+                var changedAt = DateTime.UtcNow;
+                await firestore.PutAsync(new CloudDocument(
+                    EntityType,
+                    candidate.Id,
+                    payload,
+                    CloudKey.Hash(payload),
+                    changedAt,
+                    false), cancellationToken);
+
+                var updatedState = new CloudAssetStateRecord
+                {
+                    Id = candidate.Id,
+                    OwnerType = candidate.OwnerType,
+                    OwnerId = candidate.OwnerId,
+                    Slot = candidate.Slot,
+                    OriginalPath = candidate.Path,
+                    CachePath = state?.CachePath,
+                    SourceHash = compressed.SourceHash,
+                    SourceFingerprint = sourceFingerprint,
+                    CloudObjectName = objectName,
+                    CloudHash = compressed.CloudHash,
+                    UpdatedAtUtc = changedAt
+                };
+                await database.Connection.InsertOrReplaceAsync(updatedState);
+                states[candidate.Id] = updatedState;
             }
-
-            var objectName = $"{compressed.SourceHash}.webp";
-            await assetStore.UploadAsync(objectName, compressed.Bytes, "image/webp", cancellationToken);
-            var metadata = new CloudAssetMetadata(
-                candidate.OwnerType,
-                candidate.OwnerId,
-                candidate.Slot,
-                objectName,
-                compressed.CloudHash);
-            var payload = JsonSerializer.Serialize(metadata, JsonOptions);
-            var changedAt = DateTime.UtcNow;
-            await firestore.PutAsync(new CloudDocument(
-                EntityType,
-                candidate.Id,
-                payload,
-                CloudKey.Hash(payload),
-                changedAt,
-                false), cancellationToken);
-
-            await database.Connection.InsertOrReplaceAsync(new CloudAssetStateRecord
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                Id = candidate.Id,
-                OwnerType = candidate.OwnerType,
-                OwnerId = candidate.OwnerId,
-                Slot = candidate.Slot,
-                OriginalPath = candidate.Path,
-                CachePath = state?.CachePath,
-                SourceHash = compressed.SourceHash,
-                SourceFingerprint = sourceFingerprint,
-                CloudObjectName = objectName,
-                CloudHash = compressed.CloudHash,
-                UpdatedAtUtc = changedAt
-            });
+                throw;
+            }
+            catch (Exception exception)
+            {
+                // A single unreadable image or interrupted Drive request must not
+                // prevent the Firestore data from synchronizing. The missing state
+                // means this asset is retried automatically on the next sync.
+                failed++;
+                System.Diagnostics.Debug.WriteLine($"Cloud asset '{candidate.Id}' was skipped: {exception}");
+            }
+            finally
+            {
+                completed++;
+                progress?.Invoke(completed, candidates.Count);
+            }
         }
+
+        return failed;
     }
 
     public async Task ApplyRemoteAsync(CloudDocument document, CancellationToken cancellationToken = default)

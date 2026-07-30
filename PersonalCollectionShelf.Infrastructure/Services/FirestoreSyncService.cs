@@ -1,3 +1,4 @@
+using PersonalCollectionShelf.Application.DTOs;
 using PersonalCollectionShelf.Infrastructure.Persistence;
 using PersonalCollectionShelf.Infrastructure.Services.Firebase;
 using PersonalCollectionShelf.Infrastructure.Services.Sync;
@@ -22,7 +23,9 @@ public sealed class FirestoreSyncService(
         return TryParseUtc(value?.Value);
     }
 
-    public async Task SyncAsync(CancellationToken cancellationToken = default)
+    public async Task<SyncResultDto> SyncAsync(
+        IProgress<SyncProgressDto>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         if (!IsConfigured)
         {
@@ -32,29 +35,42 @@ public sealed class FirestoreSyncService(
         await _syncLock.WaitAsync(cancellationToken);
         try
         {
+            Report(progress, 0, "Sync.Progress.Preparing");
             await database.InitializeAsync(cancellationToken);
-            await assetSyncService.UploadLocalChangesAsync(cancellationToken);
+            var failedAssetCount = await assetSyncService.UploadLocalChangesAsync((completed, total) =>
+            {
+                var percent = total == 0 ? 20 : 3 + (int)Math.Round(completed / (double)total * 17);
+                Report(progress, percent, "Sync.Progress.Assets", completed, total);
+            }, cancellationToken);
             var adapters = CloudTableRegistry.Create(database);
             var adapterMap = adapters.ToDictionary(adapter => adapter.EntityType, StringComparer.Ordinal);
             var states = (await database.Connection.Table<CloudEntityStateRecord>().ToListAsync())
                 .ToDictionary(state => state.Id, StringComparer.Ordinal);
 
-            var localEntities = await ScanLocalChangesAsync(adapters, states, cancellationToken);
+            var localEntities = await ScanLocalChangesAsync(adapters, states, (completed, total) =>
+            {
+                var percent = total == 0 ? 45 : 20 + (int)Math.Round(completed / (double)total * 25);
+                Report(progress, percent, "Sync.Progress.Scanning", completed, total);
+            }, cancellationToken);
             var cursorRecord = await database.Connection.FindAsync<CloudSyncMetadataRecord>(PullCursorKey);
             var cursor = TryParseUtc(cursorRecord?.Value);
+            Report(progress, 48, "Sync.Progress.Downloading");
             var remoteChanges = await firestoreClient.GetChangesAsync(cursor, cancellationToken);
 
-            foreach (var remote in remoteChanges)
+            for (var remoteIndex = 0; remoteIndex < remoteChanges.Count; remoteIndex++)
             {
+                var remote = remoteChanges[remoteIndex];
                 cancellationToken.ThrowIfCancellationRequested();
                 if (remote.EntityType == CloudAssetSyncService.EntityType)
                 {
                     await assetSyncService.ApplyRemoteAsync(remote, cancellationToken);
+                    ReportRemoteProgress(progress, remoteIndex + 1, remoteChanges.Count);
                     continue;
                 }
 
                 if (!adapterMap.TryGetValue(remote.EntityType, out var adapter))
                 {
+                    ReportRemoteProgress(progress, remoteIndex + 1, remoteChanges.Count);
                     continue;
                 }
 
@@ -62,6 +78,7 @@ public sealed class FirestoreSyncService(
                 states.TryGetValue(stateId, out var localState);
                 if (localState is not null && localState.ChangedAtUtc > remote.ChangedAtUtc)
                 {
+                    ReportRemoteProgress(progress, remoteIndex + 1, remoteChanges.Count);
                     continue;
                 }
 
@@ -79,8 +96,10 @@ public sealed class FirestoreSyncService(
                 await database.Connection.InsertOrReplaceAsync(state);
                 states[stateId] = state;
                 localEntities.Remove(stateId);
+                ReportRemoteProgress(progress, remoteIndex + 1, remoteChanges.Count);
             }
 
+            var pendingUploads = new List<(CloudEntityStateRecord State, CloudDocument Document)>();
             foreach (var state in states.Values.Where(state => state.CloudHash != state.ContentHash))
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -98,11 +117,28 @@ public sealed class FirestoreSyncService(
                     continue;
                 }
 
-                await firestoreClient.PutAsync(cloudDocument, cancellationToken);
-                state.CloudHash = state.ContentHash;
-                await database.Connection.UpdateAsync(state);
+                pendingUploads.Add((state, cloudDocument));
             }
 
+            var uploaded = 0;
+            Report(progress, 65, "Sync.Progress.Uploading", uploaded, pendingUploads.Count);
+            foreach (var batch in pendingUploads.Chunk(100))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await firestoreClient.PutBatchAsync(batch.Select(value => value.Document).ToList(), cancellationToken);
+                foreach (var value in batch)
+                {
+                    value.State.CloudHash = value.State.ContentHash;
+                    await database.Connection.UpdateAsync(value.State);
+                }
+                uploaded += batch.Length;
+                var percent = pendingUploads.Count == 0
+                    ? 95
+                    : 65 + (int)Math.Round(uploaded / (double)pendingUploads.Count * 30);
+                Report(progress, percent, "Sync.Progress.Uploading", uploaded, pendingUploads.Count);
+            }
+
+            Report(progress, 97, "Sync.Progress.Finalizing");
             var newestRemote = remoteChanges.Count == 0 ? cursor : remoteChanges.Max(change => change.ChangedAtUtc);
             if (newestRemote is not null)
             {
@@ -110,6 +146,8 @@ public sealed class FirestoreSyncService(
             }
 
             await SetMetadataAsync(LastSyncKey, DateTime.UtcNow, cancellationToken);
+            Report(progress, 100, failedAssetCount > 0 ? "Sync.Progress.CompleteWithWarnings" : "Sync.Progress.Complete");
+            return new SyncResultDto(failedAssetCount);
         }
         finally
         {
@@ -120,13 +158,16 @@ public sealed class FirestoreSyncService(
     private async Task<Dictionary<string, LocalCloudEntity>> ScanLocalChangesAsync(
         IReadOnlyList<ICloudTableAdapter> adapters,
         Dictionary<string, CloudEntityStateRecord> states,
+        Action<int, int>? progress,
         CancellationToken cancellationToken)
     {
         var entities = new Dictionary<string, LocalCloudEntity>(StringComparer.Ordinal);
         var seen = new HashSet<string>(StringComparer.Ordinal);
 
-        foreach (var adapter in adapters)
+        progress?.Invoke(0, adapters.Count);
+        for (var adapterIndex = 0; adapterIndex < adapters.Count; adapterIndex++)
         {
+            var adapter = adapters[adapterIndex];
             foreach (var entity in await adapter.ReadAsync(cancellationToken))
             {
                 var stateId = CloudKey.CreateStateId(entity.EntityType, entity.EntityKey);
@@ -158,6 +199,7 @@ public sealed class FirestoreSyncService(
                 state.IsDeleted = entity.IsDeleted;
                 await database.Connection.UpdateAsync(state);
             }
+            progress?.Invoke(adapterIndex + 1, adapters.Count);
         }
 
         foreach (var state in states.Values.Where(state => !seen.Contains(state.Id) && !state.IsDeleted))
@@ -185,4 +227,18 @@ public sealed class FirestoreSyncService(
         DateTime.TryParse(value, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsed)
             ? parsed.ToUniversalTime()
             : null;
+
+    private static void ReportRemoteProgress(IProgress<SyncProgressDto>? progress, int completed, int total)
+    {
+        var percent = total == 0 ? 65 : 50 + (int)Math.Round(completed / (double)total * 15);
+        Report(progress, percent, "Sync.Progress.Applying", completed, total);
+    }
+
+    private static void Report(
+        IProgress<SyncProgressDto>? progress,
+        int percent,
+        string messageKey,
+        int completed = 0,
+        int total = 0) =>
+        progress?.Report(new SyncProgressDto(Math.Clamp(percent, 0, 100), messageKey, completed, total));
 }

@@ -20,7 +20,10 @@ public partial class TagsViewModel : BaseViewModel
     private readonly IAuthService _auth;
     private IReadOnlyList<TagSourceGroup> _allTags = [];
     private string _searchText = string.Empty;
-    private bool _isSearchVisible;
+    private bool _isOptionsVisible;
+    private bool _hasLoaded;
+    private bool _suppressFiltering;
+    private Task? _loadingTask;
     private LocalizedOption<MediaType?>? _selectedMediaTypeFilter;
     private LocalizedOption<TagSortOption>? _selectedSortOption;
 
@@ -32,10 +35,16 @@ public partial class TagsViewModel : BaseViewModel
     {
         _mediaItems = mediaItems;
         _auth = auth;
+        IsBusy = true;
         ReloadFilterOptions();
     }
 
-    public ObservableCollection<TagCardViewModel> Tags { get; } = [];
+    private ObservableCollection<TagCardViewModel> _tags = [];
+    public ObservableCollection<TagCardViewModel> Tags
+    {
+        get => _tags;
+        private set => SetProperty(ref _tags, value);
+    }
     public ObservableCollection<LocalizedOption<MediaType?>> MediaTypeFilters { get; } = [];
     public ObservableCollection<LocalizedOption<TagSortOption>> SortOptions { get; } = [];
 
@@ -45,6 +54,9 @@ public partial class TagsViewModel : BaseViewModel
     public string SearchPlaceholder => T("Tags.SearchPlaceholder");
     public string SortPlaceholder => T("Tags.SortPlaceholder");
     public string ResultsText => string.Format(T("Tags.ResultsFormat"), Tags.Count);
+    public string OptionsText => T("Tags.Options");
+    public string CategoryFilterLabel => T("Tags.CategoryFilter");
+    public string LoadingText => T("Tags.Loading");
 
     public string SearchText
     {
@@ -58,10 +70,10 @@ public partial class TagsViewModel : BaseViewModel
         }
     }
 
-    public bool IsSearchVisible
+    public bool IsOptionsVisible
     {
-        get => _isSearchVisible;
-        set => SetProperty(ref _isSearchVisible, value);
+        get => _isOptionsVisible;
+        set => SetProperty(ref _isOptionsVisible, value);
     }
 
     public LocalizedOption<MediaType?>? SelectedMediaTypeFilter
@@ -74,7 +86,7 @@ public partial class TagsViewModel : BaseViewModel
             {
                 option.IsSelected = ReferenceEquals(option, value);
             }
-            ApplyFilter();
+            if (!_suppressFiltering) ApplyFilter();
         }
     }
 
@@ -83,16 +95,21 @@ public partial class TagsViewModel : BaseViewModel
         get => _selectedSortOption;
         set
         {
-            if (SetProperty(ref _selectedSortOption, value))
+            if (SetProperty(ref _selectedSortOption, value) && !_suppressFiltering)
             {
                 ApplyFilter();
             }
         }
     }
 
-    public async Task LoadAsync()
+    public Task LoadAsync()
     {
-        if (IsBusy) return;
+        if (_hasLoaded) return Task.CompletedTask;
+        return _loadingTask ??= LoadCoreAsync();
+    }
+
+    private async Task LoadCoreAsync()
+    {
         IsBusy = true;
         try
         {
@@ -106,19 +123,20 @@ public partial class TagsViewModel : BaseViewModel
                     group.First().Name,
                     group.Select(value => value.Item).DistinctBy(item => item.Id).ToList()))
                 .ToList();
+            _hasLoaded = true;
             ApplyFilter();
         }
         finally
         {
             IsBusy = false;
+            _loadingTask = null;
         }
     }
 
     [RelayCommand]
-    private void ToggleSearch()
+    private void ToggleOptions()
     {
-        IsSearchVisible = !IsSearchVisible;
-        if (!IsSearchVisible) SearchText = string.Empty;
+        IsOptionsVisible = !IsOptionsVisible;
     }
 
     [RelayCommand]
@@ -158,7 +176,7 @@ public partial class TagsViewModel : BaseViewModel
             _ => filtered.OrderBy(group => group.Name, StringComparer.OrdinalIgnoreCase)
         };
 
-        Tags.Clear();
+        var cards = new List<TagCardViewModel>();
         foreach (var group in filtered)
         {
             var visibleItems = mediaType.HasValue
@@ -171,12 +189,14 @@ public partial class TagsViewModel : BaseViewModel
                 .Take(4)
                 .Select(category => $"{T($"MediaType.{category.Key}")} {category.Count()}"));
 
-            Tags.Add(new TagCardViewModel(
+            cards.Add(new TagCardViewModel(
                 group.Name,
                 visibleItems.Count,
                 string.Format(T("Tags.ItemCountFormat"), visibleItems.Count),
                 categorySummary));
         }
+
+        Tags = new ObservableCollection<TagCardViewModel>(cards);
 
         OnPropertyChanged(nameof(ResultsText));
     }
@@ -188,27 +208,39 @@ public partial class TagsViewModel : BaseViewModel
     {
         var selectedMediaType = SelectedMediaTypeFilter?.Value;
         var selectedSort = SelectedSortOption?.Value ?? TagSortOption.NameAscending;
-
-        MediaTypeFilters.Clear();
-        MediaTypeFilters.Add(new LocalizedOption<MediaType?>(null, T("Common.All")));
-        foreach (var mediaType in MediaPresentation.OrderedMediaTypes)
+        _suppressFiltering = true;
+        try
         {
-            MediaTypeFilters.Add(new LocalizedOption<MediaType?>(mediaType, T($"MediaType.{mediaType}")));
-        }
+            MediaTypeFilters.Clear();
+            MediaTypeFilters.Add(new LocalizedOption<MediaType?>(null, T("Common.All")));
+            foreach (var mediaType in MediaPresentation.OrderedMediaTypes)
+            {
+                MediaTypeFilters.Add(new LocalizedOption<MediaType?>(mediaType, T($"MediaType.{mediaType}")));
+            }
 
-        SortOptions.Clear();
-        foreach (var sortOption in Enum.GetValues<TagSortOption>())
+            SortOptions.Clear();
+            foreach (var sortOption in Enum.GetValues<TagSortOption>())
+            {
+                SortOptions.Add(new LocalizedOption<TagSortOption>(sortOption, T($"Tags.Sort.{sortOption}")));
+            }
+
+            _selectedMediaTypeFilter = null;
+            _selectedSortOption = null;
+            OnPropertyChanged(nameof(SelectedMediaTypeFilter));
+            OnPropertyChanged(nameof(SelectedSortOption));
+            SelectedMediaTypeFilter = MediaTypeFilters.FirstOrDefault(option => option.Value == selectedMediaType) ?? MediaTypeFilters[0];
+            SelectedSortOption = SortOptions.First(option => option.Value == selectedSort);
+        }
+        finally
         {
-            SortOptions.Add(new LocalizedOption<TagSortOption>(sortOption, T($"Tags.Sort.{sortOption}")));
+            _suppressFiltering = false;
         }
-
-        SelectedMediaTypeFilter = MediaTypeFilters.FirstOrDefault(option => option.Value == selectedMediaType) ?? MediaTypeFilters[0];
-        SelectedSortOption = SortOptions.First(option => option.Value == selectedSort);
     }
 
     protected override void RefreshLocalizedProperties()
     {
         ReloadFilterOptions();
+        ApplyFilter();
         base.RefreshLocalizedProperties();
     }
 

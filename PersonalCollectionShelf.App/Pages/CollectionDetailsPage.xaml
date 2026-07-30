@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.CollectionDetailsPage"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:CollectionDetailsViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+    <Grid Padding="{OnIdiom Phone='14,10', Default='24'}" RowDefinitions="Auto,Auto,*" RowSpacing="14">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <Button
+                Command="{Binding GoBackCommand}"
+                HeightRequest="44"
+                Style="{StaticResource IconToggleButtonStyle}"
+                Text="&#x2190;"
+                WidthRequest="44" />
+            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="{OnIdiom Phone=24, Default=30}" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding PageTitle}" />
+                <HorizontalStackLayout Spacing="7">
+                    <Label FontSize="11" Text="{Binding KindText}" TextColor="{DynamicResource Primary}" />
+                    <Label FontSize="11" Text="•" TextColor="{DynamicResource MutedForeground}" />
+                    <Label FontSize="11" Text="{Binding ItemCountText}" TextColor="{DynamicResource MutedForeground}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Grid>
+
+        <Label Grid.Row="1" IsVisible="{Binding HasDescription}" Text="{Binding Description}" TextColor="{DynamicResource MutedForeground}" />
+
+        <Grid Grid.Row="2">
+            <VerticalStackLayout HorizontalOptions="Center" IsVisible="{Binding IsBusy}" Spacing="10" VerticalOptions="Center">
+                <ActivityIndicator HeightRequest="42" IsRunning="{Binding IsBusy}" WidthRequest="42" />
+                <Label Text="{Binding LoadingText}" TextColor="{DynamicResource MutedForeground}" />
+            </VerticalStackLayout>
+
+            <CollectionView
+                x:Name="CollectionItemsList"
+                IsVisible="{Binding IsNotBusy}"
+                ItemSizingStrategy="MeasureFirstItem"
+                ItemsSource="{Binding Items}"
+                SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <Border Margin="0,36,0,0" Padding="24" Style="{StaticResource CardBorderStyle}">
+                        <Label HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" />
+                    </Border>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:CollectionDetailItemViewModel">
+                        <Border Margin="0,0,0,10" Padding="10" Style="{StaticResource CardBorderStyle}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type pages:CollectionDetailsPage}}, Path=ViewModel.OpenItemCommand, x:DataType={x:Type pages:CollectionDetailsPage}}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="58,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto,Auto" RowSpacing="5">
+                                <Border Grid.RowSpan="3" HeightRequest="82" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 7" WidthRequest="58">
+                                    <Grid>
+                                        <Image Aspect="AspectFill" IsVisible="{Binding HasCover}" Source="{Binding CoverSource}" />
+                                        <Label FontAttributes="Bold" FontSize="20" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCover}" Text="{Binding Initial}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                                <Label Grid.Column="1" FontAttributes="Bold" FontSize="15" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding Title}" />
+                                <Border Grid.Column="2" IsVisible="{Binding HasPosition}" Padding="7,3" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 8">
+                                    <Label FontAttributes="Bold" FontSize="10" Text="{Binding PositionText}" />
+                                </Border>
+                                <Label Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" FontSize="11" LineBreakMode="TailTruncation" Text="{Binding Metadata}" TextColor="{DynamicResource MutedForeground}" />
+                                <HorizontalStackLayout Grid.Row="2" Grid.Column="1" Spacing="7">
+                                    <Border Padding="7,2" BackgroundColor="{DynamicResource Muted}" Stroke="{Binding StatusColor}" StrokeShape="RoundRectangle 9" StrokeThickness="1">
+                                        <Label FontAttributes="Bold" FontSize="9" Text="{Binding StatusLabel}" TextColor="{Binding StatusColor}" />
+                                    </Border>
+                                    <Border Padding="7,2" BackgroundColor="{Binding MediaTypeColor}" StrokeThickness="0" StrokeShape="RoundRectangle 9">
+                                        <Label FontAttributes="Bold" FontSize="9" Text="{Binding MediaTypeLabel}" TextColor="White" />
+                                    </Border>
+                                </HorizontalStackLayout>
+                                <Label Grid.Row="2" Grid.Column="2" FontSize="18" Text="&#x203A;" TextColor="{DynamicResource MutedForeground}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+    </Grid>
+</ContentPage>

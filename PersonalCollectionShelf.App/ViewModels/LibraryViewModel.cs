@@ -28,9 +28,12 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     private int _thumbnailViewportVersion;
     private IReadOnlyList<MediaItemDto> _allItems = [];
     private IReadOnlyList<MediaItemDto> _visibleItems = [];
+    private IReadOnlyList<MediaItemDto> _statisticsItems = [];
     private IReadOnlyList<MediaItemListItemViewModel> _preparedMediaItems = [];
     private CancellationTokenSource? _searchDelayCancellation;
     private bool _suppressFilterReload;
+    private bool _suppressStatisticsScopeChange;
+    private bool _suppressStatisticsTimeChange;
     private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewModePreferenceKey, "grid") != "list";
     private bool _isSearchVisible;
     private bool _isFilterPanelVisible = true;
@@ -64,6 +67,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         _authService = authService;
         _thumbnailCache = thumbnailCache;
         ReloadFilterOptions();
+        ReloadStatisticsMediaTypeFilters();
         RestoreSessionFilter();
     }
 
@@ -94,10 +98,14 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     public ObservableCollection<StatisticPoint> CountryStatistics { get; } = [];
     public ObservableCollection<StatisticPoint> RatingStatistics { get; } = [];
     public ObservableCollection<StatisticPoint> AverageRatingByTypeStatistics { get; } = [];
-    public ObservableCollection<StatisticPoint> CompletionByTypeStatistics { get; } = [];
-    public ObservableCollection<StatisticPoint> FavoritesByTypeStatistics { get; } = [];
+    public ObservableCollection<ChartLegendItem> CategoryLegendItems { get; } = [];
+    public ObservableCollection<ChartLegendItem> DecadeLegendItems { get; } = [];
 
     public ObservableCollection<LocalizedOption<MediaType?>> MediaTypeFilters { get; } = [];
+
+    public ObservableCollection<LocalizedOption<MediaType?>> StatisticsMediaTypeFilters { get; } = [];
+    public ObservableCollection<LocalizedOption<int>> StatisticsActivityYearFilters { get; } = [];
+    public ObservableCollection<LocalizedOption<StatisticYearRange>> StatisticsReleaseYearRanges { get; } = [];
 
     public ObservableCollection<LocalizedOption<MediaStatus?>> StatusFilters { get; } = [];
 
@@ -228,6 +236,9 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     private string _searchTerm = string.Empty;
     private LocalizedOption<MediaType?>? _selectedMediaTypeFilter;
+    private LocalizedOption<MediaType?>? _selectedStatisticsMediaType;
+    private LocalizedOption<int>? _selectedStatisticsActivityYear;
+    private LocalizedOption<StatisticYearRange>? _selectedStatisticsReleaseYearRange;
     private LocalizedOption<MediaStatus?>? _selectedStatusFilter;
     private LocalizedOption<string?>? _selectedCategoryFilter;
     private LocalizedOption<string?>? _selectedTagFilter;
@@ -255,6 +266,53 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             {
                 foreach (var option in MediaTypeFilters) option.IsSelected = ReferenceEquals(option, value);
                 OnSelectedMediaTypeFilterChanged(value);
+            }
+        }
+    }
+
+    public LocalizedOption<MediaType?>? SelectedStatisticsMediaType
+    {
+        get => _selectedStatisticsMediaType;
+        set
+        {
+            if (SetProperty(ref _selectedStatisticsMediaType, value))
+            {
+                foreach (var option in StatisticsMediaTypeFilters)
+                {
+                    option.IsSelected = ReferenceEquals(option, value);
+                }
+
+                OnPropertyChanged(nameof(IsAllStatisticsMediaTypes));
+                if (!_suppressStatisticsScopeChange)
+                {
+                    ApplyStatisticsScope();
+                }
+            }
+        }
+    }
+
+    public bool IsAllStatisticsMediaTypes => SelectedStatisticsMediaType?.Value is null;
+
+    public LocalizedOption<int>? SelectedStatisticsActivityYear
+    {
+        get => _selectedStatisticsActivityYear;
+        set
+        {
+            if (SetProperty(ref _selectedStatisticsActivityYear, value) && !_suppressStatisticsTimeChange)
+            {
+                PopulateStatisticsCollections(_statisticsItems);
+            }
+        }
+    }
+
+    public LocalizedOption<StatisticYearRange>? SelectedStatisticsReleaseYearRange
+    {
+        get => _selectedStatisticsReleaseYearRange;
+        set
+        {
+            if (SetProperty(ref _selectedStatisticsReleaseYearRange, value) && !_suppressStatisticsTimeChange)
+            {
+                PopulateStatisticsCollections(_statisticsItems);
             }
         }
     }
@@ -398,6 +456,8 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     public string StatisticsTitle => T("Shell.Statistics");
 
+    public string StatisticsScopeLabel => T("Statistics.Scope");
+
     public string AverageRatingLabel => T("Statistics.AverageRating");
 
     public string CompletionLabel => T("Statistics.Completion");
@@ -405,6 +465,9 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     public string CollectionLabel => T("Statistics.Collection");
 
     public string MonthlyActivityTitle => T("Statistics.MonthlyActivity");
+    public string MonthlyActivityHint => T("Statistics.MonthlyActivityHint");
+    public string ActivityYearLabel => T("Statistics.ActivityYear");
+    public string ReleaseYearRangeLabel => T("Statistics.ReleaseYearRange");
 
     public string ByCategoryTitle => T("Statistics.ByCategory");
 
@@ -423,8 +486,29 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     public string ByCountryTitle => T("Statistics.ByCountry");
     public string RatingDistributionTitle => T("Statistics.RatingDistribution");
     public string AverageRatingByTypeTitle => T("Statistics.AverageRatingByType");
-    public string CompletionByTypeTitle => T("Statistics.CompletionByType");
-    public string FavoritesByTypeTitle => T("Statistics.FavoritesByType");
+
+    public int StatisticsTotalItemCount => _statisticsItems.Count;
+
+    public int StatisticsFavoritesItemCount => _statisticsItems.Count(item => item.IsFavorite);
+
+    public string StatisticsAverageRatingText
+    {
+        get
+        {
+            var ratings = _statisticsItems.Where(item => item.Rating.HasValue).Select(item => item.Rating!.Value).ToList();
+            return ratings.Count == 0 ? "--" : ratings.Average().ToString("0.0", CultureInfo.InvariantCulture);
+        }
+    }
+
+    public string StatisticsCompletionPercentText
+    {
+        get
+        {
+            if (_statisticsItems.Count == 0) return "0%";
+            var completed = _statisticsItems.Count(item => item.Status == MediaStatus.Completed);
+            return (completed / (double)_statisticsItems.Count).ToString("P0", CultureInfo.InvariantCulture);
+        }
+    }
 
     public string AverageRatingText
     {
@@ -462,8 +546,11 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         base.RefreshLocalizedProperties();
         ReloadFilterOptions();
+        ReloadStatisticsMediaTypeFilters();
+        ReloadStatisticsTimeFilters();
         PopulateMediaItems(_visibleItems);
-        PopulateDashboardCollections(_visibleItems);
+        PopulateStatisticsCollections(_statisticsItems);
+        RefreshStatisticsSummary();
     }
 
     private void OnSelectedMediaTypeFilterChanged(LocalizedOption<MediaType?>? value)
@@ -652,8 +739,10 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             var userId = await GetCurrentUserIdAsync();
             var library = await _mediaItemService.GetLibraryAsync(userId);
             _allItems = library;
+            ReloadStatisticsMediaTypeFilters();
             ReloadDynamicFilterOptions(library);
             ApplyCurrentFilters();
+            ApplyStatisticsScope();
             StartInitialThumbnailPipeline();
             _ = _thumbnailCache.PrimeDisplaySourcesAsync(library.Select(item => item.CoverUrl));
         }
@@ -800,6 +889,85 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         finally
         {
             _suppressFilterReload = false;
+        }
+    }
+
+    private void ReloadStatisticsMediaTypeFilters()
+    {
+        var selectedMediaType = SelectedStatisticsMediaType?.Value;
+        _suppressStatisticsScopeChange = true;
+        try
+        {
+            StatisticsMediaTypeFilters.Clear();
+            StatisticsMediaTypeFilters.Add(new LocalizedOption<MediaType?>(null, T("Common.All")));
+            foreach (var mediaType in MediaPresentation.OrderedMediaTypes)
+            {
+                StatisticsMediaTypeFilters.Add(new LocalizedOption<MediaType?>(mediaType, T($"MediaType.{mediaType}")));
+            }
+
+            _selectedStatisticsMediaType = null;
+            OnPropertyChanged(nameof(SelectedStatisticsMediaType));
+            SelectedStatisticsMediaType = StatisticsMediaTypeFilters.First(option =>
+                EqualityComparer<MediaType?>.Default.Equals(option.Value, selectedMediaType));
+        }
+        finally
+        {
+            _suppressStatisticsScopeChange = false;
+        }
+
+        OnPropertyChanged(nameof(IsAllStatisticsMediaTypes));
+    }
+
+    private void ApplyStatisticsScope()
+    {
+        _statisticsItems = SelectedStatisticsMediaType?.Value is { } mediaType
+            ? _allItems.Where(item => item.MediaType == mediaType).ToList()
+            : _allItems;
+        ReloadStatisticsTimeFilters();
+        PopulateStatisticsCollections(_statisticsItems);
+        RefreshStatisticsSummary();
+    }
+
+    private void ReloadStatisticsTimeFilters()
+    {
+        var selectedActivityYear = SelectedStatisticsActivityYear?.Value;
+        var selectedRange = SelectedStatisticsReleaseYearRange?.Value;
+        var activityYears = _statisticsItems.Select(item => item.CreatedAt.Year).Distinct().OrderBy(year => year).ToList();
+        var releaseYears = _statisticsItems.Where(item => item.ReleaseYear.HasValue).Select(item => item.ReleaseYear!.Value).ToList();
+        var releaseRanges = releaseYears
+            .Select(year => year / 10 * 10)
+            .Distinct()
+            .OrderBy(year => year)
+            .Select(year => new StatisticYearRange(year, year + 9))
+            .ToList();
+
+        _suppressStatisticsTimeChange = true;
+        try
+        {
+            StatisticsActivityYearFilters.Clear();
+            foreach (var year in activityYears)
+            {
+                StatisticsActivityYearFilters.Add(new LocalizedOption<int>(year, year.ToString(CultureInfo.InvariantCulture)));
+            }
+
+            StatisticsReleaseYearRanges.Clear();
+            foreach (var range in releaseRanges)
+            {
+                StatisticsReleaseYearRanges.Add(new LocalizedOption<StatisticYearRange>(range, $"{range.StartYear}–{range.EndYear}"));
+            }
+
+            _selectedStatisticsActivityYear = null;
+            _selectedStatisticsReleaseYearRange = null;
+            OnPropertyChanged(nameof(SelectedStatisticsActivityYear));
+            OnPropertyChanged(nameof(SelectedStatisticsReleaseYearRange));
+            SelectedStatisticsActivityYear = StatisticsActivityYearFilters.FirstOrDefault(option => option.Value == selectedActivityYear)
+                ?? StatisticsActivityYearFilters.LastOrDefault();
+            SelectedStatisticsReleaseYearRange = StatisticsReleaseYearRanges.FirstOrDefault(option => option.Value == selectedRange)
+                ?? StatisticsReleaseYearRanges.LastOrDefault();
+        }
+        finally
+        {
+            _suppressStatisticsTimeChange = false;
         }
     }
 
@@ -1125,7 +1293,10 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         {
             FavoriteItems.Add(ToListItem(item));
         }
+    }
 
+    private void PopulateStatisticsCollections(IReadOnlyList<MediaItemDto> items)
+    {
         CategorySummaries.Clear();
         foreach (var mediaType in MediaPresentation.OrderedMediaTypes)
         {
@@ -1138,6 +1309,11 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
                 MediaPresentation.GetMediaTypeColor(mediaType)));
         }
 
+        PopulateLegendItems(
+            CategoryLegendItems,
+            CategorySummaries.Where(summary => summary.Count > 0)
+                .Select(summary => (summary.Label, (double)summary.Count, summary.Color)));
+
         StatusSummaries.Clear();
         foreach (var status in Enum.GetValues<MediaStatus>())
         {
@@ -1149,32 +1325,48 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         }
 
         MonthlyActivity.Clear();
-        var now = DateTime.Now;
-        for (var offset = 8; offset >= 0; offset--)
+        var activityYear = SelectedStatisticsActivityYear?.Value
+            ?? items.Select(item => item.CreatedAt.Year).DefaultIfEmpty(DateTime.Now.Year).Max();
+        var culture = CultureInfo.GetCultureInfo(LocalizationService.CurrentLanguage);
+        for (var monthNumber = 1; monthNumber <= 12; monthNumber++)
         {
-            var month = new DateTime(now.Year, now.Month, 1).AddMonths(-offset);
-            var count = items.Count(item => item.CreatedAt.Year == month.Year && item.CreatedAt.Month == month.Month);
-            var culture = CultureInfo.GetCultureInfo(LocalizationService.CurrentLanguage);
+            var month = new DateTime(activityYear, monthNumber, 1);
+            var count = items.Count(item => item.CreatedAt.Year == activityYear && item.CreatedAt.Month == monthNumber);
             MonthlyActivity.Add(new MonthlyActivityPoint(month.ToString("MMM", culture), count));
         }
 
-        PopulateStatisticPoints(ReleaseYearStatistics, items
-            .Where(item => item.ReleaseYear.HasValue)
+        var releaseYearRange = SelectedStatisticsReleaseYearRange?.Value;
+        var releaseYearCounts = items
+            .Where(item => item.ReleaseYear.HasValue &&
+                           (releaseYearRange is null ||
+                            item.ReleaseYear.Value >= releaseYearRange.StartYear &&
+                            item.ReleaseYear.Value <= releaseYearRange.EndYear))
             .GroupBy(item => item.ReleaseYear!.Value)
-            .OrderBy(group => group.Key)
-            .TakeLast(24)
-            .Select((group, index) => new StatisticPoint(group.Key.ToString(CultureInfo.InvariantCulture), group.Count(), ChartColor(index))));
+            .ToDictionary(group => group.Key, group => group.Count());
+        IEnumerable<int> displayedReleaseYears = releaseYearRange is null
+            ? releaseYearCounts.Keys.OrderBy(year => year)
+            : Enumerable.Range(releaseYearRange.StartYear, releaseYearRange.EndYear - releaseYearRange.StartYear + 1);
+        PopulateStatisticPoints(ReleaseYearStatistics, displayedReleaseYears
+            .Select(year => new StatisticPoint(
+                year.ToString(CultureInfo.InvariantCulture),
+                releaseYearCounts.GetValueOrDefault(year),
+                Color.FromArgb("#9D7FF4"))));
 
         PopulateStatisticPoints(AddedYearStatistics, items
             .GroupBy(item => item.CreatedAt.Year)
             .OrderBy(group => group.Key)
-            .Select((group, index) => new StatisticPoint(group.Key.ToString(CultureInfo.InvariantCulture), group.Count(), ChartColor(index))));
+            .Select(group => new StatisticPoint(group.Key.ToString(CultureInfo.InvariantCulture), group.Count(), Color.FromArgb("#9D7FF4"))));
 
         PopulateStatisticPoints(DecadeStatistics, items
             .Where(item => item.ReleaseYear.HasValue)
             .GroupBy(item => item.ReleaseYear!.Value / 10 * 10)
             .OrderBy(group => group.Key)
             .Select((group, index) => new StatisticPoint($"{group.Key}s", group.Count(), ChartColor(index))));
+
+        PopulateLegendItems(
+            DecadeLegendItems,
+            DecadeStatistics.Where(point => point.Value > 0)
+                .Select(point => (point.Label, point.Value, point.Color)));
 
         PopulateStatisticPoints(GenreStatistics, items
             .SelectMany(item => item.Genres ?? [])
@@ -1207,20 +1399,23 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
                 return new StatisticPoint(T($"MediaType.{type}"), ratings.Count == 0 ? 0 : (double)ratings.Average(), MediaPresentation.GetMediaTypeColor(type));
             }).Where(point => point.Value > 0));
 
-        PopulateStatisticPoints(CompletionByTypeStatistics, MediaPresentation.OrderedMediaTypes
-            .Select(type =>
-            {
-                var values = items.Where(item => item.MediaType == type).ToList();
-                var percent = values.Count == 0 ? 0 : values.Count(item => item.Status == MediaStatus.Completed) * 100d / values.Count;
-                return new StatisticPoint(T($"MediaType.{type}"), percent, MediaPresentation.GetMediaTypeColor(type), $"{percent:0}%");
-            }).Where(point => point.Value > 0));
+    }
 
-        PopulateStatisticPoints(FavoritesByTypeStatistics, MediaPresentation.OrderedMediaTypes
-            .Select(type => new StatisticPoint(
-                T($"MediaType.{type}"),
-                items.Count(item => item.MediaType == type && item.IsFavorite),
-                MediaPresentation.GetMediaTypeColor(type)))
-            .Where(point => point.Value > 0));
+    private void PopulateLegendItems(
+        ObservableCollection<ChartLegendItem> target,
+        IEnumerable<(string Label, double Value, Color Color)> values)
+    {
+        var entries = values.ToList();
+        var total = entries.Sum(entry => entry.Value);
+        target.Clear();
+        foreach (var entry in entries)
+        {
+            var percent = total <= 0 ? 0 : entry.Value * 100d / total;
+            target.Add(new ChartLegendItem(
+                entry.Label,
+                string.Format(T("Statistics.LegendValueFormat"), entry.Value.ToString("0", CultureInfo.InvariantCulture), percent.ToString("0.#", CultureInfo.InvariantCulture)),
+                entry.Color));
+        }
     }
 
     private static void PopulateStatisticPoints(ObservableCollection<StatisticPoint> target, IEnumerable<StatisticPoint> values)
@@ -1249,6 +1444,15 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         OnPropertyChanged(nameof(CompletionPercentText));
         OnPropertyChanged(nameof(CompletionSubtitle));
         OnPropertyChanged(nameof(CollectionSubtitle));
+    }
+
+    private void RefreshStatisticsSummary()
+    {
+        OnPropertyChanged(nameof(StatisticsTotalItemCount));
+        OnPropertyChanged(nameof(StatisticsFavoritesItemCount));
+        OnPropertyChanged(nameof(StatisticsAverageRatingText));
+        OnPropertyChanged(nameof(StatisticsCompletionPercentText));
+        OnPropertyChanged(nameof(IsAllStatisticsMediaTypes));
     }
 
     private IEnumerable<MediaItemDto> ApplyQuickFilter(IEnumerable<MediaItemDto> items)

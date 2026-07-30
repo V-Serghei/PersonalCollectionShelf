@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.IO.Compression;
+using System.Diagnostics;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -87,8 +89,17 @@ public partial class SettingsViewModel : BaseViewModel
     private string _backgroundImageDescription = string.Empty;
     private bool _hasBackgroundImage;
     private bool _isSyncing;
+    private double _syncProgress;
+    private string _syncProgressPercentText = "0%";
+    private bool _hasSyncProgress;
     private bool _isDriveBackupRunning;
     private bool _isDriveRestoreRunning;
+    private double _driveProgress;
+    private string _driveProgressPercentText = "0%";
+    private string _driveProgressEtaText = string.Empty;
+    private bool _hasDriveProgress;
+    private Stopwatch? _syncProgressTimer;
+    private Stopwatch? _driveProgressTimer;
 
     public LocalizedOption<string>? SelectedLanguageOption
     {
@@ -122,6 +133,50 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     public bool IsNotSyncing => !IsSyncing;
+
+    public double SyncProgress
+    {
+        get => _syncProgress;
+        private set => SetProperty(ref _syncProgress, Math.Clamp(value, 0, 1));
+    }
+
+    public string SyncProgressPercentText
+    {
+        get => _syncProgressPercentText;
+        private set => SetProperty(ref _syncProgressPercentText, value);
+    }
+
+    public bool HasSyncProgress
+    {
+        get => _hasSyncProgress;
+        private set => SetProperty(ref _hasSyncProgress, value);
+    }
+
+    public string SyncProgressEtaText { get; private set; } = string.Empty;
+
+    public double DriveProgress
+    {
+        get => _driveProgress;
+        private set => SetProperty(ref _driveProgress, Math.Clamp(value, 0, 1));
+    }
+
+    public string DriveProgressPercentText
+    {
+        get => _driveProgressPercentText;
+        private set => SetProperty(ref _driveProgressPercentText, value);
+    }
+
+    public string DriveProgressEtaText
+    {
+        get => _driveProgressEtaText;
+        private set => SetProperty(ref _driveProgressEtaText, value);
+    }
+
+    public bool HasDriveProgress
+    {
+        get => _hasDriveProgress;
+        private set => SetProperty(ref _hasDriveProgress, value);
+    }
 
     public bool IsDriveBackupRunning
     {
@@ -431,35 +486,29 @@ public partial class SettingsViewModel : BaseViewModel
         if (IsBusy) return;
         IsBusy = true;
         IsSyncing = true;
+        HasSyncProgress = true;
+        _syncProgressTimer = Stopwatch.StartNew();
+        UpdateSyncProgress(new SyncProgressDto(0, "Sync.Progress.Preparing"));
         SetSyncStatus("Sync.Status.Started");
         UserNotification.Show(StatusMessage);
         CrashReporter.LogMessage("SettingsViewModel.SyncNowAsync", "Synchronization started.");
         try
         {
             await Task.Yield();
-            SetSyncStatus("Sync.Status.DataInProgress");
-            await _syncService.RequestSyncAsync();
-            if (await _googleAccountService.GetDriveAccessTokenAsync() is not null)
-            {
-                SetSyncStatus("Sync.Status.DriveInProgress");
-                var backup = await BuildExportDocumentAsync(compressImages: true);
-                await _driveBackupService.UploadBackupAsync(
-                    $"personal-collection-shelf-{DateTime.UtcNow:yyyyMMdd-HHmmss}.zip",
-                    CreateBackupArchive(backup));
-                SetSyncStatus("Sync.Status.CompletedWithDrive");
-            }
-            else
-            {
-                SetSyncStatus("Sync.Status.CompletedWithoutDrive");
-            }
+            var progress = new Progress<SyncProgressDto>(UpdateSyncProgress);
+            var result = await _syncService.RequestSyncAsync(progress);
+            UpdateSyncProgress(new SyncProgressDto(100, result.HasWarnings ? "Sync.Progress.CompleteWithWarnings" : "Sync.Progress.Complete"));
+            SetSyncStatus(result.HasWarnings ? "Sync.Status.CompletedWithWarnings" : "Sync.Status.Completed");
             UserNotification.Show(StatusMessage);
             CrashReporter.LogMessage("SettingsViewModel.SyncNowAsync", "Synchronization completed.");
         }
         catch (Exception exception)
         {
-            SetSyncStatus("Sync.Status.Failed");
+            SetSyncStatus(IsNetworkFailure(exception) ? "Sync.Status.NetworkFailed" : "Sync.Status.Failed");
+            SyncProgressEtaText = T("Progress.Stopped");
+            OnPropertyChanged(nameof(SyncProgressEtaText));
             UserNotification.Show(StatusMessage);
-            await CrashReporter.ReportAsync(exception, "SettingsViewModel.SyncNowAsync");
+            CrashReporter.Log(exception, "SettingsViewModel.SyncNowAsync");
         }
         finally
         {
@@ -474,30 +523,53 @@ public partial class SettingsViewModel : BaseViewModel
         StatusMessage = T(key);
     }
 
+    private void UpdateSyncProgress(SyncProgressDto progress)
+    {
+        SyncProgress = progress.Percent / 100d;
+        SyncProgressPercentText = $"{progress.Percent}%";
+        SyncProgressEtaText = BuildEtaText(_syncProgressTimer, progress.Percent);
+        OnPropertyChanged(nameof(SyncProgressEtaText));
+        SetSyncStatus(progress.MessageKey);
+    }
+
+    private static bool IsNetworkFailure(Exception exception) =>
+        exception is HttpRequestException or WebException or IOException ||
+        exception.InnerException is not null && IsNetworkFailure(exception.InnerException);
+
     [RelayCommand]
     private async Task BackupToDriveAsync()
     {
         if (IsBusy) return;
         IsBusy = true;
         IsDriveBackupRunning = true;
-        SetSyncStatus("Settings.DriveBackup.Preparing");
+        HasDriveProgress = true;
+        _driveProgressTimer = Stopwatch.StartNew();
+        UpdateDriveProgress(0, "Settings.DriveBackup.Preparing");
         UserNotification.Show(StatusMessage);
         CrashReporter.LogMessage("SettingsViewModel.BackupToDriveAsync", "Google Drive backup started.");
         try
         {
             await Task.Yield();
-            var document = await BuildExportDocumentAsync(compressImages: true);
+            var document = await BuildExportDocumentAsync(
+                compressImages: true,
+                (percent, key) => UpdateDriveProgress(percent, key));
             var archive = CreateBackupArchive(document);
             var name = $"personal-collection-shelf-{DateTime.UtcNow:yyyyMMdd-HHmmss}.zip";
-            SetSyncStatus("Settings.DriveBackup.Uploading");
-            await _driveBackupService.UploadBackupAsync(name, archive);
-            SetSyncStatus("Settings.DriveBackup.Completed");
+            UpdateDriveProgress(74, "Settings.DriveBackup.Uploading");
+            var transferProgress = new Progress<DriveTransferProgressDto>(value =>
+            {
+                var fraction = value.TotalBytes is > 0 ? value.TransferredBytes / (double)value.TotalBytes.Value : 0;
+                UpdateDriveProgress(74 + (int)Math.Round(fraction * 24), "Settings.DriveBackup.Uploading");
+            });
+            await _driveBackupService.UploadBackupAsync(name, archive, transferProgress);
+            UpdateDriveProgress(100, "Settings.DriveBackup.Completed");
             UserNotification.Show(StatusMessage);
             CrashReporter.LogMessage("SettingsViewModel.BackupToDriveAsync", "Google Drive backup completed.");
         }
         catch (Exception exception)
         {
             SetSyncStatus("Settings.DriveBackup.Failed");
+            DriveProgressEtaText = T("Progress.Stopped");
             UserNotification.Show(StatusMessage);
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.BackupToDriveAsync");
         }
@@ -530,15 +602,29 @@ public partial class SettingsViewModel : BaseViewModel
         });
     }
 
-    private async Task<LibraryExportDocument> BuildExportDocumentAsync(bool compressImages = false)
+    private async Task<LibraryExportDocument> BuildExportDocumentAsync(
+        bool compressImages = false,
+        Action<int, string>? progress = null)
     {
+        progress?.Invoke(2, "Settings.DriveBackup.Preparing");
         var userId = await GetCurrentUserIdAsync();
         var items = await _mediaItemService.GetLibraryAsync(userId);
+        progress?.Invoke(6, "Settings.DriveBackup.Preparing");
+        var people = await BuildPersonExportsAsync(userId, compressImages, (completed, total) =>
+        {
+            var fraction = total == 0 ? 1 : completed / (double)total;
+            progress?.Invoke(6 + (int)Math.Round(fraction * 34), "Settings.DriveBackup.Preparing");
+        });
+        var covers = await BuildCoverExportsAsync(items, compressImages, (completed, total) =>
+        {
+            var fraction = total == 0 ? 1 : completed / (double)total;
+            progress?.Invoke(40 + (int)Math.Round(fraction * 32), "Settings.DriveBackup.Preparing");
+        });
         return new LibraryExportDocument
         {
             Items = items,
-            People = await BuildPersonExportsAsync(userId, compressImages),
-            Covers = await BuildCoverExportsAsync(items, compressImages)
+            People = people,
+            Covers = covers
         };
     }
 
@@ -565,21 +651,26 @@ public partial class SettingsViewModel : BaseViewModel
 
     private async Task<IReadOnlyList<PortableMediaCover>> BuildCoverExportsAsync(
         IReadOnlyList<MediaItemDto> items,
-        bool compressImages)
+        bool compressImages,
+        Action<int, int>? progress = null)
     {
         var covers = new List<PortableMediaCover>();
-        foreach (var item in items)
+        for (var index = 0; index < items.Count; index++)
         {
+            var item = items[index];
             var path = ResolveFilePath(item.CoverUrl);
-            if (path is null) continue;
-            var image = await ReadPortableImageAsync(path, compressImages);
-            covers.Add(new PortableMediaCover
+            if (path is not null)
             {
-                MediaItemId = item.Id,
-                Extension = image.Extension,
-                DataBase64 = image.DataBase64,
-                CloudObjectName = image.CloudObjectName
-            });
+                var image = await ReadPortableImageAsync(path, compressImages);
+                covers.Add(new PortableMediaCover
+                {
+                    MediaItemId = item.Id,
+                    Extension = image.Extension,
+                    DataBase64 = image.DataBase64,
+                    CloudObjectName = image.CloudObjectName
+                });
+            }
+            progress?.Invoke(index + 1, items.Count);
         }
 
         return covers;
@@ -639,16 +730,24 @@ public partial class SettingsViewModel : BaseViewModel
         if (!confirmed) return;
         IsBusy = true;
         IsDriveRestoreRunning = true;
-        SetSyncStatus("Settings.DriveRestore.Downloading");
+        HasDriveProgress = true;
+        _driveProgressTimer = Stopwatch.StartNew();
+        UpdateDriveProgress(0, "Settings.DriveRestore.Downloading");
         UserNotification.Show(StatusMessage);
         CrashReporter.LogMessage("SettingsViewModel.RestoreFromDriveAsync", "Google Drive restore started.");
         try
         {
             await Task.Yield();
-            var backup = await _driveBackupService.DownloadLatestBackupAsync();
+            var transferProgress = new Progress<DriveTransferProgressDto>(value =>
+            {
+                var fraction = value.TotalBytes is > 0 ? value.TransferredBytes / (double)value.TotalBytes.Value : 0;
+                UpdateDriveProgress(3 + (int)Math.Round(fraction * 52), "Settings.DriveRestore.Downloading");
+            });
+            var backup = await _driveBackupService.DownloadLatestBackupAsync(transferProgress);
             if (backup is null)
             {
                 SetSyncStatus("Settings.DriveRestore.NotFound");
+                DriveProgressEtaText = T("Progress.Stopped");
                 UserNotification.Show(StatusMessage);
                 return;
             }
@@ -676,15 +775,20 @@ public partial class SettingsViewModel : BaseViewModel
 
             var document = JsonSerializer.Deserialize<LibraryExportDocument>(json, JsonOptions)
                 ?? throw new InvalidDataException("Backup data is invalid.");
-            SetSyncStatus("Settings.DriveRestore.Importing");
-            await ImportDocumentAsync(document);
-            SetSyncStatus("Settings.DriveRestore.Completed");
+            UpdateDriveProgress(60, "Settings.DriveRestore.Importing");
+            await ImportDocumentAsync(document, (completed, total) =>
+            {
+                var fraction = total == 0 ? 1 : completed / (double)total;
+                UpdateDriveProgress(60 + (int)Math.Round(fraction * 39), "Settings.DriveRestore.Importing");
+            });
+            UpdateDriveProgress(100, "Settings.DriveRestore.Completed");
             UserNotification.Show(StatusMessage);
             CrashReporter.LogMessage("SettingsViewModel.RestoreFromDriveAsync", "Google Drive restore completed.");
         }
         catch (Exception exception)
         {
             SetSyncStatus("Settings.DriveRestore.Failed");
+            DriveProgressEtaText = T("Progress.Stopped");
             UserNotification.Show(StatusMessage);
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.RestoreFromDriveAsync");
         }
@@ -695,12 +799,14 @@ public partial class SettingsViewModel : BaseViewModel
         }
     }
 
-    private async Task ImportDocumentAsync(LibraryExportDocument document)
+    private async Task ImportDocumentAsync(LibraryExportDocument document, Action<int, int>? progress = null)
     {
 
         var userId = await GetCurrentUserIdAsync();
         var imported = 0;
         var updated = 0;
+        var progressTotal = document.People.Count + document.Items.Count;
+        var progressCompleted = 0;
 
         foreach (var exportedPerson in document.People)
         {
@@ -754,6 +860,7 @@ public partial class SettingsViewModel : BaseViewModel
                     await _peopleManagementService.SetPrimaryPhotoAsync(userId, saved.Id, portablePhoto.Id);
                 }
             }
+            progress?.Invoke(++progressCompleted, progressTotal);
         }
 
         var importedRelations = new HashSet<Guid>();
@@ -812,6 +919,7 @@ public partial class SettingsViewModel : BaseViewModel
                 await _mediaItemService.UpdateMediaItemAsync(ToUpdateRequest(item, userId));
                 updated++;
             }
+            progress?.Invoke(++progressCompleted, progressTotal);
         }
 
         StatusMessage = string.Format(T("Settings.Import.Completed"), imported, updated);
@@ -819,13 +927,20 @@ public partial class SettingsViewModel : BaseViewModel
 
     private async Task<IReadOnlyList<PersonExportDocument>> BuildPersonExportsAsync(
         string userId,
-        bool compressImages = false)
+        bool compressImages = false,
+        Action<int, int>? progress = null)
     {
         var result = new List<PersonExportDocument>();
-        foreach (var summary in await _peopleManagementService.GetCatalogAsync(userId))
+        var summaries = await _peopleManagementService.GetCatalogAsync(userId);
+        for (var index = 0; index < summaries.Count; index++)
         {
+            var summary = summaries[index];
             var person = await _peopleManagementService.GetAsync(userId, summary.Id);
-            if (person is null) continue;
+            if (person is null)
+            {
+                progress?.Invoke(index + 1, summaries.Count);
+                continue;
+            }
             var photos = new List<PortablePersonPhoto>();
             foreach (var photo in person.Photos)
             {
@@ -843,8 +958,28 @@ public partial class SettingsViewModel : BaseViewModel
                 });
             }
             result.Add(new PersonExportDocument { Person = person, Photos = photos });
+            progress?.Invoke(index + 1, summaries.Count);
         }
         return result;
+    }
+
+    private void UpdateDriveProgress(int percent, string messageKey)
+    {
+        var normalized = Math.Clamp(percent, 0, 100);
+        DriveProgress = normalized / 100d;
+        DriveProgressPercentText = $"{normalized}%";
+        DriveProgressEtaText = BuildEtaText(_driveProgressTimer, normalized);
+        SetSyncStatus(messageKey);
+    }
+
+    private string BuildEtaText(Stopwatch? timer, int percent)
+    {
+        if (percent >= 100) return T("Progress.Done");
+        if (timer is null || percent < 2 || timer.Elapsed.TotalSeconds < 1) return T("Progress.Estimating");
+        var remainingSeconds = timer.Elapsed.TotalSeconds * (100 - percent) / percent;
+        var remaining = TimeSpan.FromSeconds(Math.Clamp(remainingSeconds, 1, 24 * 60 * 60));
+        var formatted = remaining.TotalHours >= 1 ? remaining.ToString(@"h\:mm\:ss") : remaining.ToString(@"m\:ss");
+        return string.Format(T("Progress.Remaining"), formatted);
     }
 
     private async Task<PortableImageData> ReadPortableImageAsync(string path, bool compress)

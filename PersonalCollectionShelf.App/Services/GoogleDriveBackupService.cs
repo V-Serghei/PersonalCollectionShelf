@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using PersonalCollectionShelf.Application.Interfaces;
@@ -16,6 +17,7 @@ public sealed class GoogleDriveBackupService(
     public async Task<string> UploadBackupAsync(
         string fileName,
         ReadOnlyMemory<byte> content,
+        IProgress<DriveTransferProgressDto>? progress = null,
         CancellationToken cancellationToken = default)
     {
         var token = await RequireTokenAsync(cancellationToken);
@@ -25,7 +27,7 @@ public sealed class GoogleDriveBackupService(
         using var requestContent = new MultipartContent("related", boundary)
         {
             new StringContent(metadata, Encoding.UTF8, "application/json"),
-            new ByteArrayContent(content.ToArray())
+            new ProgressByteArrayContent(content, progress, cancellationToken)
         };
         requestContent.Last().Headers.ContentType = new MediaTypeHeaderValue("application/zip");
         using var request = CreateRequest(HttpMethod.Post, $"{UploadApi}/files?uploadType=multipart&fields=id", token);
@@ -38,7 +40,9 @@ public sealed class GoogleDriveBackupService(
         return fileId;
     }
 
-    public async Task<DriveBackupFileDto?> DownloadLatestBackupAsync(CancellationToken cancellationToken = default)
+    public async Task<DriveBackupFileDto?> DownloadLatestBackupAsync(
+        IProgress<DriveTransferProgressDto>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         var token = await RequireTokenAsync(cancellationToken);
         var folderId = await FindFolderAsync(token, cancellationToken);
@@ -55,11 +59,24 @@ public sealed class GoogleDriveBackupService(
         }
 
         using var request = CreateRequest(HttpMethod.Get, $"{DriveApi}/files/{Uri.EscapeDataString(latest.Id)}?alt=media", token);
-        using var response = await httpClient.SendAsync(request, cancellationToken);
+        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
+        var total = response.Content.Headers.ContentLength;
+        await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var output = total is > 0 and <= int.MaxValue ? new MemoryStream((int)total.Value) : new MemoryStream();
+        var buffer = new byte[64 * 1024];
+        long transferred = 0;
+        while (true)
+        {
+            var read = await source.ReadAsync(buffer, cancellationToken);
+            if (read == 0) break;
+            await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            transferred += read;
+            progress?.Report(new DriveTransferProgressDto(transferred, total));
+        }
         return new DriveBackupFileDto(
             latest.Name,
-            await response.Content.ReadAsByteArrayAsync(cancellationToken),
+            output.ToArray(),
             latest.CreatedAtUtc);
     }
 
@@ -158,4 +175,30 @@ public sealed class GoogleDriveBackupService(
     }
 
     private sealed record DriveFile(string Id, string Name, DateTime CreatedAtUtc);
+
+    private sealed class ProgressByteArrayContent(
+        ReadOnlyMemory<byte> content,
+        IProgress<DriveTransferProgressDto>? progress,
+        CancellationToken cancellationToken) : HttpContent
+    {
+        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+        {
+            const int chunkSize = 64 * 1024;
+            long transferred = 0;
+            for (var offset = 0; offset < content.Length; offset += chunkSize)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var length = Math.Min(chunkSize, content.Length - offset);
+                await stream.WriteAsync(content.Slice(offset, length), cancellationToken);
+                transferred += length;
+                progress?.Report(new DriveTransferProgressDto(transferred, content.Length));
+            }
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = content.Length;
+            return true;
+        }
+    }
 }

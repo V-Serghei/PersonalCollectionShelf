@@ -11,7 +11,10 @@ using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.App.ViewModels;
 
-public sealed record PersonPhotoViewModel(Guid Id, string FilePath, string Caption, bool IsPrimary, string PrimaryText);
+public sealed record PersonPhotoViewModel(Guid Id, string FilePath, string Caption, bool IsPrimary, string PrimaryText)
+{
+    public bool HasCaption => !string.IsNullOrWhiteSpace(Caption);
+}
 
 public sealed record PersonWorkViewModel(
     Guid MediaItemId,

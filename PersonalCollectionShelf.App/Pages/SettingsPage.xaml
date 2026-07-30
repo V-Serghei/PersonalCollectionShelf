@@ -33,7 +33,7 @@
                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AppearanceSectionTitle}" />
                     <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="0">
-                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding ThemeSectionTitle}" />
                                     <Label FontSize="12" Text="{Binding ThemeModeDescription}" TextColor="{DynamicResource Primary}" />
@@ -110,14 +110,16 @@
                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BackgroundSectionTitle}" />
                     <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="0">
-                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
-                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <VerticalStackLayout Padding="16" Spacing="10">
+                                <VerticalStackLayout Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding CustomBackgroundTitle}" />
-                                    <Label FontSize="12" Text="{Binding BackgroundImageDescription}" TextColor="{DynamicResource Primary}" />
+                                    <Label FontSize="12" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding BackgroundImageDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
-                                <Button Grid.Column="1" Command="{Binding PickBackgroundImageCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding ChooseBackgroundImageText}" />
-                                <Button Grid.Column="2" Command="{Binding ClearBackgroundImageCommand}" IsVisible="{Binding HasBackgroundImage}" Style="{StaticResource DangerButtonStyle}" Text="{Binding RemoveBackgroundText}" />
-                            </Grid>
+                                <FlexLayout Direction="Row" JustifyContent="End" Wrap="Wrap">
+                                    <Button Margin="0,0,8,8" Command="{Binding PickBackgroundImageCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding ChooseBackgroundImageText}" />
+                                    <Button Margin="0,0,0,8" Command="{Binding ClearBackgroundImageCommand}" IsVisible="{Binding HasBackgroundImage}" Style="{StaticResource DangerButtonStyle}" Text="{Binding RemoveBackgroundText}" />
+                                </FlexLayout>
+                            </VerticalStackLayout>
 
                             <BoxView HeightRequest="1" IsVisible="{Binding HasBackgroundImage}" Color="{DynamicResource Border}" />
 
@@ -169,10 +171,9 @@
                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SyncSectionTitle}" />
                     <Border Padding="0" Style="{StaticResource CardBorderStyle}">
                         <VerticalStackLayout Spacing="0">
-                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
-                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                                <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
                                     <Label FontAttributes="Bold" FontSize="14" Text="{Binding SyncSectionTitle}" />
-                                    <Label FontSize="12" Text="{Binding SyncDescription}" TextColor="{DynamicResource Primary}" />
                                 </VerticalStackLayout>
                                 <ActivityIndicator
                                     Grid.Column="1"
@@ -180,10 +181,27 @@
                                     IsRunning="{Binding IsSyncing}"
                                     IsVisible="{Binding IsSyncing}"
                                     VerticalOptions="Center" />
-                                <Button Grid.Column="2" Command="{Binding SyncNowCommand}" IsEnabled="{Binding IsNotBusy}" Text="{Binding SyncNowButtonText}" />
+                                <Button Grid.Column="2" Command="{Binding SyncNowCommand}" FontSize="12" IsEnabled="{Binding IsNotBusy}" MaximumWidthRequest="160" Padding="12,8" Text="{Binding SyncNowButtonText}" />
+                                <Label Grid.Row="1" Grid.ColumnSpan="3" FontSize="12" Text="{Binding SyncDescription}" TextColor="{DynamicResource Primary}" />
+                                <Label Grid.Row="2" Grid.ColumnSpan="3" FontSize="12" Text="{Binding StatusMessage}" TextColor="{DynamicResource MutedForeground}" />
+                                <Grid Grid.Row="3" Grid.ColumnSpan="3" ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding HasSyncProgress}">
+                                    <ProgressBar
+                                        HeightRequest="8"
+                                        Progress="{Binding SyncProgress}"
+                                        ProgressColor="{DynamicResource Primary}"
+                                        VerticalOptions="Center" />
+                                    <Label
+                                        Grid.Column="1"
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        Text="{Binding SyncProgressPercentText}"
+                                        TextColor="{DynamicResource Primary}"
+                                        VerticalTextAlignment="Center" />
+                                </Grid>
+                                <Label Grid.Row="4" Grid.ColumnSpan="3" FontSize="11" IsVisible="{Binding HasSyncProgress}" Text="{Binding SyncProgressEtaText}" TextColor="{DynamicResource MutedForeground}" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
-                            <Grid Padding="16" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="10">
                                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                                     <Label FontAttributes="Bold" FontSize="14" Text="Google Drive" />
                                     <Label FontSize="12" Text="{Binding DriveBackupDescription}" TextColor="{DynamicResource Primary}" />
@@ -196,8 +214,12 @@
                                     <Button Command="{Binding BackupToDriveCommand}" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding DriveBackupButtonText}" />
                                     <Button Command="{Binding RestoreFromDriveCommand}" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding DriveRestoreButtonText}" />
                                 </HorizontalStackLayout>
+                                <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding HasDriveProgress}">
+                                    <ProgressBar HeightRequest="8" Progress="{Binding DriveProgress}" ProgressColor="{DynamicResource Primary}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" FontAttributes="Bold" FontSize="12" Text="{Binding DriveProgressPercentText}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                                </Grid>
+                                <Label Grid.Row="3" Grid.ColumnSpan="2" FontSize="11" IsVisible="{Binding HasDriveProgress}" Text="{Binding DriveProgressEtaText}" TextColor="{DynamicResource MutedForeground}" />
                             </Grid>
-                            <Label Padding="16,0,16,16" FontSize="12" Text="{Binding StatusMessage}" TextColor="{DynamicResource MutedForeground}" />
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>

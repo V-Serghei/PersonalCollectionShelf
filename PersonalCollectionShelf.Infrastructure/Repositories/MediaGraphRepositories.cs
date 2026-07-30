@@ -618,6 +618,15 @@ public sealed class MediaCollectionRepository(LocalDatabaseService databaseServi
         return records.OrderBy(record => record.Position).Select(ToDomain).ToList();
     }
 
+    public async Task<IReadOnlyList<MediaCollectionEntry>> GetAllEntriesAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        var records = await databaseService.Connection.Table<MediaCollectionEntryRecord>()
+            .Where(record => record.UserId == userId)
+            .ToListAsync();
+        return records.Select(ToDomain).ToList();
+    }
+
     public async Task<IReadOnlyList<MediaCollectionEntry>> GetEntriesForItemAsync(Guid mediaItemId, string userId, CancellationToken cancellationToken = default)
     {
         await databaseService.InitializeAsync(cancellationToken);

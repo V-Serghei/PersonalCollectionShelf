@@ -29,8 +29,6 @@ public partial class StatisticsPage : ContentPage
         CountryChart.Drawable = new HorizontalPointBarDrawable(viewModel.CountryStatistics);
         RatingChart.Drawable = new VerticalPointBarDrawable(viewModel.RatingStatistics);
         AverageByTypeChart.Drawable = new HorizontalPointBarDrawable(viewModel.AverageRatingByTypeStatistics, "0.0");
-        CompletionByTypeChart.Drawable = new HorizontalPointBarDrawable(viewModel.CompletionByTypeStatistics, "0'%'", 100);
-        FavoritesByTypeChart.Drawable = new HorizontalPointBarDrawable(viewModel.FavoritesByTypeStatistics);
         SelectTab("overview");
     }
 
@@ -49,19 +47,29 @@ public partial class StatisticsPage : ContentPage
                 await CrashReporter.ReportAsync(exception, "StatisticsPage.OnAppearing");
             }
 
-            MonthlyChart.Invalidate();
-            DonutChart.Invalidate();
-            BarChart.Invalidate();
-            ReleaseYearChart.Invalidate();
-            AddedYearChart.Invalidate();
-            DecadeChart.Invalidate();
-            GenreChart.Invalidate();
-            CountryChart.Invalidate();
-            RatingChart.Invalidate();
-            AverageByTypeChart.Invalidate();
-            CompletionByTypeChart.Invalidate();
-            FavoritesByTypeChart.Invalidate();
+            InvalidateCharts();
         }
+    }
+
+    private void HandleStatisticsScopeChanged(object? sender, EventArgs e) => Dispatcher.Dispatch(InvalidateCharts);
+
+    private void HandleStatisticsTimeFilterChanged(object? sender, EventArgs e) => Dispatcher.Dispatch(InvalidateCharts);
+
+    private void HandleStatisticsOptionsClicked(object? sender, EventArgs e) =>
+        StatisticsOptionsPanel.IsVisible = !StatisticsOptionsPanel.IsVisible;
+
+    private void InvalidateCharts()
+    {
+        MonthlyChart.Invalidate();
+        DonutChart.Invalidate();
+        BarChart.Invalidate();
+        ReleaseYearChart.Invalidate();
+        AddedYearChart.Invalidate();
+        DecadeChart.Invalidate();
+        GenreChart.Invalidate();
+        CountryChart.Invalidate();
+        RatingChart.Invalidate();
+        AverageByTypeChart.Invalidate();
     }
 
     private void HandleStatisticsTabClicked(object? sender, EventArgs e)
@@ -102,8 +110,6 @@ public partial class StatisticsPage : ContentPage
         }
 
         _usesCompactLayout = usesCompactLayout;
-        TopBar.ColumnDefinitions.Clear();
-        TopBar.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         TopBar.Padding = usesCompactLayout ? new Thickness(12, 7) : new Thickness(18, 7);
         StatisticsContent.Padding = usesCompactLayout
             ? new Thickness(12, 8, 12, 30)
@@ -118,7 +124,7 @@ public partial class StatisticsPage : ContentPage
             var points = viewModel.MonthlyActivity.ToList();
             canvas.SaveState();
 
-            var left = 26f;
+            var left = 48f;
             var top = 14f;
             var width = dirtyRect.Width - left - 10f;
             var height = dirtyRect.Height - 46f;
@@ -134,7 +140,7 @@ public partial class StatisticsPage : ContentPage
                 canvas.DrawLine(left, y, left + width, y);
                 canvas.FontColor = Color.FromArgb("#6F6098");
                 var label = (gridMax - gridMax * i / 4f).ToString("0", CultureInfo.InvariantCulture);
-                canvas.DrawString(label, 0, y - 6, left - 8, 12, HorizontalAlignment.Right, VerticalAlignment.Center);
+                canvas.DrawString(label, 0, y - 6, left - 10, 12, HorizontalAlignment.Right, VerticalAlignment.Center);
             }
 
             if (points.Count == 0)
@@ -271,40 +277,33 @@ public partial class StatisticsPage : ContentPage
         public void Draw(ICanvas canvas, RectF dirtyRect)
         {
             var summaries = viewModel.StatusSummaries.Where(summary => summary.Count > 0).ToList();
-            canvas.SaveState();
-
-            if (summaries.Count == 0)
-            {
-                canvas.RestoreState();
-                return;
-            }
+            if (summaries.Count == 0) return;
 
             var maxValue = Math.Max(1, summaries.Max(summary => summary.Count));
-            var bottom = dirtyRect.Height - 26f;
-            var maxHeight = dirtyRect.Height - 58f;
-            var gap = 18f;
-            var barWidth = Math.Min(42f, (dirtyRect.Width - gap * (summaries.Count + 1)) / summaries.Count);
-            var totalWidth = summaries.Count * barWidth + (summaries.Count - 1) * gap;
-            var left = (dirtyRect.Width - totalWidth) / 2f;
+            var labelWidth = Math.Min(150f, dirtyRect.Width * .38f);
+            var valueWidth = 42f;
+            var availableWidth = Math.Max(30f, dirtyRect.Width - labelWidth - valueWidth - 8f);
+            var rowHeight = dirtyRect.Height / summaries.Count;
 
-            canvas.FontSize = 10;
-            for (var i = 0; i < summaries.Count; i++)
+            for (var index = 0; index < summaries.Count; index++)
             {
-                var summary = summaries[i];
-                var x = left + i * (barWidth + gap);
-                var barHeight = Math.Max(3f, summary.Count / (float)maxValue * maxHeight);
+                var summary = summaries[index];
+                var barHeight = Math.Clamp(rowHeight - 12f, 10f, 28f);
+                var y = index * rowHeight + (rowHeight - barHeight) / 2f;
+                var filledWidth = Math.Max(3f, summary.Count / (float)maxValue * availableWidth);
 
+                canvas.FontSize = 10;
+                canvas.FontColor = Color.FromArgb("#C6BEE0");
+                canvas.DrawString(summary.Label, 0, y, labelWidth - 10f, barHeight, HorizontalAlignment.Right, VerticalAlignment.Center);
+
+                canvas.FillColor = Color.FromArgb("#241E38");
+                canvas.FillRoundedRectangle(labelWidth, y, availableWidth, barHeight, barHeight / 2f);
                 canvas.FillColor = summary.Color;
-                canvas.FillRoundedRectangle(x, bottom - barHeight, barWidth, barHeight, 6);
+                canvas.FillRoundedRectangle(labelWidth, y, filledWidth, barHeight, barHeight / 2f);
 
                 canvas.FontColor = Color.FromArgb("#EDE9F8");
-                canvas.DrawString(summary.Count.ToString(CultureInfo.InvariantCulture), x - 6, bottom - barHeight - 18, barWidth + 12, 14, HorizontalAlignment.Center, VerticalAlignment.Bottom);
-
-                canvas.FontColor = Color.FromArgb("#9D7FF4");
-                canvas.DrawString(summary.Label, x - 10, bottom + 6, barWidth + 20, 14, HorizontalAlignment.Center, VerticalAlignment.Top);
+                canvas.DrawString(summary.Count.ToString(CultureInfo.InvariantCulture), labelWidth + availableWidth + 8f, y, valueWidth, barHeight, HorizontalAlignment.Left, VerticalAlignment.Center);
             }
-
-            canvas.RestoreState();
         }
     }
 
@@ -347,10 +346,11 @@ public partial class StatisticsPage : ContentPage
             var values = points.Where(point => point.Value >= 0).ToList();
             if (values.Count == 0) return;
             var max = Math.Max(1, values.Max(point => point.Value));
-            var bottom = dirtyRect.Height - 30;
-            var availableHeight = dirtyRect.Height - 54;
+            var bottom = dirtyRect.Height - 34;
+            var availableHeight = dirtyRect.Height - 62;
             var slot = dirtyRect.Width / values.Count;
             var barWidth = Math.Max(3, Math.Min(32, slot * .62f));
+            var labelStep = values.Count <= 10 ? 1 : Math.Max(1, (int)Math.Ceiling(values.Count / 7d));
             for (var index = 0; index < values.Count; index++)
             {
                 var point = values[index];
@@ -358,9 +358,21 @@ public partial class StatisticsPage : ContentPage
                 var x = index * slot + (slot - barWidth) / 2;
                 canvas.FillColor = point.Color;
                 canvas.FillRoundedRectangle((float)x, (float)(bottom - height), (float)barWidth, (float)height, 5);
-                canvas.FontSize = values.Count > 14 ? 7 : 9;
-                canvas.FontColor = Color.FromArgb("#8179A3");
-                canvas.DrawString(point.Label, (float)(index * slot), bottom + 5, (float)slot, 16, HorizontalAlignment.Center, VerticalAlignment.Top);
+
+                if (values.Count <= 12 && point.Value > 0)
+                {
+                    canvas.FontSize = 9;
+                    canvas.FontColor = Color.FromArgb("#C6BEE0");
+                    canvas.DrawString(point.Value.ToString("0", CultureInfo.InvariantCulture), (float)x - 8, (float)(bottom - height - 17), (float)barWidth + 16, 14, HorizontalAlignment.Center, VerticalAlignment.Bottom);
+                }
+
+                if (index % labelStep == 0 || index == values.Count - 1)
+                {
+                    canvas.FontSize = 9;
+                    canvas.FontColor = Color.FromArgb("#8179A3");
+                    var centerX = (float)(index * slot + slot / 2);
+                    canvas.DrawString(point.Label, centerX - 28, bottom + 7, 56, 16, HorizontalAlignment.Center, VerticalAlignment.Top);
+                }
             }
         }
     }
@@ -375,6 +387,7 @@ public partial class StatisticsPage : ContentPage
             var left = 18f;
             var width = dirtyRect.Width - 36;
             var height = dirtyRect.Height - 48;
+            var labelStep = Math.Max(1, (int)Math.Ceiling(values.Count / 7d));
             var path = new PathF();
             for (var index = 0; index < values.Count; index++)
             {
@@ -383,9 +396,12 @@ public partial class StatisticsPage : ContentPage
                 if (index == 0) path.MoveTo(x, (float)y); else path.LineTo(x, (float)y);
                 canvas.FillColor = values[index].Color;
                 canvas.FillCircle(x, (float)y, 4);
-                canvas.FontSize = 9;
-                canvas.FontColor = Color.FromArgb("#8179A3");
-                canvas.DrawString(values[index].Label, x - 25, dirtyRect.Height - 24, 50, 14, HorizontalAlignment.Center, VerticalAlignment.Top);
+                if (index % labelStep == 0 || index == values.Count - 1)
+                {
+                    canvas.FontSize = 9;
+                    canvas.FontColor = Color.FromArgb("#8179A3");
+                    canvas.DrawString(values[index].Label, x - 28, dirtyRect.Height - 24, 56, 14, HorizontalAlignment.Center, VerticalAlignment.Top);
+                }
             }
             canvas.StrokeColor = Color.FromArgb("#9D7FF4");
             canvas.StrokeSize = 3;

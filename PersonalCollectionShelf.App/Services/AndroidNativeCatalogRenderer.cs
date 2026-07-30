@@ -54,6 +54,35 @@ internal static class AndroidNativeCatalogRenderer
         return binding;
     }
 
+    public static NativeCatalogBinding<CollectionCardViewModel>? AttachCollections(
+        CollectionView collectionView,
+        IList<CollectionCardViewModel> items,
+        int span,
+        Action<CollectionCardViewModel> open)
+    {
+        if (collectionView.Handler?.PlatformView is not RecyclerView recyclerView) return null;
+        Prepare(collectionView, recyclerView, grid: true, span);
+        var adapter = new CollectionAdapter(recyclerView, Math.Clamp(span, 1, 4), open);
+        var binding = new NativeCatalogBinding<CollectionCardViewModel>(recyclerView, adapter);
+        binding.Update(items);
+        recyclerView.SetAdapter(adapter);
+        return binding;
+    }
+
+    public static NativeCatalogBinding<CollectionDetailItemViewModel>? AttachCollectionItems(
+        CollectionView collectionView,
+        IList<CollectionDetailItemViewModel> items,
+        Action<CollectionDetailItemViewModel> open)
+    {
+        if (collectionView.Handler?.PlatformView is not RecyclerView recyclerView) return null;
+        Prepare(collectionView, recyclerView, grid: false, span: 1);
+        var adapter = new CollectionDetailAdapter(recyclerView, open);
+        var binding = new NativeCatalogBinding<CollectionDetailItemViewModel>(recyclerView, adapter);
+        binding.Update(items);
+        recyclerView.SetAdapter(adapter);
+        return binding;
+    }
+
     private static void Prepare(CollectionView collectionView, RecyclerView recyclerView, bool grid, int span)
     {
         // Disconnect MAUI's templated adapter; otherwise it can replace the
@@ -183,6 +212,29 @@ internal static class AndroidNativeCatalogRenderer
 
         public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position) =>
             ((PersonHolder)holder).Bind(ItemAt(position));
+    }
+
+    private sealed class CollectionAdapter(
+        RecyclerView recyclerView,
+        int span,
+        Action<CollectionCardViewModel> open) : NativeAdapter<CollectionCardViewModel>(recyclerView)
+    {
+        public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType) =>
+            new CollectionHolder(parent, span, open);
+
+        public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position) =>
+            ((CollectionHolder)holder).Bind(ItemAt(position));
+    }
+
+    private sealed class CollectionDetailAdapter(
+        RecyclerView recyclerView,
+        Action<CollectionDetailItemViewModel> open) : NativeAdapter<CollectionDetailItemViewModel>(recyclerView)
+    {
+        public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType) =>
+            new CollectionDetailHolder(parent, open);
+
+        public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position) =>
+            ((CollectionDetailHolder)holder).Bind(ItemAt(position));
     }
 
     private sealed class MediaHolder : RecyclerView.ViewHolder
@@ -347,6 +399,201 @@ internal static class AndroidNativeCatalogRenderer
             textArea.AddView(name);
             textArea.AddView(details);
             textArea.AddView(rating);
+            root.AddView(textArea);
+            return root;
+        }
+    }
+
+    private sealed class CollectionHolder : RecyclerView.ViewHolder
+    {
+        private readonly Action<CollectionCardViewModel> _open;
+        private readonly FrameLayout[] _coverFrames;
+        private readonly ImageView[] _coverImages;
+        private readonly TextView[] _coverPlaceholders;
+        private readonly TextView _emptyStack;
+        private readonly TextView _name;
+        private readonly TextView _summary;
+        private readonly TextView _categories;
+        private readonly string[] _imageKeys = new string[5];
+        private CollectionCardViewModel? _item;
+
+        public CollectionHolder(ViewGroup parent, int span, Action<CollectionCardViewModel> open)
+            : base(CreateRoot(parent, span, out var frames, out var images, out var placeholders, out var emptyStack, out var name, out var summary, out var categories))
+        {
+            _open = open;
+            _coverFrames = frames;
+            _coverImages = images;
+            _coverPlaceholders = placeholders;
+            _emptyStack = emptyStack;
+            _name = name;
+            _summary = summary;
+            _categories = categories;
+            ItemView.Click += (_, _) => { if (_item is not null) _open(_item); };
+        }
+
+        public void Bind(CollectionCardViewModel item)
+        {
+            _item = item;
+            _name.Text = item.Name;
+            _summary.Text = $"{item.ItemCountText}  ·  {item.KindLabel}";
+            _categories.Text = item.CategorySummary;
+            var covers = new[] { item.FirstCover, item.SecondCover, item.ThirdCover, item.FourthCover, item.FifthCover };
+            _emptyStack.Visibility = covers[0].Length == 0 ? ViewStates.Visible : ViewStates.Gone;
+            for (var index = 0; index < covers.Length; index++)
+            {
+                var coverIndex = index;
+                var source = covers[index];
+                _coverFrames[index].Visibility = source.Length == 0 ? ViewStates.Gone : ViewStates.Visible;
+                if (source.Length == 0) continue;
+                BindImage(
+                    _coverImages[index],
+                    _coverPlaceholders[index],
+                    source,
+                    string.Empty,
+                    key => _imageKeys[coverIndex] = key,
+                    () => _imageKeys[coverIndex]);
+            }
+        }
+
+        private static AView CreateRoot(
+            ViewGroup parent,
+            int span,
+            out FrameLayout[] frames,
+            out ImageView[] images,
+            out TextView[] placeholders,
+            out TextView emptyStack,
+            out TextView name,
+            out TextView summary,
+            out TextView categories)
+        {
+            var context = parent.Context!;
+            var root = new LinearLayout(context) { Orientation = Orientation.Vertical, Clickable = true };
+            root.SetPadding(Dp(context, 8), Dp(context, 9), Dp(context, 8), Dp(context, 9));
+            root.Background = Rounded(context, ResourceColor("CardBackground", AColor.Rgb(31, 27, 42)), ResourceColor("Border", AColor.Rgb(65, 58, 79)), 11);
+            var rootParams = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            rootParams.SetMargins(Dp(context, 4), Dp(context, 4), Dp(context, 4), Dp(context, 7));
+            root.LayoutParameters = rootParams;
+
+            var stack = new FrameLayout(context) { LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, Dp(context, span >= 3 ? 105 : 126)) };
+            frames = new FrameLayout[5];
+            images = new ImageView[5];
+            placeholders = new TextView[5];
+            var widths = new[] { 72, 67, 63, 59, 55 };
+            var heights = new[] { 106, 100, 95, 90, 85 };
+            var shifts = new[] { 0, -19, 20, -30, 31 };
+            var rotations = new[] { 0f, -6f, 7f, -11f, 12f };
+
+            // Add the rear covers first so the first item remains fully visible on top.
+            for (var index = 4; index >= 0; index--)
+            {
+                var frame = new FrameLayout(context)
+                {
+                    Rotation = rotations[index],
+                    TranslationX = Dp(context, shifts[index]),
+                    Background = Rounded(context, ResourceColor("Muted", AColor.Rgb(42, 37, 53)), ResourceColor("Border", AColor.Rgb(65, 58, 79)), 6),
+                    ClipToOutline = true
+                };
+                var layout = new FrameLayout.LayoutParams(Dp(context, widths[index]), Dp(context, heights[index]), GravityFlags.Center);
+                frame.LayoutParameters = layout;
+                var image = new ImageView(context);
+                image.SetScaleType(ImageView.ScaleType.CenterCrop);
+                frame.AddView(image, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+                var placeholder = Text(context, 15, true, ResourceColor("MutedForeground", AColor.LightGray), 1);
+                placeholder.Gravity = GravityFlags.Center;
+                frame.AddView(placeholder, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+                frames[index] = frame;
+                images[index] = image;
+                placeholders[index] = placeholder;
+                stack.AddView(frame);
+            }
+
+            emptyStack = Text(context, 48, false, ResourceColor("Primary", AColor.Rgb(151, 121, 242)), 1);
+            emptyStack.Text = "◲";
+            emptyStack.Gravity = GravityFlags.Center;
+            stack.AddView(emptyStack, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            root.AddView(stack);
+
+            name = Text(context, span >= 3 ? 13 : 15, true, ResourceColor("Foreground", AColor.White), 2);
+            summary = Text(context, 10, true, ResourceColor("Primary", AColor.Rgb(151, 121, 242)), 1);
+            categories = Text(context, 9, false, ResourceColor("MutedForeground", AColor.LightGray), 1);
+            root.AddView(name);
+            root.AddView(summary);
+            root.AddView(categories);
+            return root;
+        }
+    }
+
+    private sealed class CollectionDetailHolder : RecyclerView.ViewHolder
+    {
+        private readonly Action<CollectionDetailItemViewModel> _open;
+        private readonly ImageView _image;
+        private readonly TextView _placeholder;
+        private readonly TextView _title;
+        private readonly TextView _metadata;
+        private readonly TextView _status;
+        private CollectionDetailItemViewModel? _item;
+        private string _imageKey = string.Empty;
+
+        public CollectionDetailHolder(ViewGroup parent, Action<CollectionDetailItemViewModel> open)
+            : base(CreateRoot(parent, out var image, out var placeholder, out var title, out var metadata, out var status))
+        {
+            _open = open;
+            _image = image;
+            _placeholder = placeholder;
+            _title = title;
+            _metadata = metadata;
+            _status = status;
+            ItemView.Click += (_, _) => { if (_item is not null) _open(_item); };
+        }
+
+        public void Bind(CollectionDetailItemViewModel item)
+        {
+            _item = item;
+            _title.Text = item.HasPosition ? $"{item.PositionText}  {item.Title}" : item.Title;
+            _metadata.Text = $"{item.MediaTypeLabel}  ·  {item.Metadata}";
+            _status.Text = item.StatusLabel;
+            BindImage(_image, _placeholder, item.CoverSource, item.Initial, key => _imageKey = key, () => _imageKey);
+        }
+
+        private static AView CreateRoot(
+            ViewGroup parent,
+            out ImageView image,
+            out TextView placeholder,
+            out TextView title,
+            out TextView metadata,
+            out TextView status)
+        {
+            var context = parent.Context!;
+            var root = new LinearLayout(context) { Orientation = Orientation.Horizontal, Clickable = true };
+            root.SetPadding(Dp(context, 9), Dp(context, 8), Dp(context, 9), Dp(context, 8));
+            root.Background = Rounded(context, ResourceColor("CardBackground", AColor.Rgb(31, 27, 42)), ResourceColor("Border", AColor.Rgb(65, 58, 79)), 11);
+            var rootParams = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            rootParams.SetMargins(Dp(context, 3), Dp(context, 3), Dp(context, 3), Dp(context, 7));
+            root.LayoutParameters = rootParams;
+
+            var cover = new FrameLayout(context)
+            {
+                LayoutParameters = new LinearLayout.LayoutParams(Dp(context, 56), Dp(context, 80)),
+                Background = Rounded(context, ResourceColor("Muted", AColor.Rgb(42, 37, 53)), AColor.Transparent, 7),
+                ClipToOutline = true
+            };
+            image = new ImageView(context);
+            image.SetScaleType(ImageView.ScaleType.CenterCrop);
+            cover.AddView(image, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            placeholder = Text(context, 20, true, ResourceColor("MutedForeground", AColor.LightGray), 1);
+            placeholder.Gravity = GravityFlags.Center;
+            cover.AddView(placeholder, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            root.AddView(cover);
+
+            var textArea = new LinearLayout(context) { Orientation = Orientation.Vertical };
+            textArea.SetPadding(Dp(context, 11), Dp(context, 3), 0, 0);
+            textArea.LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MatchParent, 1);
+            title = Text(context, 15, true, ResourceColor("Foreground", AColor.White), 2);
+            metadata = Text(context, 11, false, ResourceColor("MutedForeground", AColor.LightGray), 1);
+            status = Text(context, 10, true, ResourceColor("Primary", AColor.Rgb(151, 121, 242)), 1);
+            textArea.AddView(title);
+            textArea.AddView(metadata);
+            textArea.AddView(status);
             root.AddView(textArea);
             return root;
         }

@@ -158,3 +158,45 @@
 - Prevented delayed double taps on library and dashboard cards from stacking duplicate details pages. Media
   details now preload once before modal presentation, navigation is globally gated, and a delayed blocking
   activity indicator appears on the source page when opening takes longer than 150 ms.
+- Added pressed-scale feedback to the media-details edit button and made editor navigation preload behind a
+  delayed blocking activity indicator. A global editor gate prevents repeated taps from stacking forms.
+- Replaced Google Books Play Store deep links with exact browser pages and rebuilt external-source actions
+  from verified provider IDs. IMDb, Kinopoisk, Google Books, Open Library, Comic Vine, and RAWG links are
+  clickable only when an exact item page can be constructed or validated.
+- Rebuilt the person gallery as a swipeable carousel with previous/next controls, synchronized selectable
+  thumbnails, selected-photo highlighting, position count, primary/caption overlays, and loading feedback.
+- Reworked Statistics around a dedicated All/media-type scope selector that recalculates summary cards and
+  every meaningful chart independently of Library filters. Added count/percentage legends to category and
+  decade donuts, converted status data to readable labeled horizontal bars, reduced crowded year-axis labels,
+  widened the monthly value axis, and removed the low-value completion/favorites-by-type rating charts.
+- Verified the statistics changes with zero-warning Windows and Android builds, synchronized 570 English and
+  Russian localization keys, and all 38 automated tests passing.
+- Rebuilt Series and universes as a virtualized folder grid that no longer renders every nested item on the
+  overview. Folder cards show up to three asynchronously cached covers, item/type summaries, and open a new
+  dedicated series page with ordered item cards. Initial overview/details loading now has explicit progress UI.
+- Moved search, media-category filters, and name/size/category/kind sorting behind a default-collapsed overflow
+  panel. Optimized collection loading from per-item/per-series queries to three batched database reads and
+  gated series navigation against duplicate taps; Windows and Android builds remain warning-free and all 38
+  tests pass.
+- Added live synchronization stage progress with a percentage bar. Sync now sends changed Firestore records
+  in resumable batches instead of one network request per record, loads image-sync state in one database read,
+  and no longer rebuilds a full Google Drive backup (the dedicated Backup button remains responsible for it).
+- Added exponential retries for transient Firebase/Drive/token connection failures and preserved monotonic
+  progress across a restarted sync pass. Expected network failures stay in the sync status and log instead of
+  opening the generic Application error dialog; retries continue from already persisted batch checkpoints.
+- Verified zero-warning Windows/Android builds and the new Firestore commit/retry test. The full suite passes
+  38/39; the pre-existing nondeterministic movie actor-order assertion remains the only failure.
+- Corrected the inline description expansion on Android with a large multiline cap that remains compatible
+  with TailTruncation, kept the sync
+  progress row visible at completion, and reorganized both the sync and custom-background cards so narrow
+  screens no longer overlap or squeeze their text beside action buttons.
+- Added animated busy feedback to one-item online metadata refresh and replaced long external-source labels
+  with compact provider badges for film, book, comic, and game ratings; badges navigate only when an exact
+  provider item URL is available.
+- Prevented collection cover warming from rebuilding the visible folder collection, enabled buffered free
+  scrolling on both collection levels, and rebuilt the tag index as a compact virtualized badge grid with
+  search, category, and sorting controls hidden behind its overflow menu.
+- Moved Statistics scope selection behind an overflow button, condensed the four tabs into a single accessible
+  icon row, defined monthly activity as library additions per month with an activity-year picker, and limited
+  release-year charts to selectable 20-year ranges. Windows and Android builds pass with zero warnings; all
+  39 automated tests pass.

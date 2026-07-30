@@ -16,6 +16,8 @@ public interface IMediaCollectionRepository
 
     Task<IReadOnlyList<MediaCollectionEntry>> GetEntriesAsync(Guid collectionId, string userId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<MediaCollectionEntry>> GetAllEntriesAsync(string userId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<MediaCollectionEntry>> GetEntriesForItemAsync(Guid mediaItemId, string userId, CancellationToken cancellationToken = default);
 
     Task UpsertEntryAsync(MediaCollectionEntry entry, CancellationToken cancellationToken = default);
