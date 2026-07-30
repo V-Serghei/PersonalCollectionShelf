@@ -61,7 +61,12 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
         ReloadFilterOptions();
     }
 
-    public ObservableCollection<TagMediaItemViewModel> Items { get; } = [];
+    private ObservableCollection<TagMediaItemViewModel> _items = [];
+    public ObservableCollection<TagMediaItemViewModel> Items
+    {
+        get => _items;
+        private set => SetProperty(ref _items, value);
+    }
     public ObservableCollection<LocalizedOption<MediaType?>> MediaTypeFilters { get; } = [];
     public ObservableCollection<LocalizedOption<LibrarySortOption>> SortOptions { get; } = [];
 
@@ -200,11 +205,7 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
             _ => filtered.OrderByDescending(item => item.CreatedAt)
         };
 
-        Items.Clear();
-        foreach (var item in filtered)
-        {
-            Items.Add(ToViewModel(item));
-        }
+        Items = new ObservableCollection<TagMediaItemViewModel>(filtered.Select(ToViewModel));
         OnPropertyChanged(nameof(ResultsText));
     }
 

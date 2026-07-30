@@ -29,6 +29,21 @@ public sealed class CloudSyncMetadataRecord
     public string? Value { get; set; }
 }
 
+[Table("CloudDirtyEntities")]
+public sealed class CloudDirtyEntityRecord
+{
+    [PrimaryKey]
+    public string Id { get; set; } = string.Empty;
+
+    [Indexed]
+    public string EntityType { get; set; } = string.Empty;
+
+    [Indexed]
+    public string EntityKey { get; set; } = string.Empty;
+
+    public long Revision { get; set; }
+}
+
 [Table("CloudAssetStates")]
 public sealed class CloudAssetStateRecord
 {

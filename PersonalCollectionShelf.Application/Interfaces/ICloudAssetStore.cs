@@ -4,6 +4,8 @@ public interface ICloudAssetStore
 {
     Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default);
 
+    Task<bool> ExistsAsync(string objectName, CancellationToken cancellationToken = default);
+
     Task UploadAsync(
         string objectName,
         ReadOnlyMemory<byte> content,

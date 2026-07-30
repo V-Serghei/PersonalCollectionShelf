@@ -31,6 +31,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IMediaItemService, MediaItemService>();
         builder.Services.AddSingleton<ICollectionExplorerService, CollectionExplorerService>();
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
+        builder.Services.AddSingleton<IBackgroundOperationNotifier, BackgroundOperationNotifier>();
         builder.Services.AddSingleton(MediaMetadataOptions.Load(FileSystem.AppDataDirectory));
         builder.Services.AddSingleton<IMediaMetadataService, OnlineMediaMetadataService>();
         builder.Services.AddSingleton<IExternalCatalogMetadataService, ExternalCatalogMetadataService>();

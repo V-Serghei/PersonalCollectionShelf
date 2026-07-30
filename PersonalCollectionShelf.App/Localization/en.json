@@ -204,6 +204,8 @@
   "Progress.Remaining": "About {0} remaining",
   "Progress.Done": "Done",
   "Progress.Stopped": "Operation stopped",
+  "CloudOperation.Cancelling": "Stopping operation…",
+  "CloudOperation.Cancelled": "Operation cancelled.",
   "Sync.Status.Requested": "Synchronization completed.",
   "Sync.Status.Failed": "Synchronization failed. Check the connection and Firebase configuration.",
   "Settings.DriveBackup.Button": "Back up",

@@ -1055,6 +1055,15 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             ? T("Library.NoTags")
             : string.Format(T("Library.TagsFormat"), item.Tags);
         var displayCoverUrl = _thumbnailCache.GetDisplaySource(item.CoverUrl);
+        // A freshly downloaded local cover has no UI thumbnail yet. Dashboard
+        // cards do not use the native catalog renderer (which has its own
+        // original-image fallback), so keep showing the original until the
+        // thumbnail pipeline replaces it.
+        if (!MediaPresentation.HasValidCoverUrl(displayCoverUrl) &&
+            MediaPresentation.HasValidCoverUrl(item.CoverUrl))
+        {
+            displayCoverUrl = item.CoverUrl!;
+        }
         var hasCoverUrl = MediaPresentation.HasValidCoverUrl(displayCoverUrl);
 
         return new MediaItemListItemViewModel(

@@ -79,10 +79,12 @@ public sealed class LocalDatabaseService
             await Connection.CreateTableAsync<PersonProfessionRecord>();
             await Connection.CreateTableAsync<CloudEntityStateRecord>();
             await Connection.CreateTableAsync<CloudSyncMetadataRecord>();
+            await Connection.CreateTableAsync<CloudDirtyEntityRecord>();
             await Connection.CreateTableAsync<CloudAssetStateRecord>();
 
             await ConfigureForReadPerformanceAsync();
             await CreateQueryIndexesAsync();
+            await CreateSyncChangeTrackingAsync();
             await MigrateLegacyDataAsync();
             _isInitialized = true;
         }
@@ -125,6 +127,86 @@ public sealed class LocalDatabaseService
         {
             await Connection.ExecuteAsync(statement);
         }
+    }
+
+    private async Task CreateSyncChangeTrackingAsync()
+    {
+        (string Table, string EntityType, string Key)[] trackedTables =
+        [
+            ("MediaItems", "mediaItem", "Id"),
+            ("People", "person", "Id"),
+            ("PersonPhotos", "personPhoto", "Id"),
+            ("Studios", "studio", "Id"),
+            ("MediaCategories", "mediaCategory", "Id"),
+            ("BookDetails", "bookDetails", "MediaItemId"),
+            ("MovieDetails", "movieDetails", "MediaItemId"),
+            ("EpisodicDetails", "episodicDetails", "MediaItemId"),
+            ("GraphicPublicationDetails", "graphicDetails", "MediaItemId"),
+            ("GameDetails", "gameDetails", "MediaItemId"),
+            ("Tags", "tag", "Id"),
+            ("MediaContributions", "mediaContribution", "Id"),
+            ("MediaStudioCredits", "mediaStudioCredit", "Id"),
+            ("MediaCollections", "mediaCollection", "Id"),
+            ("MediaCollectionEntries", "mediaCollectionEntry", "Id"),
+            ("MediaRelations", "mediaRelation", "Id"),
+            ("PersonRelations", "personRelation", "Id"),
+            ("PersonProfessions", "personProfession", "Id")
+        ];
+
+        foreach (var tracked in trackedTables)
+        {
+            await CreateDirtyTriggersAsync(
+                tracked.Table,
+                tracked.EntityType,
+                $"NEW.\"{tracked.Key}\"",
+                $"OLD.\"{tracked.Key}\"");
+        }
+
+        await CreateDirtyTriggersAsync(
+            "MediaItemTags",
+            "mediaItemTag",
+            "NEW.\"MediaItemId\" || ':' || NEW.\"TagId\"",
+            "OLD.\"MediaItemId\" || ':' || OLD.\"TagId\"");
+    }
+
+    private async Task CreateDirtyTriggersAsync(
+        string table,
+        string entityType,
+        string newKeyExpression,
+        string oldKeyExpression)
+    {
+        await CreateDirtyTriggerAsync(table, entityType, "insert", newKeyExpression);
+        await CreateDirtyTriggerAsync(table, entityType, "update", newKeyExpression);
+        await CreateDirtyTriggerAsync(table, entityType, "delete", oldKeyExpression);
+    }
+
+    private async Task CreateDirtyTriggerAsync(
+        string table,
+        string entityType,
+        string operation,
+        string keyExpression)
+    {
+        var triggerName = $"TR_CloudDirty_{table}_{operation}";
+        var idExpression = $"'{entityType}:' || ({keyExpression})";
+        var sql =
+            $"""
+             CREATE TRIGGER IF NOT EXISTS "{triggerName}"
+             AFTER {operation.ToUpperInvariant()} ON "{table}"
+             BEGIN
+                 INSERT INTO "CloudDirtyEntities"
+                     ("Id", "EntityType", "EntityKey", "Revision")
+                 VALUES (
+                     {idExpression},
+                     '{entityType}',
+                     ({keyExpression}),
+                     1)
+                 ON CONFLICT("Id") DO UPDATE SET
+                     "EntityType" = excluded."EntityType",
+                     "EntityKey" = excluded."EntityKey",
+                     "Revision" = "CloudDirtyEntities"."Revision" + 1;
+             END
+             """;
+        await Connection.ExecuteAsync(sql);
     }
 
     private async Task MigrateLegacyDataAsync()

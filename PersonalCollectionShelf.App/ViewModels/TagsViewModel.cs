@@ -70,6 +70,8 @@ public partial class TagsViewModel : BaseViewModel
     public string OptionsText => T($"{LocalizationPrefix}.Options");
     public string CategoryFilterLabel => T($"{LocalizationPrefix}.CategoryFilter");
     public string LoadingText => T($"{LocalizationPrefix}.Loading");
+    public bool IsGenreMode => _isGenreMode;
+    public bool IsTagMode => !_isGenreMode;
 
     public string SearchText
     {

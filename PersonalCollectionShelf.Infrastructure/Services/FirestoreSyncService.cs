@@ -12,6 +12,7 @@ public sealed class FirestoreSyncService(
 {
     private const string PullCursorKey = "firestore.pullCursorUtc";
     private const string LastSyncKey = "firestore.lastSyncUtc";
+    private const string DirtyQueueInitializedKey = "firestore.dirtyQueueInitialized";
     private readonly SemaphoreSlim _syncLock = new(1, 1);
 
     public bool IsConfigured => firestoreClient.IsConfigured;
@@ -37,7 +38,12 @@ public sealed class FirestoreSyncService(
         {
             Report(progress, 0, "Sync.Progress.Preparing");
             await database.InitializeAsync(cancellationToken);
-            var failedAssetCount = await assetSyncService.UploadLocalChangesAsync((completed, total) =>
+            var queueMarker = await database.Connection.FindAsync<CloudSyncMetadataRecord>(DirtyQueueInitializedKey);
+            var useDirtyQueue = string.Equals(queueMarker?.Value, "1", StringComparison.Ordinal);
+            var dirtySnapshot = await database.Connection.Table<CloudDirtyEntityRecord>().ToListAsync();
+            var failedAssetCount = await assetSyncService.UploadLocalChangesAsync(
+                useDirtyQueue ? dirtySnapshot : null,
+                (completed, total) =>
             {
                 var percent = total == 0 ? 42 : 3 + (int)Math.Round(completed / (double)total * 39);
                 Report(progress, percent, "Sync.Progress.Assets", completed, total);
@@ -47,11 +53,17 @@ public sealed class FirestoreSyncService(
             var states = (await database.Connection.Table<CloudEntityStateRecord>().ToListAsync())
                 .ToDictionary(state => state.Id, StringComparer.Ordinal);
 
-            var localEntities = await ScanLocalChangesAsync(adapters, states, (completed, total) =>
-            {
-                var percent = total == 0 ? 57 : 42 + (int)Math.Round(completed / (double)total * 15);
-                Report(progress, percent, "Sync.Progress.Scanning", completed, total);
-            }, cancellationToken);
+            var localEntities = useDirtyQueue
+                ? await ScanDirtyLocalChangesAsync(adapters, states, dirtySnapshot, (completed, total) =>
+                {
+                    var percent = total == 0 ? 57 : 42 + (int)Math.Round(completed / (double)total * 15);
+                    Report(progress, percent, "Sync.Progress.Scanning", completed, total);
+                }, cancellationToken)
+                : await ScanLocalChangesAsync(adapters, states, (completed, total) =>
+                {
+                    var percent = total == 0 ? 57 : 42 + (int)Math.Round(completed / (double)total * 15);
+                    Report(progress, percent, "Sync.Progress.Scanning", completed, total);
+                }, cancellationToken);
             var cursorRecord = await database.Connection.FindAsync<CloudSyncMetadataRecord>(PullCursorKey);
             var cursor = TryParseUtc(cursorRecord?.Value);
             Report(progress, 59, "Sync.Progress.Downloading");
@@ -146,6 +158,8 @@ public sealed class FirestoreSyncService(
             }
 
             await SetMetadataAsync(LastSyncKey, DateTime.UtcNow, cancellationToken);
+            await SetMetadataValueAsync(DirtyQueueInitializedKey, "1", cancellationToken);
+            await ClearProcessedDirtyRecordsAsync(dirtySnapshot, cancellationToken);
             Report(progress, 100, failedAssetCount > 0 ? "Sync.Progress.CompleteWithWarnings" : "Sync.Progress.Complete");
             return new SyncResultDto(failedAssetCount);
         }
@@ -213,6 +227,93 @@ public sealed class FirestoreSyncService(
         return entities;
     }
 
+    private async Task<Dictionary<string, LocalCloudEntity>> ScanDirtyLocalChangesAsync(
+        IReadOnlyList<ICloudTableAdapter> adapters,
+        Dictionary<string, CloudEntityStateRecord> states,
+        IReadOnlyList<CloudDirtyEntityRecord> dirtySnapshot,
+        Action<int, int>? progress,
+        CancellationToken cancellationToken)
+    {
+        var keysByType = dirtySnapshot
+            .GroupBy(record => record.EntityType, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(record => record.EntityKey).ToHashSet(StringComparer.Ordinal),
+                StringComparer.Ordinal);
+
+        // A previous interrupted upload may no longer have a dirty marker.
+        // Include every state whose local hash is still not acknowledged.
+        foreach (var pending in states.Values.Where(state => state.CloudHash != state.ContentHash))
+        {
+            if (!keysByType.TryGetValue(pending.EntityType, out var keys))
+            {
+                keys = new HashSet<string>(StringComparer.Ordinal);
+                keysByType[pending.EntityType] = keys;
+            }
+            keys.Add(pending.EntityKey);
+        }
+
+        var activeAdapters = adapters
+            .Where(adapter => keysByType.TryGetValue(adapter.EntityType, out var keys) && keys.Count > 0)
+            .ToList();
+        var entities = new Dictionary<string, LocalCloudEntity>(StringComparer.Ordinal);
+        progress?.Invoke(0, activeAdapters.Count);
+
+        for (var adapterIndex = 0; adapterIndex < activeAdapters.Count; adapterIndex++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var adapter = activeAdapters[adapterIndex];
+            var requestedKeys = keysByType[adapter.EntityType];
+            var current = await adapter.ReadAsync(requestedKeys, cancellationToken);
+            var currentKeys = current.Select(entity => entity.EntityKey).ToHashSet(StringComparer.Ordinal);
+
+            foreach (var entity in current)
+            {
+                var stateId = CloudKey.CreateStateId(entity.EntityType, entity.EntityKey);
+                entities[stateId] = entity;
+                if (!states.TryGetValue(stateId, out var state))
+                {
+                    state = new CloudEntityStateRecord
+                    {
+                        Id = stateId,
+                        EntityType = entity.EntityType,
+                        EntityKey = entity.EntityKey,
+                        ContentHash = entity.ContentHash,
+                        ChangedAtUtc = entity.EntityUpdatedAtUtc,
+                        IsDeleted = entity.IsDeleted
+                    };
+                    await database.Connection.InsertAsync(state);
+                    states[stateId] = state;
+                    continue;
+                }
+
+                if (state.ContentHash == entity.ContentHash && state.IsDeleted == entity.IsDeleted)
+                {
+                    continue;
+                }
+
+                state.ContentHash = entity.ContentHash;
+                state.ChangedAtUtc = DateTime.UtcNow;
+                state.IsDeleted = entity.IsDeleted;
+                await database.Connection.UpdateAsync(state);
+            }
+
+            foreach (var missingKey in requestedKeys.Where(key => !currentKeys.Contains(key)))
+            {
+                var stateId = CloudKey.CreateStateId(adapter.EntityType, missingKey);
+                if (!states.TryGetValue(stateId, out var state) || state.IsDeleted) continue;
+                state.IsDeleted = true;
+                state.ContentHash = CloudKey.Hash($"deleted:{state.Id}:{DateTime.UtcNow:O}");
+                state.ChangedAtUtc = DateTime.UtcNow;
+                await database.Connection.UpdateAsync(state);
+            }
+
+            progress?.Invoke(adapterIndex + 1, activeAdapters.Count);
+        }
+
+        return entities;
+    }
+
     private async Task SetMetadataAsync(string key, DateTime value, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -221,6 +322,33 @@ public sealed class FirestoreSyncService(
             Key = key,
             Value = value.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture)
         });
+    }
+
+    private async Task SetMetadataValueAsync(
+        string key,
+        string value,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await database.Connection.InsertOrReplaceAsync(new CloudSyncMetadataRecord
+        {
+            Key = key,
+            Value = value
+        });
+    }
+
+    private async Task ClearProcessedDirtyRecordsAsync(
+        IReadOnlyList<CloudDirtyEntityRecord> snapshot,
+        CancellationToken cancellationToken)
+    {
+        foreach (var record in snapshot)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await database.Connection.ExecuteAsync(
+                "DELETE FROM CloudDirtyEntities WHERE Id = ? AND Revision = ?",
+                record.Id,
+                record.Revision);
+        }
     }
 
     private static DateTime? TryParseUtc(string? value) =>

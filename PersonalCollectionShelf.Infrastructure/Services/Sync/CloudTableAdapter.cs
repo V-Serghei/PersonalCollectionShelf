@@ -1,6 +1,8 @@
 using System.Text.Json;
+using System.Reflection;
 using PersonalCollectionShelf.Infrastructure.Persistence;
 using PersonalCollectionShelf.Infrastructure.Services.Firebase;
+using SQLite;
 
 namespace PersonalCollectionShelf.Infrastructure.Services.Sync;
 
@@ -16,6 +18,8 @@ internal sealed class CloudTableAdapter<T> : ICloudTableAdapter where T : class,
     private readonly Func<T, bool> _isDeleted;
     private readonly Action<T> _sanitizeForCloud;
     private readonly Action<T, T?> _prepareForLocal;
+    private readonly string _keySql;
+    private readonly string _tableName;
 
     public CloudTableAdapter(
         LocalDatabaseService database,
@@ -25,7 +29,8 @@ internal sealed class CloudTableAdapter<T> : ICloudTableAdapter where T : class,
         Func<T, DateTime>? updatedAt = null,
         Func<T, bool>? isDeleted = null,
         Action<T>? sanitizeForCloud = null,
-        Action<T, T?>? prepareForLocal = null)
+        Action<T, T?>? prepareForLocal = null,
+        string keySql = "\"Id\"")
     {
         _database = database;
         EntityType = entityType;
@@ -35,6 +40,8 @@ internal sealed class CloudTableAdapter<T> : ICloudTableAdapter where T : class,
         _isDeleted = isDeleted ?? (_ => false);
         _sanitizeForCloud = sanitizeForCloud ?? (_ => { });
         _prepareForLocal = prepareForLocal ?? NormalizeUserId;
+        _keySql = keySql;
+        _tableName = typeof(T).GetCustomAttribute<TableAttribute>()?.Name ?? typeof(T).Name;
     }
 
     public string EntityType { get; }
@@ -43,8 +50,32 @@ internal sealed class CloudTableAdapter<T> : ICloudTableAdapter where T : class,
     {
         cancellationToken.ThrowIfCancellationRequested();
         var rows = await _database.Connection.Table<T>().ToListAsync();
-        var result = new List<LocalCloudEntity>();
+        return ToCloudEntities(rows, cancellationToken);
+    }
 
+    public async Task<IReadOnlyList<LocalCloudEntity>> ReadAsync(
+        IReadOnlyCollection<string> entityKeys,
+        CancellationToken cancellationToken)
+    {
+        if (entityKeys.Count == 0) return [];
+
+        var rows = new List<T>(entityKeys.Count);
+        foreach (var chunk in entityKeys.Distinct(StringComparer.Ordinal).Chunk(200))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var placeholders = string.Join(",", chunk.Select(_ => "?"));
+            var sql = $"SELECT * FROM \"{_tableName}\" WHERE CAST({_keySql} AS TEXT) IN ({placeholders})";
+            rows.AddRange(await _database.Connection.QueryAsync<T>(sql, chunk.Cast<object>().ToArray()));
+        }
+
+        return ToCloudEntities(rows, cancellationToken);
+    }
+
+    private IReadOnlyList<LocalCloudEntity> ToCloudEntities(
+        IEnumerable<T> rows,
+        CancellationToken cancellationToken)
+    {
+        var result = new List<LocalCloudEntity>();
         foreach (var row in rows.Where(_include))
         {
             cancellationToken.ThrowIfCancellationRequested();

@@ -306,41 +306,81 @@ public sealed class OnlineMediaMetadataService(HttpClient httpClient, MediaMetad
 
     private static IReadOnlyList<MetadataPerson> ReadPeople(JsonElement root)
     {
-        if (!root.TryGetProperty("credits", out var credits))
-        {
-            return [];
-        }
-
         var people = new List<MetadataPerson>();
-        foreach (var member in credits.GetProperty("crew").EnumerateArray())
+
+        // TMDB models a TV show's creators separately from its crew. Most
+        // series therefore have no useful "Director" row in /tv/{id}/credits,
+        // even though created_by is populated. The application currently
+        // presents the primary creative credit for screen productions as
+        // "Director", so include these people in that slot.
+        if (root.TryGetProperty("created_by", out var creators) &&
+            creators.ValueKind == JsonValueKind.Array)
         {
-            var role = ReadString(member, "job") switch
+            foreach (var creator in creators.EnumerateArray())
             {
-                "Director" => ContributionRole.Director,
-                "Screenplay" or "Writer" => ContributionRole.Screenwriter,
-                "Producer" or "Executive Producer" => ContributionRole.Producer,
-                "Director of Photography" => ContributionRole.Cinematographer,
-                "Original Music Composer" => ContributionRole.Composer,
-                "Casting" => ContributionRole.CastingDirector,
-                "Production Design" => ContributionRole.ProductionDesigner,
-                _ => (ContributionRole?)null
-            };
-            var name = ReadString(member, "name");
-            if (role.HasValue && !string.IsNullOrWhiteSpace(name) &&
-                !people.Any(value => value.Role == role && string.Equals(value.Name, name, StringComparison.OrdinalIgnoreCase)))
-            {
-                people.Add(new MetadataPerson(name, role.Value));
+                AddPerson(people, ReadString(creator, "name"), ContributionRole.Director);
             }
         }
 
-        people.AddRange(credits.GetProperty("cast").EnumerateArray()
-            .Take(12)
-            .Select(value => new MetadataPerson(
-                ReadString(value, "name") ?? string.Empty,
-                ContributionRole.Actor,
-                ReadString(value, "character")))
-            .Where(value => value.Name.Length > 0));
+        if (!root.TryGetProperty("credits", out var credits))
+        {
+            return people;
+        }
+
+        if (credits.TryGetProperty("crew", out var crew) && crew.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var member in crew.EnumerateArray())
+            {
+                var role = ReadString(member, "job") switch
+                {
+                    "Director" => ContributionRole.Director,
+                    "Screenplay" or "Writer" => ContributionRole.Screenwriter,
+                    "Producer" or "Executive Producer" => ContributionRole.Producer,
+                    "Director of Photography" => ContributionRole.Cinematographer,
+                    "Original Music Composer" => ContributionRole.Composer,
+                    "Casting" => ContributionRole.CastingDirector,
+                    "Production Design" => ContributionRole.ProductionDesigner,
+                    _ => (ContributionRole?)null
+                };
+                if (role.HasValue)
+                {
+                    AddPerson(people, ReadString(member, "name"), role.Value);
+                }
+            }
+        }
+
+        if (credits.TryGetProperty("cast", out var cast) && cast.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var member in cast.EnumerateArray().Take(12))
+            {
+                var name = ReadString(member, "name");
+                if (string.IsNullOrWhiteSpace(name) ||
+                    people.Any(value => value.Role == ContributionRole.Actor &&
+                                        string.Equals(value.Name, name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                people.Add(new MetadataPerson(name, ContributionRole.Actor, ReadString(member, "character")));
+            }
+        }
+
         return people;
+    }
+
+    private static void AddPerson(
+        ICollection<MetadataPerson> people,
+        string? name,
+        ContributionRole role)
+    {
+        if (string.IsNullOrWhiteSpace(name) ||
+            people.Any(value => value.Role == role &&
+                                string.Equals(value.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        people.Add(new MetadataPerson(name.Trim(), role));
     }
 
     private static IReadOnlyList<string> ReadNames(JsonElement root, string property) =>

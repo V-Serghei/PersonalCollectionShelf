@@ -14,14 +14,28 @@ public sealed class CloudImageCompressor(LocalDatabaseService database)
         Path.GetDirectoryName(database.DatabasePath) ?? AppContext.BaseDirectory,
         "compressed-image-cache");
 
+    public async Task<string?> TryGetCachedObjectNameAsync(
+        string path,
+        CancellationToken cancellationToken)
+    {
+        var (imageCachePath, metadataCachePath) = GetCachePaths(path);
+        if (!File.Exists(imageCachePath) || !File.Exists(metadataCachePath)) return null;
+        try
+        {
+            var metadata = JsonSerializer.Deserialize<CompressionCacheMetadata>(
+                await File.ReadAllTextAsync(metadataCachePath, cancellationToken));
+            return metadata is null ? null : $"{metadata.SourceHash}.webp";
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
     public async Task<CompressedCloudImage> CompressAsync(string path, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(_cacheDirectory);
-        var sourceInfo = new FileInfo(path);
-        var fingerprint = $"{Path.GetFullPath(path)}|{sourceInfo.Length}|{sourceInfo.LastWriteTimeUtc.Ticks}";
-        var cacheKey = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fingerprint))).ToLowerInvariant();
-        var imageCachePath = Path.Combine(_cacheDirectory, cacheKey + ".webp");
-        var metadataCachePath = Path.Combine(_cacheDirectory, cacheKey + ".json");
+        var (imageCachePath, metadataCachePath) = GetCachePaths(path);
         if (File.Exists(imageCachePath) && File.Exists(metadataCachePath))
         {
             try
@@ -66,6 +80,16 @@ public sealed class CloudImageCompressor(LocalDatabaseService database)
             JsonSerializer.Serialize(new CompressionCacheMetadata(sourceHash, cloudHash)),
             cancellationToken);
         return new CompressedCloudImage(sourceHash, cloudHash, bytes);
+    }
+
+    private (string ImagePath, string MetadataPath) GetCachePaths(string path)
+    {
+        var sourceInfo = new FileInfo(path);
+        var fingerprint = $"{Path.GetFullPath(path)}|{sourceInfo.Length}|{sourceInfo.LastWriteTimeUtc.Ticks}";
+        var cacheKey = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fingerprint))).ToLowerInvariant();
+        return (
+            Path.Combine(_cacheDirectory, cacheKey + ".webp"),
+            Path.Combine(_cacheDirectory, cacheKey + ".json"));
     }
 
     private sealed record CompressionCacheMetadata(string SourceHash, string CloudHash);

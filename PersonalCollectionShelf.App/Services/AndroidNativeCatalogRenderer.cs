@@ -83,6 +83,20 @@ internal static class AndroidNativeCatalogRenderer
         return binding;
     }
 
+    public static NativeCatalogBinding<TagMediaItemViewModel>? AttachTagItems(
+        CollectionView collectionView,
+        IList<TagMediaItemViewModel> items,
+        Action<TagMediaItemViewModel> open)
+    {
+        if (collectionView.Handler?.PlatformView is not RecyclerView recyclerView) return null;
+        Prepare(collectionView, recyclerView, grid: false, span: 1);
+        var adapter = new TagMediaAdapter(recyclerView, open);
+        var binding = new NativeCatalogBinding<TagMediaItemViewModel>(recyclerView, adapter);
+        binding.Update(items);
+        recyclerView.SetAdapter(adapter);
+        return binding;
+    }
+
     private static void Prepare(CollectionView collectionView, RecyclerView recyclerView, bool grid, int span)
     {
         // Disconnect MAUI's templated adapter; otherwise it can replace the
@@ -235,6 +249,17 @@ internal static class AndroidNativeCatalogRenderer
 
         public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position) =>
             ((CollectionDetailHolder)holder).Bind(ItemAt(position));
+    }
+
+    private sealed class TagMediaAdapter(
+        RecyclerView recyclerView,
+        Action<TagMediaItemViewModel> open) : NativeAdapter<TagMediaItemViewModel>(recyclerView)
+    {
+        public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType) =>
+            new TagMediaHolder(parent, open);
+
+        public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position) =>
+            ((TagMediaHolder)holder).Bind(ItemAt(position));
     }
 
     private sealed class MediaHolder : RecyclerView.ViewHolder
@@ -595,6 +620,95 @@ internal static class AndroidNativeCatalogRenderer
             textArea.AddView(metadata);
             textArea.AddView(status);
             root.AddView(textArea);
+            return root;
+        }
+    }
+
+    private sealed class TagMediaHolder : RecyclerView.ViewHolder
+    {
+        private readonly Action<TagMediaItemViewModel> _open;
+        private readonly ImageView _image;
+        private readonly TextView _placeholder;
+        private readonly TextView _title;
+        private readonly TextView _metadata;
+        private readonly TextView _status;
+        private readonly TextView _trailing;
+        private TagMediaItemViewModel? _item;
+        private string _imageKey = string.Empty;
+
+        public TagMediaHolder(ViewGroup parent, Action<TagMediaItemViewModel> open)
+            : base(CreateRoot(parent, out var image, out var placeholder, out var title, out var metadata, out var status, out var trailing))
+        {
+            _open = open;
+            _image = image;
+            _placeholder = placeholder;
+            _title = title;
+            _metadata = metadata;
+            _status = status;
+            _trailing = trailing;
+            ItemView.Click += (_, _) => { if (_item is not null) _open(_item); };
+        }
+
+        public void Bind(TagMediaItemViewModel item)
+        {
+            _item = item;
+            _title.Text = item.Title;
+            _metadata.Text = string.IsNullOrWhiteSpace(item.CategoryLine)
+                ? item.MediaTypeLabel
+                : $"{item.MediaTypeLabel}  ·  {item.CategoryLine}";
+            _status.Text = item.StatusLabel;
+            _trailing.Text = item.HasRating
+                ? $"★ {item.RatingText}"
+                : item.ReleaseYearText;
+            BindImage(_image, _placeholder, item.CoverUrl, item.Initial, key => _imageKey = key, () => _imageKey);
+        }
+
+        private static AView CreateRoot(
+            ViewGroup parent,
+            out ImageView image,
+            out TextView placeholder,
+            out TextView title,
+            out TextView metadata,
+            out TextView status,
+            out TextView trailing)
+        {
+            var context = parent.Context!;
+            var root = new LinearLayout(context) { Orientation = Orientation.Horizontal, Clickable = true };
+            root.SetPadding(Dp(context, 9), Dp(context, 8), Dp(context, 9), Dp(context, 8));
+            root.Background = Rounded(context, ResourceColor("CardBackground", AColor.Rgb(31, 27, 42)), ResourceColor("Border", AColor.Rgb(65, 58, 79)), 11);
+            var rootParams = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            rootParams.SetMargins(Dp(context, 3), Dp(context, 3), Dp(context, 3), Dp(context, 7));
+            root.LayoutParameters = rootParams;
+
+            var cover = new FrameLayout(context)
+            {
+                LayoutParameters = new LinearLayout.LayoutParams(Dp(context, 56), Dp(context, 80)),
+                Background = Rounded(context, ResourceColor("Muted", AColor.Rgb(42, 37, 53)), AColor.Transparent, 7),
+                ClipToOutline = true
+            };
+            image = new ImageView(context);
+            image.SetScaleType(ImageView.ScaleType.CenterCrop);
+            cover.AddView(image, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            placeholder = Text(context, 20, true, ResourceColor("MutedForeground", AColor.LightGray), 1);
+            placeholder.Gravity = GravityFlags.Center;
+            cover.AddView(placeholder, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent));
+            root.AddView(cover);
+
+            var textArea = new LinearLayout(context) { Orientation = Orientation.Vertical };
+            textArea.SetPadding(Dp(context, 11), Dp(context, 3), Dp(context, 8), 0);
+            textArea.LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MatchParent, 1);
+            title = Text(context, 15, true, ResourceColor("Foreground", AColor.White), 2);
+            metadata = Text(context, 11, false, ResourceColor("MutedForeground", AColor.LightGray), 1);
+            status = Text(context, 10, true, ResourceColor("Primary", AColor.Rgb(151, 121, 242)), 1);
+            textArea.AddView(title);
+            textArea.AddView(metadata);
+            textArea.AddView(status);
+            root.AddView(textArea);
+
+            trailing = Text(context, 11, true, AColor.Rgb(245, 190, 80), 1);
+            trailing.Gravity = GravityFlags.CenterVertical | GravityFlags.End;
+            trailing.SetMinWidth(Dp(context, 45));
+            root.AddView(trailing, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.MatchParent));
             return root;
         }
     }

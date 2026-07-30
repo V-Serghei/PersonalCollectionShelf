@@ -20,6 +20,7 @@ public sealed class CloudAssetSyncService(
         "cloud-cache");
 
     public async Task<int> UploadLocalChangesAsync(
+        IReadOnlyCollection<CloudDirtyEntityRecord>? dirtyChanges,
         Action<int, int>? progress = null,
         CancellationToken cancellationToken = default)
     {
@@ -43,6 +44,20 @@ public sealed class CloudAssetSyncService(
         }
 
         var candidates = await GetLocalCandidatesAsync(cancellationToken);
+        if (dirtyChanges is not null)
+        {
+            var dirtyKeys = dirtyChanges
+                .GroupBy(change => change.EntityType, StringComparer.Ordinal)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(change => change.EntityKey).ToHashSet(StringComparer.Ordinal),
+                    StringComparer.Ordinal);
+            candidates = candidates
+                .Where(candidate =>
+                    dirtyKeys.TryGetValue(ToDirtyEntityType(candidate.OwnerType), out var keys) &&
+                    keys.Contains(candidate.OwnerId))
+                .ToList();
+        }
         var states = new ConcurrentDictionary<string, CloudAssetStateRecord>(
             (await database.Connection.Table<CloudAssetStateRecord>().ToListAsync())
                 .ToDictionary(state => state.Id, StringComparer.Ordinal),
@@ -89,6 +104,7 @@ public sealed class CloudAssetSyncService(
                 catch (Exception exception)
                 {
                     Interlocked.Increment(ref failed);
+                    await MarkCandidateDirtyAsync(candidate);
                     System.Diagnostics.Debug.WriteLine($"Cloud asset '{candidate.Id}' could not be compressed: {exception}");
                     return;
                 }
@@ -106,7 +122,11 @@ public sealed class CloudAssetSyncService(
                 // Once Drive or Firestore becomes unavailable, do not repeat a
                 // multi-second retry sequence for every remaining image. The
                 // data tables will still synchronize and assets retry next time.
-                if (Volatile.Read(ref stopCloudRequests) != 0) return;
+                if (Volatile.Read(ref stopCloudRequests) != 0)
+                {
+                    await MarkCandidateDirtyAsync(candidate);
+                    return;
+                }
 
                 var objectName = $"{compressed.SourceHash}.webp";
                 try
@@ -153,6 +173,7 @@ public sealed class CloudAssetSyncService(
                 {
                     Interlocked.Increment(ref failed);
                     Interlocked.Exchange(ref stopCloudRequests, 1);
+                    await MarkCandidateDirtyAsync(candidate);
                     System.Diagnostics.Debug.WriteLine($"Cloud asset transfer stopped after '{candidate.Id}': {exception}");
                 }
                 }
@@ -165,6 +186,32 @@ public sealed class CloudAssetSyncService(
 
         return failed;
     }
+
+    private async Task MarkCandidateDirtyAsync(LocalAssetCandidate candidate)
+    {
+        var entityType = ToDirtyEntityType(candidate.OwnerType);
+        var id = $"{entityType}:{candidate.OwnerId}";
+        await database.Connection.ExecuteAsync(
+            """
+            INSERT INTO CloudDirtyEntities (Id, EntityType, EntityKey, Revision)
+            VALUES (?, ?, ?, 1)
+            ON CONFLICT(Id) DO UPDATE SET
+                EntityType = excluded.EntityType,
+                EntityKey = excluded.EntityKey,
+                Revision = CloudDirtyEntities.Revision + 1
+            """,
+            id,
+            entityType,
+            candidate.OwnerId);
+    }
+
+    private static string ToDirtyEntityType(string ownerType) => ownerType switch
+    {
+        "media" => "mediaItem",
+        "person" => "person",
+        "personPhoto" => "personPhoto",
+        _ => ownerType
+    };
 
     public async Task ApplyRemoteAsync(CloudDocument document, CancellationToken cancellationToken = default)
     {

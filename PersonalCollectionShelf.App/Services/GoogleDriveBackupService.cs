@@ -155,12 +155,19 @@ public sealed class GoogleDriveBackupService(
             keep.Add(file.Id);
         }
 
-        foreach (var file in files.Where(file => !keep.Contains(file.Id)))
-        {
-            using var request = CreateRequest(HttpMethod.Delete, $"{DriveApi}/files/{Uri.EscapeDataString(file.Id)}", token);
-            using var response = await httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
-        }
+        await Parallel.ForEachAsync(
+            files.Where(file => !keep.Contains(file.Id)),
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = 3,
+                CancellationToken = cancellationToken
+            },
+            async (file, ct) =>
+            {
+                using var request = CreateRequest(HttpMethod.Delete, $"{DriveApi}/files/{Uri.EscapeDataString(file.Id)}", token);
+                using var response = await httpClient.SendAsync(request, ct);
+                response.EnsureSuccessStatusCode();
+            });
     }
 
     private async Task<string> RequireTokenAsync(CancellationToken cancellationToken) =>

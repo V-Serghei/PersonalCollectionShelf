@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Diagnostics;
 using System.Net;
@@ -30,6 +31,7 @@ public partial class SettingsViewModel : BaseViewModel
     private readonly IGoogleDriveBackupService _driveBackupService;
     private readonly CloudImageCompressor _cloudImageCompressor;
     private readonly ICloudAssetStore _cloudAssetStore;
+    private readonly IBackgroundOperationNotifier _backgroundOperationNotifier;
     private bool _suppressLanguageChange;
     private bool _isDarkTheme;
     private double _backgroundBlur;
@@ -56,6 +58,7 @@ public partial class SettingsViewModel : BaseViewModel
         IGoogleDriveBackupService driveBackupService,
         CloudImageCompressor cloudImageCompressor,
         ICloudAssetStore cloudAssetStore,
+        IBackgroundOperationNotifier backgroundOperationNotifier,
         ILocalizationService localizationService,
         IAppearanceService appearanceService)
         : base(localizationService)
@@ -68,6 +71,7 @@ public partial class SettingsViewModel : BaseViewModel
         _driveBackupService = driveBackupService;
         _cloudImageCompressor = cloudImageCompressor;
         _cloudAssetStore = cloudAssetStore;
+        _backgroundOperationNotifier = backgroundOperationNotifier;
         _appearanceService = appearanceService;
         _isDarkTheme = _appearanceService.IsDarkTheme;
         _backgroundBlur = _appearanceService.BackgroundBlur;
@@ -105,6 +109,10 @@ public partial class SettingsViewModel : BaseViewModel
     private CancellationTokenSource? _driveEtaTicker;
     private int _syncProgressCompleted;
     private int _syncProgressTotal;
+    private CancellationTokenSource? _activeCloudOperationCts;
+    private bool _hasActiveCloudOperation;
+    private bool _isCancellingCloudOperation;
+    private bool _notificationFinalized;
 
     public LocalizedOption<string>? SelectedLanguageOption
     {
@@ -138,6 +146,20 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     public bool IsNotSyncing => !IsSyncing;
+
+    public bool HasActiveCloudOperation
+    {
+        get => _hasActiveCloudOperation;
+        private set
+        {
+            if (!SetProperty(ref _hasActiveCloudOperation, value)) return;
+            OnPropertyChanged(nameof(CanCancelCloudOperation));
+        }
+    }
+
+    public bool CanCancelCloudOperation => HasActiveCloudOperation && !_isCancellingCloudOperation;
+
+    public string CancelCloudOperationText => T("Common.Cancel");
 
     public double SyncProgress
     {
@@ -456,6 +478,7 @@ public partial class SettingsViewModel : BaseViewModel
     protected override void RefreshLocalizedProperties()
     {
         base.RefreshLocalizedProperties();
+        OnPropertyChanged(nameof(CancelCloudOperationText));
         StatusMessage = T(_statusMessageKey);
 
         if (_accountStatusKey is not null)
@@ -490,9 +513,48 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private void CancelCloudOperation()
+    {
+        if (!CanCancelCloudOperation) return;
+        _isCancellingCloudOperation = true;
+        OnPropertyChanged(nameof(CanCancelCloudOperation));
+        SetSyncStatus("CloudOperation.Cancelling");
+        _backgroundOperationNotifier.Report(
+            (int)Math.Round(Math.Max(SyncProgress, DriveProgress) * 100),
+            StatusMessage);
+        _activeCloudOperationCts?.Cancel();
+    }
+
+    private CancellationToken BeginCloudOperation(string initialMessageKey)
+    {
+        _activeCloudOperationCts?.Dispose();
+        _activeCloudOperationCts = new CancellationTokenSource();
+        _isCancellingCloudOperation = false;
+        _notificationFinalized = false;
+        HasActiveCloudOperation = true;
+        OnPropertyChanged(nameof(CanCancelCloudOperation));
+        _backgroundOperationNotifier.Start(T("App.Name"), T(initialMessageKey));
+        return _activeCloudOperationCts.Token;
+    }
+
+    private void EndCloudOperation()
+    {
+        if (!_notificationFinalized)
+        {
+            _backgroundOperationNotifier.Stop();
+        }
+        _activeCloudOperationCts?.Dispose();
+        _activeCloudOperationCts = null;
+        _isCancellingCloudOperation = false;
+        HasActiveCloudOperation = false;
+        OnPropertyChanged(nameof(CanCancelCloudOperation));
+    }
+
+    [RelayCommand]
     private async Task SyncNowAsync()
     {
         if (IsBusy) return;
+        var cancellationToken = BeginCloudOperation("Sync.Progress.Preparing");
         IsBusy = true;
         IsSyncing = true;
         HasSyncProgress = true;
@@ -508,16 +570,26 @@ public partial class SettingsViewModel : BaseViewModel
         {
             await Task.Yield();
             var progress = new Progress<SyncProgressDto>(UpdateSyncProgress);
-            var result = await _syncService.RequestSyncAsync(progress);
+            var result = await _syncService.RequestSyncAsync(progress, cancellationToken);
             UpdateSyncProgress(new SyncProgressDto(100, result.HasWarnings ? "Sync.Progress.CompleteWithWarnings" : "Sync.Progress.Complete"));
             SetSyncStatus(result.HasWarnings ? "Sync.Status.CompletedWithWarnings" : "Sync.Status.Completed");
+            _backgroundOperationNotifier.Complete(StatusMessage);
+            _notificationFinalized = true;
             UserNotification.Show(StatusMessage);
             CrashReporter.LogMessage("SettingsViewModel.SyncNowAsync", "Synchronization completed.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            SetSyncStatus("CloudOperation.Cancelled");
+            SyncProgressEtaText = T("Progress.Stopped");
+            UserNotification.Show(StatusMessage);
         }
         catch (Exception exception)
         {
             SetSyncStatus(IsNetworkFailure(exception) ? "Sync.Status.NetworkFailed" : "Sync.Status.Failed");
             SyncProgressEtaText = T("Progress.Stopped");
+            _backgroundOperationNotifier.Fail(StatusMessage);
+            _notificationFinalized = true;
             UserNotification.Show(StatusMessage);
             CrashReporter.Log(exception, "SettingsViewModel.SyncNowAsync");
         }
@@ -526,6 +598,7 @@ public partial class SettingsViewModel : BaseViewModel
             _syncEtaTicker?.Cancel();
             IsSyncing = false;
             IsBusy = false;
+            EndCloudOperation();
         }
     }
 
@@ -545,7 +618,8 @@ public partial class SettingsViewModel : BaseViewModel
             _syncEtaEstimator.Update(progress.Percent),
             _syncProgressCompleted,
             _syncProgressTotal);
-        SetSyncStatus(progress.MessageKey);
+        SetSyncStatus(_isCancellingCloudOperation ? "CloudOperation.Cancelling" : progress.MessageKey);
+        _backgroundOperationNotifier.Report(progress.Percent, StatusMessage);
     }
 
     private static bool IsNetworkFailure(Exception exception) =>
@@ -556,6 +630,7 @@ public partial class SettingsViewModel : BaseViewModel
     private async Task BackupToDriveAsync()
     {
         if (IsBusy) return;
+        var cancellationToken = BeginCloudOperation("Settings.DriveBackup.Preparing");
         IsBusy = true;
         IsDriveBackupRunning = true;
         HasDriveProgress = true;
@@ -571,7 +646,9 @@ public partial class SettingsViewModel : BaseViewModel
             await Task.Yield();
             var document = await BuildExportDocumentAsync(
                 compressImages: true,
-                (percent, key) => UpdateDriveProgress(percent, key));
+                (percent, key) => UpdateDriveProgress(percent, key),
+                cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             var archive = CreateBackupArchive(document);
             var name = $"personal-collection-shelf-{DateTime.UtcNow:yyyyMMdd-HHmmss}.zip";
             UpdateDriveProgress(74, "Settings.DriveBackup.Uploading");
@@ -580,15 +657,25 @@ public partial class SettingsViewModel : BaseViewModel
                 var fraction = value.TotalBytes is > 0 ? value.TransferredBytes / (double)value.TotalBytes.Value : 0;
                 UpdateDriveProgress(74 + (int)Math.Round(fraction * 24), "Settings.DriveBackup.Uploading");
             });
-            await _driveBackupService.UploadBackupAsync(name, archive, transferProgress);
+            await _driveBackupService.UploadBackupAsync(name, archive, transferProgress, cancellationToken);
             UpdateDriveProgress(100, "Settings.DriveBackup.Completed");
+            _backgroundOperationNotifier.Complete(StatusMessage);
+            _notificationFinalized = true;
             UserNotification.Show(StatusMessage);
             CrashReporter.LogMessage("SettingsViewModel.BackupToDriveAsync", "Google Drive backup completed.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            SetSyncStatus("CloudOperation.Cancelled");
+            DriveProgressEtaText = T("Progress.Stopped");
+            UserNotification.Show(StatusMessage);
         }
         catch (Exception exception)
         {
             SetSyncStatus("Settings.DriveBackup.Failed");
             DriveProgressEtaText = T("Progress.Stopped");
+            _backgroundOperationNotifier.Fail(StatusMessage);
+            _notificationFinalized = true;
             UserNotification.Show(StatusMessage);
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.BackupToDriveAsync");
         }
@@ -597,6 +684,7 @@ public partial class SettingsViewModel : BaseViewModel
             _driveEtaTicker?.Cancel();
             IsDriveBackupRunning = false;
             IsBusy = false;
+            EndCloudOperation();
         }
     }
 
@@ -624,9 +712,11 @@ public partial class SettingsViewModel : BaseViewModel
 
     private async Task<LibraryExportDocument> BuildExportDocumentAsync(
         bool compressImages = false,
-        Action<int, string>? progress = null)
+        Action<int, string>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         progress?.Invoke(2, "Settings.DriveBackup.Preparing");
+        cancellationToken.ThrowIfCancellationRequested();
         var userId = await GetCurrentUserIdAsync();
         var items = await _mediaItemService.GetLibraryAsync(userId);
         progress?.Invoke(6, "Settings.DriveBackup.Preparing");
@@ -634,12 +724,12 @@ public partial class SettingsViewModel : BaseViewModel
         {
             var fraction = total == 0 ? 1 : completed / (double)total;
             progress?.Invoke(6 + (int)Math.Round(fraction * 34), "Settings.DriveBackup.Preparing");
-        });
+        }, cancellationToken);
         var covers = await BuildCoverExportsAsync(items, compressImages, (completed, total) =>
         {
             var fraction = total == 0 ? 1 : completed / (double)total;
             progress?.Invoke(40 + (int)Math.Round(fraction * 32), "Settings.DriveBackup.Preparing");
-        });
+        }, cancellationToken);
         return new LibraryExportDocument
         {
             Items = items,
@@ -672,28 +762,37 @@ public partial class SettingsViewModel : BaseViewModel
     private async Task<IReadOnlyList<PortableMediaCover>> BuildCoverExportsAsync(
         IReadOnlyList<MediaItemDto> items,
         bool compressImages,
-        Action<int, int>? progress = null)
+        Action<int, int>? progress = null,
+        CancellationToken cancellationToken = default)
     {
-        var covers = new List<PortableMediaCover>();
-        for (var index = 0; index < items.Count; index++)
-        {
-            var item = items[index];
-            var path = ResolveFilePath(item.CoverUrl);
-            if (path is not null)
+        var covers = new ConcurrentBag<PortableMediaCover>();
+        var completed = 0;
+        await Parallel.ForEachAsync(
+            items,
+            new ParallelOptions
             {
-                var image = await ReadPortableImageAsync(path, compressImages);
-                covers.Add(new PortableMediaCover
+                MaxDegreeOfParallelism = 3,
+                CancellationToken = cancellationToken
+            },
+            async (item, token) =>
+            {
+                var path = ResolveFilePath(item.CoverUrl);
+                if (path is not null)
                 {
-                    MediaItemId = item.Id,
-                    Extension = image.Extension,
-                    DataBase64 = image.DataBase64,
-                    CloudObjectName = image.CloudObjectName
-                });
-            }
-            progress?.Invoke(index + 1, items.Count);
-        }
+                    var image = await ReadPortableImageAsync(path, compressImages, token);
+                    covers.Add(new PortableMediaCover
+                    {
+                        MediaItemId = item.Id,
+                        Extension = image.Extension,
+                        DataBase64 = image.DataBase64,
+                        CloudObjectName = image.CloudObjectName
+                    });
+                }
+                var current = Interlocked.Increment(ref completed);
+                await MainThread.InvokeOnMainThreadAsync(() => progress?.Invoke(current, items.Count));
+            });
 
-        return covers;
+        return covers.OrderBy(cover => cover.MediaItemId).ToList();
     }
 
     private static string? ResolveFilePath(string? value)
@@ -748,6 +847,7 @@ public partial class SettingsViewModel : BaseViewModel
             T("Settings.DriveRestore.Confirm"),
             T("Common.Cancel"));
         if (!confirmed) return;
+        var cancellationToken = BeginCloudOperation("Settings.DriveRestore.Downloading");
         IsBusy = true;
         IsDriveRestoreRunning = true;
         HasDriveProgress = true;
@@ -766,7 +866,7 @@ public partial class SettingsViewModel : BaseViewModel
                 var fraction = value.TotalBytes is > 0 ? value.TransferredBytes / (double)value.TotalBytes.Value : 0;
                 UpdateDriveProgress(3 + (int)Math.Round(fraction * 52), "Settings.DriveRestore.Downloading");
             });
-            var backup = await _driveBackupService.DownloadLatestBackupAsync(transferProgress);
+            var backup = await _driveBackupService.DownloadLatestBackupAsync(transferProgress, cancellationToken);
             if (backup is null)
             {
                 SetSyncStatus("Settings.DriveRestore.NotFound");
@@ -781,7 +881,7 @@ public partial class SettingsViewModel : BaseViewModel
                 ?? throw new InvalidDataException("Backup does not contain library.json.");
             await using var dataStream = dataEntry.Open();
             using var buffer = new MemoryStream();
-            await dataStream.CopyToAsync(buffer);
+            await dataStream.CopyToAsync(buffer, cancellationToken);
             var json = buffer.ToArray();
 
             var checksumEntry = archive.GetEntry("sha256.txt");
@@ -803,15 +903,25 @@ public partial class SettingsViewModel : BaseViewModel
             {
                 var fraction = total == 0 ? 1 : completed / (double)total;
                 UpdateDriveProgress(60 + (int)Math.Round(fraction * 39), "Settings.DriveRestore.Importing");
-            });
+            }, cancellationToken);
             UpdateDriveProgress(100, "Settings.DriveRestore.Completed");
+            _backgroundOperationNotifier.Complete(StatusMessage);
+            _notificationFinalized = true;
             UserNotification.Show(StatusMessage);
             CrashReporter.LogMessage("SettingsViewModel.RestoreFromDriveAsync", "Google Drive restore completed.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            SetSyncStatus("CloudOperation.Cancelled");
+            DriveProgressEtaText = T("Progress.Stopped");
+            UserNotification.Show(StatusMessage);
         }
         catch (Exception exception)
         {
             SetSyncStatus("Settings.DriveRestore.Failed");
             DriveProgressEtaText = T("Progress.Stopped");
+            _backgroundOperationNotifier.Fail(StatusMessage);
+            _notificationFinalized = true;
             UserNotification.Show(StatusMessage);
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.RestoreFromDriveAsync");
         }
@@ -820,12 +930,16 @@ public partial class SettingsViewModel : BaseViewModel
             _driveEtaTicker?.Cancel();
             IsDriveRestoreRunning = false;
             IsBusy = false;
+            EndCloudOperation();
         }
     }
 
-    private async Task ImportDocumentAsync(LibraryExportDocument document, Action<int, int>? progress = null)
+    private async Task ImportDocumentAsync(
+        LibraryExportDocument document,
+        Action<int, int>? progress = null,
+        CancellationToken cancellationToken = default)
     {
-
+        cancellationToken.ThrowIfCancellationRequested();
         var userId = await GetCurrentUserIdAsync();
         var imported = 0;
         var updated = 0;
@@ -834,6 +948,7 @@ public partial class SettingsViewModel : BaseViewModel
 
         foreach (var exportedPerson in document.People)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var person = exportedPerson.Person;
             var saved = await _peopleManagementService.SaveAsync(new SavePersonRequest
             {
@@ -859,9 +974,11 @@ public partial class SettingsViewModel : BaseViewModel
 
             foreach (var portablePhoto in exportedPerson.Photos)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var photoBytes = await GetPortableImageBytesAsync(
                     portablePhoto.DataBase64,
-                    portablePhoto.CloudObjectName);
+                    portablePhoto.CloudObjectName,
+                    cancellationToken);
                 if (photoBytes is null) continue;
                 var extension = NormalizePhotoExtension(portablePhoto.Extension);
                 var directory = Path.Combine(FileSystem.AppDataDirectory, "person-photos");
@@ -869,7 +986,7 @@ public partial class SettingsViewModel : BaseViewModel
                 var photoPath = Path.Combine(directory, $"{portablePhoto.Id:N}{extension}");
                 if (!File.Exists(photoPath))
                 {
-                    await File.WriteAllBytesAsync(photoPath, photoBytes);
+                    await File.WriteAllBytesAsync(photoPath, photoBytes, cancellationToken);
                 }
                 await _peopleManagementService.AddPhotoAsync(new AddPersonPhotoRequest
                 {
@@ -890,6 +1007,7 @@ public partial class SettingsViewModel : BaseViewModel
         var importedRelations = new HashSet<Guid>();
         foreach (var exportedPerson in document.People)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             foreach (var relation in exportedPerson.Person.Relations.Where(relation => importedRelations.Add(relation.Id)))
             {
                 await _peopleManagementService.SaveRelationAsync(new SavePersonRelationRequest
@@ -909,13 +1027,15 @@ public partial class SettingsViewModel : BaseViewModel
 
         foreach (var exportedItem in document.Items)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var item = exportedItem;
             var portableCover = document.Covers.FirstOrDefault(cover => cover.MediaItemId == item.Id);
             if (portableCover is not null)
             {
                 var coverBytes = await GetPortableImageBytesAsync(
                     portableCover.DataBase64,
-                    portableCover.CloudObjectName);
+                    portableCover.CloudObjectName,
+                    cancellationToken);
                 if (coverBytes is not null)
                 {
                     var directory = Path.Combine(FileSystem.AppDataDirectory, "covers");
@@ -923,7 +1043,7 @@ public partial class SettingsViewModel : BaseViewModel
                     var coverPath = Path.Combine(directory, $"{item.Id:N}{NormalizePhotoExtension(portableCover.Extension)}");
                     if (!File.Exists(coverPath))
                     {
-                        await File.WriteAllBytesAsync(coverPath, coverBytes);
+                        await File.WriteAllBytesAsync(coverPath, coverBytes, cancellationToken);
                     }
                     item = item with { CoverUrl = new Uri(coverPath).AbsoluteUri };
                 }
@@ -952,39 +1072,47 @@ public partial class SettingsViewModel : BaseViewModel
     private async Task<IReadOnlyList<PersonExportDocument>> BuildPersonExportsAsync(
         string userId,
         bool compressImages = false,
-        Action<int, int>? progress = null)
+        Action<int, int>? progress = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = new List<PersonExportDocument>();
         var summaries = await _peopleManagementService.GetCatalogAsync(userId);
-        for (var index = 0; index < summaries.Count; index++)
-        {
-            var summary = summaries[index];
-            var person = await _peopleManagementService.GetAsync(userId, summary.Id);
-            if (person is null)
+        var result = new ConcurrentBag<PersonExportDocument>();
+        var completed = 0;
+        await Parallel.ForEachAsync(
+            summaries,
+            new ParallelOptions
             {
-                progress?.Invoke(index + 1, summaries.Count);
-                continue;
-            }
-            var photos = new List<PortablePersonPhoto>();
-            foreach (var photo in person.Photos)
+                MaxDegreeOfParallelism = 3,
+                CancellationToken = cancellationToken
+            },
+            async (summary, token) =>
             {
-                if (!File.Exists(photo.FilePath)) continue;
-                var image = await ReadPortableImageAsync(photo.FilePath, compressImages);
-                photos.Add(new PortablePersonPhoto
+                var person = await _peopleManagementService.GetAsync(userId, summary.Id);
+                if (person is not null)
                 {
-                    Id = photo.Id == Guid.Empty ? Guid.NewGuid() : photo.Id,
-                    Caption = photo.Caption,
-                    IsPrimary = photo.IsPrimary,
-                    SortOrder = photo.SortOrder,
-                    Extension = image.Extension,
-                    DataBase64 = image.DataBase64,
-                    CloudObjectName = image.CloudObjectName
-                });
-            }
-            result.Add(new PersonExportDocument { Person = person, Photos = photos });
-            progress?.Invoke(index + 1, summaries.Count);
-        }
-        return result;
+                    var photos = new List<PortablePersonPhoto>();
+                    foreach (var photo in person.Photos)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        if (!File.Exists(photo.FilePath)) continue;
+                        var image = await ReadPortableImageAsync(photo.FilePath, compressImages, token);
+                        photos.Add(new PortablePersonPhoto
+                        {
+                            Id = photo.Id == Guid.Empty ? Guid.NewGuid() : photo.Id,
+                            Caption = photo.Caption,
+                            IsPrimary = photo.IsPrimary,
+                            SortOrder = photo.SortOrder,
+                            Extension = image.Extension,
+                            DataBase64 = image.DataBase64,
+                            CloudObjectName = image.CloudObjectName
+                        });
+                    }
+                    result.Add(new PersonExportDocument { Person = person, Photos = photos });
+                }
+                var current = Interlocked.Increment(ref completed);
+                await MainThread.InvokeOnMainThreadAsync(() => progress?.Invoke(current, summaries.Count));
+            });
+        return result.OrderBy(document => document.Person.Name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     private void UpdateDriveProgress(int percent, string messageKey)
@@ -993,7 +1121,8 @@ public partial class SettingsViewModel : BaseViewModel
         DriveProgress = normalized / 100d;
         DriveProgressPercentText = $"{normalized}%";
         DriveProgressEtaText = BuildProgressEtaText(_driveEtaEstimator.Update(normalized));
-        SetSyncStatus(messageKey);
+        SetSyncStatus(_isCancellingCloudOperation ? "CloudOperation.Cancelling" : messageKey);
+        _backgroundOperationNotifier.Report(normalized, StatusMessage);
     }
 
     private string BuildProgressEtaText(TimeSpan? remaining, int completed = 0, int total = 0)
@@ -1116,26 +1245,39 @@ public partial class SettingsViewModel : BaseViewModel
             : null;
     }
 
-    private async Task<PortableImageData> ReadPortableImageAsync(string path, bool compress)
+    private async Task<PortableImageData> ReadPortableImageAsync(
+        string path,
+        bool compress,
+        CancellationToken cancellationToken = default)
     {
         if (!compress)
         {
             return new PortableImageData(
                 NormalizePhotoExtension(Path.GetExtension(path)),
-                Convert.ToBase64String(await File.ReadAllBytesAsync(path)));
+                Convert.ToBase64String(await File.ReadAllBytesAsync(path, cancellationToken)));
         }
 
-        var compressed = await _cloudImageCompressor.CompressAsync(path, CancellationToken.None);
+        var cachedObjectName = await _cloudImageCompressor.TryGetCachedObjectNameAsync(path, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(cachedObjectName) &&
+            await _cloudAssetStore.ExistsAsync(cachedObjectName, cancellationToken))
+        {
+            return new PortableImageData(".webp", string.Empty, cachedObjectName);
+        }
+
+        var compressed = await _cloudImageCompressor.CompressAsync(path, cancellationToken);
         var objectName = $"{compressed.SourceHash}.webp";
         await _cloudAssetStore.UploadAsync(
             objectName,
             compressed.Bytes,
             "image/webp",
-            CancellationToken.None);
+            cancellationToken);
         return new PortableImageData(".webp", string.Empty, objectName);
     }
 
-    private async Task<byte[]?> GetPortableImageBytesAsync(string? dataBase64, string? cloudObjectName)
+    private async Task<byte[]?> GetPortableImageBytesAsync(
+        string? dataBase64,
+        string? cloudObjectName,
+        CancellationToken cancellationToken = default)
     {
         if (!string.IsNullOrWhiteSpace(dataBase64))
         {
@@ -1144,7 +1286,7 @@ public partial class SettingsViewModel : BaseViewModel
 
         return string.IsNullOrWhiteSpace(cloudObjectName)
             ? null
-            : await _cloudAssetStore.DownloadAsync(cloudObjectName, CancellationToken.None);
+            : await _cloudAssetStore.DownloadAsync(cloudObjectName, cancellationToken);
     }
 
     private sealed record PortableImageData(

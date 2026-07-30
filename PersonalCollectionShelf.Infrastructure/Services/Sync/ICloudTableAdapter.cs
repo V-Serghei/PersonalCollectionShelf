@@ -8,6 +8,10 @@ internal interface ICloudTableAdapter
 
     Task<IReadOnlyList<LocalCloudEntity>> ReadAsync(CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<LocalCloudEntity>> ReadAsync(
+        IReadOnlyCollection<string> entityKeys,
+        CancellationToken cancellationToken);
+
     Task ApplyAsync(CloudDocument document, CancellationToken cancellationToken);
 }
 

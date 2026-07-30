@@ -73,8 +73,9 @@
         <Grid Grid.Row="4">
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <CollectionView
+                x:Name="ItemsList"
                 IsVisible="{Binding IsNotBusy}"
-                ItemSizingStrategy="MeasureAllItems"
+                ItemSizingStrategy="MeasureFirstItem"
                 ItemsSource="{Binding Items}"
                 SelectionMode="None">
                 <CollectionView.EmptyView>

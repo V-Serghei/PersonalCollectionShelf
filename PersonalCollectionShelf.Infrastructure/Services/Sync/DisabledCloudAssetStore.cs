@@ -6,6 +6,9 @@ internal sealed class DisabledCloudAssetStore : ICloudAssetStore
 {
     public Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default) => Task.FromResult(false);
 
+    public Task<bool> ExistsAsync(string objectName, CancellationToken cancellationToken = default) =>
+        Task.FromResult(false);
+
     public Task UploadAsync(
         string objectName,
         ReadOnlyMemory<byte> content,

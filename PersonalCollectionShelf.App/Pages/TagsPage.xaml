@@ -48,7 +48,8 @@
                 <ActivityIndicator HeightRequest="42" IsRunning="{Binding IsBusy}" WidthRequest="42" />
                 <Label Text="{Binding LoadingText}" TextColor="{DynamicResource MutedForeground}" />
             </VerticalStackLayout>
-            <CollectionView x:Name="TagsList" IsVisible="{Binding IsNotBusy}" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding Tags}" SelectionMode="None">
+            <Grid IsVisible="{Binding IsNotBusy}">
+                <CollectionView x:Name="TagsList" IsVisible="{Binding IsTagMode}" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding Tags}" SelectionMode="None">
                 <CollectionView.ItemsLayout>
                     <GridItemsLayout HorizontalItemSpacing="10" Orientation="Vertical" Span="{OnIdiom Phone=2, Tablet=3, Desktop=4}" VerticalItemSpacing="10" />
                 </CollectionView.ItemsLayout>
@@ -68,7 +69,37 @@
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
-            </CollectionView>
+                </CollectionView>
+                <CollectionView
+                x:Name="GenresList"
+                IsVisible="{Binding IsGenreMode}"
+                ItemSizingStrategy="MeasureFirstItem"
+                ItemsSource="{Binding Tags}"
+                SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout ItemSpacing="0" Orientation="Vertical" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.EmptyView>
+                    <Label Margin="0,36" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:TagCardViewModel">
+                        <Grid Padding="5,12" ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto,1" ColumnSpacing="10" RowSpacing="4">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type pages:TagsPage}}, Path=ViewModel.OpenTagCommand, x:DataType={x:Type pages:TagsPage}}"
+                                    CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label FontAttributes="Bold" FontSize="16" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding Name}" />
+                            <Label Grid.Column="1" FontAttributes="Bold" FontSize="12" Text="{Binding ItemCount}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="2" FontSize="22" Text="&#x203A;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                            <Label Grid.Row="1" Grid.ColumnSpan="2" FontSize="10" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding CategorySummary}" TextColor="{DynamicResource MutedForeground}" />
+                            <BoxView Grid.Row="2" Grid.ColumnSpan="3" Margin="0,7,0,0" HeightRequest="1" Color="{DynamicResource Border}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
         </Grid>
     </Grid>
 </ContentPage>

@@ -220,6 +220,13 @@
                                 </Grid>
                                 <Label Grid.Row="3" Grid.ColumnSpan="2" FontSize="11" IsVisible="{Binding HasDriveProgress}" Text="{Binding DriveProgressEtaText}" TextColor="{DynamicResource MutedForeground}" />
                             </Grid>
+                            <Button
+                                Margin="16,0,16,16"
+                                Command="{Binding CancelCloudOperationCommand}"
+                                IsEnabled="{Binding CanCancelCloudOperation}"
+                                IsVisible="{Binding HasActiveCloudOperation}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Text="{Binding CancelCloudOperationText}" />
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>

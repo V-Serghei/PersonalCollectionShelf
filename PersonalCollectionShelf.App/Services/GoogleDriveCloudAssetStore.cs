@@ -21,6 +21,15 @@ public sealed class GoogleDriveCloudAssetStore(
     public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default) =>
         await googleAccountService.GetDriveAccessTokenAsync(cancellationToken) is not null;
 
+    public async Task<bool> ExistsAsync(
+        string objectName,
+        CancellationToken cancellationToken = default)
+    {
+        var token = await RequireTokenAsync(cancellationToken);
+        await EnsureInventoryAsync(token, cancellationToken);
+        return _fileIds!.ContainsKey(objectName);
+    }
+
     public async Task UploadAsync(
         string objectName,
         ReadOnlyMemory<byte> content,

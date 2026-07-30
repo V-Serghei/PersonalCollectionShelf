@@ -2,7 +2,10 @@ using Android.App;
 using Android.Content.PM;
 using Android.OS;
 using Android.Views;
+using AndroidX.Core.App;
+using AndroidX.Core.Content;
 using AndroidX.Core.View;
+using System.Runtime.Versioning;
 
 namespace PersonalCollectionShelf.App;
 
@@ -22,6 +25,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
         ApplyImmersiveStatusBar();
+        RequestNotificationPermission();
     }
 
     protected override void OnResume()
@@ -55,5 +59,27 @@ public class MainActivity : MauiAppCompatActivity
 
         controller.Hide(WindowInsetsCompat.Type.StatusBars());
         controller.SystemBarsBehavior = WindowInsetsControllerCompat.BehaviorShowTransientBarsBySwipe;
+    }
+
+    private void RequestNotificationPermission()
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            return;
+        }
+
+        RequestNotificationPermissionApi33();
+    }
+
+    [SupportedOSPlatform("android33.0")]
+    private void RequestNotificationPermissionApi33()
+    {
+        if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.PostNotifications) ==
+            Permission.Granted) return;
+
+        ActivityCompat.RequestPermissions(
+            this,
+            [Android.Manifest.Permission.PostNotifications],
+            4101);
     }
 }
