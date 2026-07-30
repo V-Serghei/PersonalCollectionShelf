@@ -20,6 +20,18 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>();
 
+#if ANDROID
+        Microsoft.Maui.Handlers.PageHandler.Mapper.AppendToMapping(
+            nameof(VisualElement.BackgroundColor),
+            static (handler, view) =>
+            {
+                if (handler is Microsoft.Maui.Handlers.PageHandler pageHandler)
+                {
+                    Platforms.Android.AndroidPageBackgroundMapper.Apply(pageHandler, view);
+                }
+            });
+#endif
+
         builder.Services.AddSingleton<ILocalizationService, JsonLocalizationService>();
         builder.Services.AddInfrastructure(GetDatabasePath(), FirebaseOptions.Load(FileSystem.AppDataDirectory));
         builder.Services.AddSingleton<IAuthTokenStore, SecureStorageAuthTokenStore>();

@@ -225,7 +225,7 @@
                                 Command="{Binding CancelCloudOperationCommand}"
                                 IsEnabled="{Binding CanCancelCloudOperation}"
                                 IsVisible="{Binding HasActiveCloudOperation}"
-                                Style="{StaticResource SecondaryButtonStyle}"
+                                Style="{StaticResource CriticalButtonStyle}"
                                 Text="{Binding CancelCloudOperationText}" />
                         </VerticalStackLayout>
                     </Border>

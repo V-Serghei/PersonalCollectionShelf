@@ -8,6 +8,12 @@ internal static class AppNavigation
     private static readonly SemaphoreSlim MediaEditorNavigationGate = new(1, 1);
     private static readonly SemaphoreSlim MediaDetailsNavigationGate = new(1, 1);
     private static readonly SemaphoreSlim CollectionDetailsNavigationGate = new(1, 1);
+    private static readonly BindableProperty ForceOpaqueModalBackgroundProperty =
+        BindableProperty.CreateAttached(
+            "ForceOpaqueModalBackground",
+            typeof(bool),
+            typeof(AppNavigation),
+            false);
 
     public static async Task OpenEditMediaItemAsync(Guid? mediaItemId = null)
     {
@@ -181,27 +187,25 @@ internal static class AppNavigation
 
     private static Task PushOpaqueModalAsync(Page page)
     {
-        var appearance = App.Services.GetService<IAppearanceService>();
-        var backgroundPath = appearance?.BackgroundImagePath;
         var background = Microsoft.Maui.Controls.Application.Current?.Resources.TryGetValue("Background", out var value) == true &&
                          value is Microsoft.Maui.Graphics.Color color
             ? color
             : Microsoft.Maui.Graphics.Color.FromArgb("#201C2D");
 
-        page.BackgroundColor = backgroundPath is null ? background : Colors.Transparent;
+        page.SetValue(ForceOpaqueModalBackgroundProperty, true);
+        page.BackgroundImageSource = null;
+        page.BackgroundColor = background;
         NavigationPage.SetHasNavigationBar(page, false);
         var window = new NavigationPage(page)
         {
-            BackgroundColor = backgroundPath is null ? background : Colors.Transparent,
-            BackgroundImageSource = string.IsNullOrWhiteSpace(backgroundPath)
-                ? null
-                : new StreamImageSource
-                {
-                    Stream = cancellationToken => Task.FromResult<Stream>(File.OpenRead(backgroundPath))
-                }
+            BackgroundColor = background,
+            BackgroundImageSource = null
         };
         return Shell.Current.Navigation.PushModalAsync(window, animated: true);
     }
+
+    internal static bool RequiresOpaqueModalBackground(Page page) =>
+        (bool)page.GetValue(ForceOpaqueModalBackgroundProperty);
 
     private static bool HasOpenMediaDetailsPage()
     {

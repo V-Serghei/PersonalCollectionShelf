@@ -8,13 +8,20 @@ Offline-first cross-platform personal collection tracker with cloud sync for mov
 - Store the library locally with SQLite for offline-first use.
 - Add, edit, delete, search, and filter media items.
 - Use touch-friendly Android forms with keyboard-aware focus, user-cancelled auto-positioning, and responsive controls.
+- Browse large libraries, people, collections, and genre results through buffered native Android lists that keep already loaded rows in memory.
 - Load library summaries and filters without repeatedly hydrating every detail graph.
 - Track status, rating, notes, dates, favorites, and release year without manually maintaining percentages.
+- Browse tags and genres, open all matching works, and filter or sort the result by media type.
+- Group works into series, cycles, franchises, and universes with stacked-cover previews.
 - Use English and Russian localization across navigation, dashboards, statistics, settings, and dynamic entity labels.
+- Select light/dark themes, an accent color, grid density, and an optional aspect-preserving custom background.
 - Sign in with Google or email/password and synchronize through Firebase.
 - Keep original images on the device that added them while syncing 768px WebP copies to other devices.
 - Create checksummed, versioned Google Drive backups containing portable data and cloud-optimized image copies.
+- See progress and estimated time for sync, backup, and restore; cancel the active operation from Settings and follow long operations from an Android notification.
 - Search TMDB and autofill screen titles; show IMDb and Kinopoisk ratings separately from the personal rating.
+- Search Google Books and Open Library for books and manga, Comic Vine for comics, and RAWG for games.
+- Reuse existing people by name during metadata import and create missing contributors automatically.
 - Refresh online metadata and both external ratings only on demand from an icon in the detail card; opening the app or an item never triggers a provider refresh.
 - Target Windows and Android with .NET MAUI.
 
@@ -66,20 +73,24 @@ Already delivered beyond MVP:
 - Structured movie credits, actor characters, multi-studio roles, genres, franchises, and related works
 - Type-specific series/anime episode data, manga/comic publication data, and game platform/playtime data
 - Browsable people-to-work role links and a dedicated series/cycles/universes explorer
-- Dedicated tag explorer with direct navigation to linked items
-- Compact expandable search across Library, People, Tags, and Series/Universes, plus route-aware sidebar and category highlighting
+- Dedicated tag and genre explorers with direct navigation to linked items
+- Buffered native Android renderers for Library, People, Series/Universes, and genre/tag result lists
+- Compact expandable search across Library, People, Tags, Genres, and Series/Universes, plus route-aware sidebar and category highlighting
 - Dedicated local/account profile page accessible from the sidebar footer
+- Multi-tab statistics for status, category, time, release year, decade, genre, country, and ratings
+- Aspect-preserving page backgrounds, theme/accent controls, and independent Library/People grid density
 
 Cloud foundation now included:
 
 - Firebase Auth with Google and email/password
-- Incremental Firestore synchronization with tombstones and last-write-wins conflict handling
+- Incremental Firestore synchronization with a durable local change queue, tombstones, checkpoints, and last-write-wins conflict handling
 - Google Drive WebP image copies with local-original preservation and SHA-256 deduplication
 - Versioned Google Drive backup and restore with SHA-256 validation
+- Progress, ETA, cancellation, Android foreground notifications, and continuation when the app is moved to the background
 
 Next versions:
 
-- Background scheduling and richer sync history
+- Richer sync and backup history
 - Calendar and progress history
 - Custom lists
 
@@ -88,7 +99,6 @@ Long-term ideas:
 - Multi-device sync history
 - Advanced recommendation views
 - Custom media types and field templates
-- Backup and restore workflows
 - Rich progress analytics
 
 ## Setup Instructions
@@ -146,7 +156,7 @@ configuration values are present and the app is rebuilt. No provider is queried 
 or Firestore/Drive synchronization; calls happen only after selecting an autofill candidate or pressing
 the refresh icon for one linked item.
 
-The app project targets Windows by default so Rider can build and run the desktop app without touching Android tooling. Windows builds are self-contained for the Windows App SDK runtime. Android is opt-in and must be enabled explicitly with `-p:EnableAndroidTarget=true`.
+The app supports both Windows and Android. Windows builds are self-contained for the Windows App SDK runtime; Android builds require the Android workload, SDK, and a connected device or emulator only when installing or running.
 
 Useful commands:
 
@@ -156,7 +166,7 @@ Useful commands:
 .\scripts\run-android.cmd
 .\scripts\run-android.ps1
 dotnet build PersonalCollectionShelf.App\PersonalCollectionShelf.App.csproj -f net10.0-windows10.0.19041.0 -r win-x64
-dotnet build PersonalCollectionShelf.App\PersonalCollectionShelf.App.csproj -f net10.0-android -p:EnableAndroidTarget=true
+dotnet build PersonalCollectionShelf.App\PersonalCollectionShelf.App.csproj -f net10.0-android
 ```
 
 Android builds require JDK 11 or newer, Android SDK tooling, and a configured emulator or device.
@@ -184,11 +194,11 @@ All visible UI text must be loaded from JSON localization files in `PersonalColl
 
 ## Sync and Backup Strategy
 
-SQLite remains the working database on every device. A sync scans user-owned rows, hashes their portable representation, pulls newer Firestore documents, applies last-write-wins by UTC change time, uploads remaining local changes, and keeps tombstones so a deletion also reaches devices that were offline.
+SQLite remains the working database on every device. Local inserts, edits, and deletions are recorded in a durable sync queue. A normal sync uploads only queued changes, pulls Firestore documents newer than the saved checkpoint, applies last-write-wins by UTC change time, and advances the checkpoint only after a successful pass. Tombstones ensure that deletions also reach devices that were offline. A full scan remains available internally for recovery and migration instead of being repeated during every normal sync.
 
 Device-local file paths are never written into Firestore. Covers and person photos are handled separately: the source device retains its original; a maximum-768px WebP copy (quality 78) is deduplicated by SHA-256 and uploaded to the app-owned `Personal Collection Shelf Assets` folder in Google Drive; another device downloads that copy into its own `cloud-cache`. A remote copy never replaces an existing local original.
 
-Google Drive is the independent recovery layer. Optimized images are stored once under content-addressed names, while each small backup ZIP contains portable JSON, references to those images, and a SHA-256 checksum. Retention keeps the 30 newest backups, 12 monthly representatives, and one representative for every year. Pressing Sync also creates a Drive backup when the Google Drive grant is available; Settings also provides explicit backup and restore actions. Manual JSON export remains self-contained and keeps the locally available image quality.
+Google Drive is the independent recovery layer. Optimized images are stored once under content-addressed names, while each small backup ZIP contains portable JSON, references to those images, and a SHA-256 checksum. Retention keeps the 30 newest backups, 12 monthly representatives, and one representative for every year. Pressing Sync also creates a Drive backup when the Google Drive grant is available; Settings also provides explicit backup and restore actions. Sync, backup, and restore expose progress, estimated remaining time, and one red cancellation action. On Android an active operation is represented by a foreground notification so it can continue while the app is in the background. Manual JSON export remains self-contained and keeps the locally available image quality.
 
 Firebase refresh tokens and Google OAuth refresh tokens are stored in MAUI SecureStorage. Firestore data is scoped to `users/{Firebase uid}` by the checked-in security rules, while Drive uses the narrow `drive.file` scope and can access only files created by this app. See `.agent/sync-plan.md` for implementation details and limitations.
 

@@ -504,7 +504,14 @@ public sealed class AppShell : Shell
         var backgroundPath = _appearanceService.BackgroundImagePath;
         FlyoutBackgroundColor = SidebarColor;
         BackgroundColor = backgroundPath is null ? AppBackgroundColor : Colors.Transparent;
+#if ANDROID
+        // Android ContentPages use an aspect-preserving native drawable. The
+        // Shell image renderer stretches bitmaps and would briefly show a
+        // distorted copy during navigation.
+        BackgroundImageSource = null;
+#else
         BackgroundImageSource = CreateBackgroundImageSource(backgroundPath);
+#endif
 
         Shell.SetBackgroundColor(this, backgroundPath is null ? AppBackgroundColor : Colors.Transparent);
         Shell.SetForegroundColor(this, ForegroundColor);
