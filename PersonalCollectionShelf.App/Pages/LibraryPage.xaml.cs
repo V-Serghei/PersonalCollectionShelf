@@ -95,6 +95,7 @@ public partial class LibraryPage : ContentPage
 
     private void HandleLibraryScrolled(object? sender, ItemsViewScrolledEventArgs e)
     {
+        ViewModel.RememberScrollPosition(e.FirstVisibleItemIndex);
         ViewModel.EnsureThumbnailLookAhead(e.LastVisibleItemIndex);
         var center = (e.FirstVisibleItemIndex + e.LastVisibleItemIndex) / 2;
         if (Math.Abs(center - _lastThumbnailCenter) < 12) return;
@@ -114,11 +115,17 @@ public partial class LibraryPage : ContentPage
                 await viewModel.LoadAsync();
 #if ANDROID
                 AttachNativeLists();
+                RestoreSavedScrollPosition();
 #else
                 ApplyFreeScrolling();
                 await Task.Delay(100);
                 ApplyFreeScrolling();
+                RestoreSavedScrollPosition();
 #endif
+                if (ViewModel.SelectedMediaTypeFilter is not null)
+                {
+                    MediaTypeFilterList.ScrollTo(ViewModel.SelectedMediaTypeFilter, position: ScrollToPosition.Center, animate: false);
+                }
             }
             catch (Exception exception)
             {
@@ -144,7 +151,7 @@ public partial class LibraryPage : ContentPage
                 ViewModel.MediaItems,
                 grid: true,
                 ViewModel.GridColumnCount,
-                item => ViewModel.OpenMediaItemCommand.Execute(item));
+                item => OpenNativeMediaItem(item, _nativeGridBinding));
         }
         else
         {
@@ -159,12 +166,38 @@ public partial class LibraryPage : ContentPage
                 ViewModel.MediaItems,
                 grid: false,
                 1,
-                item => ViewModel.OpenMediaItemCommand.Execute(item));
+                item => OpenNativeMediaItem(item, _nativeListBinding));
         }
         else
         {
             _nativeListBinding.Update(ViewModel.MediaItems);
         }
     }
+
+    private void OpenNativeMediaItem(
+        MediaItemListItemViewModel item,
+        AndroidNativeCatalogRenderer.NativeCatalogBinding<MediaItemListItemViewModel>? binding)
+    {
+        var position = binding?.CaptureScrollPosition();
+        if (position.HasValue)
+        {
+            ViewModel.RememberScrollPosition(position.Value.Index, position.Value.Offset);
+        }
+
+        ViewModel.OpenMediaItemCommand.Execute(item);
+    }
 #endif
+
+    private void RestoreSavedScrollPosition()
+    {
+        var position = ViewModel.GetSavedScrollPosition();
+        if (!position.HasValue) return;
+#if ANDROID
+        var binding = ViewModel.IsGridView ? _nativeGridBinding : _nativeListBinding;
+        binding?.RestoreScrollPosition(position.Value.Index, position.Value.Offset);
+#else
+        var list = ViewModel.IsGridView ? GridLibraryList : ListLibraryList;
+        list.ScrollTo(position.Value.Index, position: ScrollToPosition.Start, animate: false);
+#endif
+    }
 }

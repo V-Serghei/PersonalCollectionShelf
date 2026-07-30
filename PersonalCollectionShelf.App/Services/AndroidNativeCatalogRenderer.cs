@@ -20,6 +20,8 @@ namespace PersonalCollectionShelf.App.Services;
 /// </summary>
 internal static class AndroidNativeCatalogRenderer
 {
+    internal readonly record struct NativeScrollPosition(int Index, int Offset);
+
     public static NativeCatalogBinding<MediaItemListItemViewModel>? AttachMedia(
         CollectionView collectionView,
         IList<MediaItemListItemViewModel> items,
@@ -88,6 +90,25 @@ internal static class AndroidNativeCatalogRenderer
             collectionView.Handler?.PlatformView == _recyclerView;
 
         public void Update(IList<T> items) => _adapter.SetItems(items);
+
+        public NativeScrollPosition? CaptureScrollPosition()
+        {
+            if (_recyclerView.GetLayoutManager() is not LinearLayoutManager manager) return null;
+            var index = manager.FindFirstVisibleItemPosition();
+            if (index < 0) return null;
+            var view = manager.FindViewByPosition(index);
+            var offset = view?.Top - _recyclerView.PaddingTop ?? 0;
+            return new NativeScrollPosition(index, offset);
+        }
+
+        public void RestoreScrollPosition(int index, int offset)
+        {
+            _recyclerView.Post(() =>
+            {
+                if (_adapter.ItemCount == 0 || _recyclerView.GetLayoutManager() is not LinearLayoutManager manager) return;
+                manager.ScrollToPositionWithOffset(Math.Clamp(index, 0, _adapter.ItemCount - 1), offset);
+            });
+        }
 
         public void Dispose()
         {

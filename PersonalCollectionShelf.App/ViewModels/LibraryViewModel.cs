@@ -11,6 +11,8 @@ using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.App.ViewModels;
 
+public readonly record struct LibraryScrollRestorePoint(int Index, int Offset);
+
 public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 {
     private const string ViewModePreferenceKey = "library.viewMode";
@@ -36,6 +38,17 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     private readonly object _thumbnailBatchLock = new();
     private int _nextThumbnailBatchStart;
     private int _thumbnailOrderingVersion;
+    private static readonly LibrarySessionState SessionState = new();
+
+    private sealed class LibrarySessionState
+    {
+        public bool HasMediaTypeFilter { get; set; }
+        public MediaType? MediaTypeFilter { get; set; }
+        public Guid? ScrollAnchorId { get; set; }
+        public int ScrollIndex { get; set; }
+        public int ScrollOffset { get; set; }
+        public bool HasScrollPosition { get; set; }
+    }
 
     public LibraryViewModel(
         IMediaItemService mediaItemService,
@@ -48,6 +61,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         _authService = authService;
         _thumbnailCache = thumbnailCache;
         ReloadFilterOptions();
+        RestoreSessionFilter();
     }
 
     private ObservableCollection<MediaItemListItemViewModel> _mediaItems = [];
@@ -166,6 +180,9 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         if (query.TryGetValue("reset", out var reset) && string.Equals(reset?.ToString(), "true", StringComparison.OrdinalIgnoreCase))
         {
+            SessionState.HasMediaTypeFilter = true;
+            SessionState.MediaTypeFilter = null;
+            ClearSavedScrollPosition();
             SelectedMediaTypeFilter = MediaTypeFilters.FirstOrDefault(option => option.Value is null);
             SelectedStatusFilter = StatusFilters.FirstOrDefault(option => option.Value is null);
         }
@@ -176,6 +193,9 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             var option = MediaTypeFilters.FirstOrDefault(candidate => candidate.Value == mediaType);
             if (option is not null)
             {
+                if (SessionState.MediaTypeFilter != mediaType) ClearSavedScrollPosition();
+                SessionState.HasMediaTypeFilter = true;
+                SessionState.MediaTypeFilter = mediaType;
                 SelectedMediaTypeFilter = option;
             }
         }
@@ -564,8 +584,44 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     {
         if (option is not null)
         {
+            if (!EqualityComparer<MediaType?>.Default.Equals(SessionState.MediaTypeFilter, option.Value))
+            {
+                ClearSavedScrollPosition();
+            }
+
+            SessionState.HasMediaTypeFilter = true;
+            SessionState.MediaTypeFilter = option.Value;
             SelectedMediaTypeFilter = option;
         }
+    }
+
+    public void RememberScrollPosition(int firstVisibleIndex, int offset = 0)
+    {
+        if (firstVisibleIndex < 0 || MediaItems.Count == 0) return;
+        var index = Math.Clamp(firstVisibleIndex, 0, MediaItems.Count - 1);
+        SessionState.ScrollAnchorId = MediaItems[index].Id;
+        SessionState.ScrollIndex = index;
+        SessionState.ScrollOffset = offset;
+        SessionState.HasScrollPosition = true;
+    }
+
+    public LibraryScrollRestorePoint? GetSavedScrollPosition()
+    {
+        if (!SessionState.HasScrollPosition || MediaItems.Count == 0) return null;
+
+        var index = -1;
+        if (SessionState.ScrollAnchorId.HasValue)
+        {
+            for (var candidate = 0; candidate < MediaItems.Count; candidate++)
+            {
+                if (MediaItems[candidate].Id != SessionState.ScrollAnchorId.Value) continue;
+                index = candidate;
+                break;
+            }
+        }
+
+        if (index < 0) index = Math.Clamp(SessionState.ScrollIndex, 0, MediaItems.Count - 1);
+        return new LibraryScrollRestorePoint(index, SessionState.ScrollOffset);
     }
 
     public async Task LoadAsync()
@@ -712,6 +768,32 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         {
             _suppressFilterReload = false;
         }
+    }
+
+    private void RestoreSessionFilter()
+    {
+        if (!SessionState.HasMediaTypeFilter) return;
+        var option = MediaTypeFilters.FirstOrDefault(candidate =>
+            EqualityComparer<MediaType?>.Default.Equals(candidate.Value, SessionState.MediaTypeFilter));
+        if (option is null) return;
+
+        _suppressFilterReload = true;
+        try
+        {
+            SelectedMediaTypeFilter = option;
+        }
+        finally
+        {
+            _suppressFilterReload = false;
+        }
+    }
+
+    private static void ClearSavedScrollPosition()
+    {
+        SessionState.ScrollAnchorId = null;
+        SessionState.ScrollIndex = 0;
+        SessionState.ScrollOffset = 0;
+        SessionState.HasScrollPosition = false;
     }
 
     private void ReloadDynamicFilterOptions(IReadOnlyList<MediaItemDto> library)

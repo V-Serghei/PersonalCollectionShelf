@@ -163,7 +163,7 @@ public sealed class AppShell : Shell
         };
 
         navigation.Children.Add(CreateNavButton("⌂", T("Shell.Home"), "//Home", true));
-        navigation.Children.Add(CreateNavButton("▤", T("Library.Title"), "//Library?reset=true", false));
+        navigation.Children.Add(CreateNavButton("▤", T("Library.Title"), "//Library", false));
         navigation.Children.Add(CreateNavButton("▥", T("Shell.Statistics"), "//Statistics", false));
         navigation.Children.Add(CreateNavButton("◎", T("Collections.Title"), "//Collections", false));
         navigation.Children.Add(CreateNavButton("#", T("Tags.Title"), "//Tags", false));
