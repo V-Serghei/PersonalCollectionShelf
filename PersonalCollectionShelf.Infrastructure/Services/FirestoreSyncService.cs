@@ -39,7 +39,7 @@ public sealed class FirestoreSyncService(
             await database.InitializeAsync(cancellationToken);
             var failedAssetCount = await assetSyncService.UploadLocalChangesAsync((completed, total) =>
             {
-                var percent = total == 0 ? 20 : 3 + (int)Math.Round(completed / (double)total * 17);
+                var percent = total == 0 ? 42 : 3 + (int)Math.Round(completed / (double)total * 39);
                 Report(progress, percent, "Sync.Progress.Assets", completed, total);
             }, cancellationToken);
             var adapters = CloudTableRegistry.Create(database);
@@ -49,12 +49,12 @@ public sealed class FirestoreSyncService(
 
             var localEntities = await ScanLocalChangesAsync(adapters, states, (completed, total) =>
             {
-                var percent = total == 0 ? 45 : 20 + (int)Math.Round(completed / (double)total * 25);
+                var percent = total == 0 ? 57 : 42 + (int)Math.Round(completed / (double)total * 15);
                 Report(progress, percent, "Sync.Progress.Scanning", completed, total);
             }, cancellationToken);
             var cursorRecord = await database.Connection.FindAsync<CloudSyncMetadataRecord>(PullCursorKey);
             var cursor = TryParseUtc(cursorRecord?.Value);
-            Report(progress, 48, "Sync.Progress.Downloading");
+            Report(progress, 59, "Sync.Progress.Downloading");
             var remoteChanges = await firestoreClient.GetChangesAsync(cursor, cancellationToken);
 
             for (var remoteIndex = 0; remoteIndex < remoteChanges.Count; remoteIndex++)
@@ -121,7 +121,7 @@ public sealed class FirestoreSyncService(
             }
 
             var uploaded = 0;
-            Report(progress, 65, "Sync.Progress.Uploading", uploaded, pendingUploads.Count);
+            Report(progress, 75, "Sync.Progress.Uploading", uploaded, pendingUploads.Count);
             foreach (var batch in pendingUploads.Chunk(100))
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -134,7 +134,7 @@ public sealed class FirestoreSyncService(
                 uploaded += batch.Length;
                 var percent = pendingUploads.Count == 0
                     ? 95
-                    : 65 + (int)Math.Round(uploaded / (double)pendingUploads.Count * 30);
+                    : 75 + (int)Math.Round(uploaded / (double)pendingUploads.Count * 20);
                 Report(progress, percent, "Sync.Progress.Uploading", uploaded, pendingUploads.Count);
             }
 
@@ -230,7 +230,7 @@ public sealed class FirestoreSyncService(
 
     private static void ReportRemoteProgress(IProgress<SyncProgressDto>? progress, int completed, int total)
     {
-        var percent = total == 0 ? 65 : 50 + (int)Math.Round(completed / (double)total * 15);
+        var percent = total == 0 ? 74 : 60 + (int)Math.Round(completed / (double)total * 14);
         Report(progress, percent, "Sync.Progress.Applying", completed, total);
     }
 

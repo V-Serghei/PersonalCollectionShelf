@@ -91,6 +91,7 @@ public partial class SettingsViewModel : BaseViewModel
     private bool _isSyncing;
     private double _syncProgress;
     private string _syncProgressPercentText = "0%";
+    private string _syncProgressEtaText = string.Empty;
     private bool _hasSyncProgress;
     private bool _isDriveBackupRunning;
     private bool _isDriveRestoreRunning;
@@ -98,8 +99,12 @@ public partial class SettingsViewModel : BaseViewModel
     private string _driveProgressPercentText = "0%";
     private string _driveProgressEtaText = string.Empty;
     private bool _hasDriveProgress;
-    private Stopwatch? _syncProgressTimer;
-    private Stopwatch? _driveProgressTimer;
+    private readonly ProgressEtaEstimator _syncEtaEstimator = new();
+    private readonly ProgressEtaEstimator _driveEtaEstimator = new();
+    private CancellationTokenSource? _syncEtaTicker;
+    private CancellationTokenSource? _driveEtaTicker;
+    private int _syncProgressCompleted;
+    private int _syncProgressTotal;
 
     public LocalizedOption<string>? SelectedLanguageOption
     {
@@ -152,7 +157,11 @@ public partial class SettingsViewModel : BaseViewModel
         private set => SetProperty(ref _hasSyncProgress, value);
     }
 
-    public string SyncProgressEtaText { get; private set; } = string.Empty;
+    public string SyncProgressEtaText
+    {
+        get => _syncProgressEtaText;
+        private set => SetProperty(ref _syncProgressEtaText, value);
+    }
 
     public double DriveProgress
     {
@@ -487,7 +496,10 @@ public partial class SettingsViewModel : BaseViewModel
         IsBusy = true;
         IsSyncing = true;
         HasSyncProgress = true;
-        _syncProgressTimer = Stopwatch.StartNew();
+        _syncEtaEstimator.Reset();
+        _syncEtaTicker?.Cancel();
+        _syncEtaTicker = new CancellationTokenSource();
+        _ = RunEtaTickerAsync(_syncEtaEstimator, isSync: true, _syncEtaTicker.Token);
         UpdateSyncProgress(new SyncProgressDto(0, "Sync.Progress.Preparing"));
         SetSyncStatus("Sync.Status.Started");
         UserNotification.Show(StatusMessage);
@@ -506,12 +518,12 @@ public partial class SettingsViewModel : BaseViewModel
         {
             SetSyncStatus(IsNetworkFailure(exception) ? "Sync.Status.NetworkFailed" : "Sync.Status.Failed");
             SyncProgressEtaText = T("Progress.Stopped");
-            OnPropertyChanged(nameof(SyncProgressEtaText));
             UserNotification.Show(StatusMessage);
             CrashReporter.Log(exception, "SettingsViewModel.SyncNowAsync");
         }
         finally
         {
+            _syncEtaTicker?.Cancel();
             IsSyncing = false;
             IsBusy = false;
         }
@@ -527,8 +539,12 @@ public partial class SettingsViewModel : BaseViewModel
     {
         SyncProgress = progress.Percent / 100d;
         SyncProgressPercentText = $"{progress.Percent}%";
-        SyncProgressEtaText = BuildEtaText(_syncProgressTimer, progress.Percent);
-        OnPropertyChanged(nameof(SyncProgressEtaText));
+        _syncProgressCompleted = progress.Completed;
+        _syncProgressTotal = progress.Total;
+        SyncProgressEtaText = BuildProgressEtaText(
+            _syncEtaEstimator.Update(progress.Percent),
+            _syncProgressCompleted,
+            _syncProgressTotal);
         SetSyncStatus(progress.MessageKey);
     }
 
@@ -543,7 +559,10 @@ public partial class SettingsViewModel : BaseViewModel
         IsBusy = true;
         IsDriveBackupRunning = true;
         HasDriveProgress = true;
-        _driveProgressTimer = Stopwatch.StartNew();
+        _driveEtaEstimator.Reset();
+        _driveEtaTicker?.Cancel();
+        _driveEtaTicker = new CancellationTokenSource();
+        _ = RunEtaTickerAsync(_driveEtaEstimator, isSync: false, _driveEtaTicker.Token);
         UpdateDriveProgress(0, "Settings.DriveBackup.Preparing");
         UserNotification.Show(StatusMessage);
         CrashReporter.LogMessage("SettingsViewModel.BackupToDriveAsync", "Google Drive backup started.");
@@ -575,6 +594,7 @@ public partial class SettingsViewModel : BaseViewModel
         }
         finally
         {
+            _driveEtaTicker?.Cancel();
             IsDriveBackupRunning = false;
             IsBusy = false;
         }
@@ -731,7 +751,10 @@ public partial class SettingsViewModel : BaseViewModel
         IsBusy = true;
         IsDriveRestoreRunning = true;
         HasDriveProgress = true;
-        _driveProgressTimer = Stopwatch.StartNew();
+        _driveEtaEstimator.Reset();
+        _driveEtaTicker?.Cancel();
+        _driveEtaTicker = new CancellationTokenSource();
+        _ = RunEtaTickerAsync(_driveEtaEstimator, isSync: false, _driveEtaTicker.Token);
         UpdateDriveProgress(0, "Settings.DriveRestore.Downloading");
         UserNotification.Show(StatusMessage);
         CrashReporter.LogMessage("SettingsViewModel.RestoreFromDriveAsync", "Google Drive restore started.");
@@ -794,6 +817,7 @@ public partial class SettingsViewModel : BaseViewModel
         }
         finally
         {
+            _driveEtaTicker?.Cancel();
             IsDriveRestoreRunning = false;
             IsBusy = false;
         }
@@ -968,18 +992,128 @@ public partial class SettingsViewModel : BaseViewModel
         var normalized = Math.Clamp(percent, 0, 100);
         DriveProgress = normalized / 100d;
         DriveProgressPercentText = $"{normalized}%";
-        DriveProgressEtaText = BuildEtaText(_driveProgressTimer, normalized);
+        DriveProgressEtaText = BuildProgressEtaText(_driveEtaEstimator.Update(normalized));
         SetSyncStatus(messageKey);
     }
 
-    private string BuildEtaText(Stopwatch? timer, int percent)
+    private string BuildProgressEtaText(TimeSpan? remaining, int completed = 0, int total = 0)
     {
-        if (percent >= 100) return T("Progress.Done");
-        if (timer is null || percent < 2 || timer.Elapsed.TotalSeconds < 1) return T("Progress.Estimating");
-        var remainingSeconds = timer.Elapsed.TotalSeconds * (100 - percent) / percent;
-        var remaining = TimeSpan.FromSeconds(Math.Clamp(remainingSeconds, 1, 24 * 60 * 60));
-        var formatted = remaining.TotalHours >= 1 ? remaining.ToString(@"h\:mm\:ss") : remaining.ToString(@"m\:ss");
-        return string.Format(T("Progress.Remaining"), formatted);
+        var eta = remaining switch
+        {
+            { TotalSeconds: <= 0 } => T("Progress.Done"),
+            null => T("Progress.Estimating"),
+            var value => string.Format(
+                T("Progress.Remaining"),
+                value.Value.TotalHours >= 1
+                    ? value.Value.ToString(@"h\:mm\:ss")
+                    : value.Value.ToString(@"m\:ss"))
+        };
+        return total > 0 ? $"{eta}  •  {Math.Min(completed, total)}/{total}" : eta;
+    }
+
+    private async Task RunEtaTickerAsync(
+        ProgressEtaEstimator estimator,
+        bool isSync,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(1000, cancellationToken);
+                var remaining = estimator.Tick();
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    if (isSync)
+                    {
+                        SyncProgressEtaText = BuildProgressEtaText(
+                            remaining,
+                            _syncProgressCompleted,
+                            _syncProgressTotal);
+                    }
+                    else
+                    {
+                        DriveProgressEtaText = BuildProgressEtaText(remaining);
+                    }
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The operation completed or failed; its final status is already shown.
+        }
+    }
+
+    private sealed class ProgressEtaEstimator
+    {
+        private readonly object _gate = new();
+        private Stopwatch _timer = new();
+        private TimeSpan _lastSample;
+        private double? _remainingSeconds;
+        private int _lastPercent;
+
+        public void Reset()
+        {
+            lock (_gate)
+            {
+                _timer = Stopwatch.StartNew();
+                _lastSample = TimeSpan.Zero;
+                _remainingSeconds = null;
+                _lastPercent = 0;
+            }
+        }
+
+        public TimeSpan? Update(int percent)
+        {
+            lock (_gate)
+            {
+                TickCore();
+                var normalized = Math.Clamp(percent, 0, 100);
+                if (normalized >= 100)
+                {
+                    _lastPercent = 100;
+                    _remainingSeconds = 0;
+                    return TimeSpan.Zero;
+                }
+
+                if (normalized > _lastPercent && normalized >= 2 && _timer.Elapsed.TotalSeconds >= 3)
+                {
+                    // Start slightly conservatively. Subsequent samples may lower
+                    // the estimate, but never make a running countdown grow.
+                    var measured = _timer.Elapsed.TotalSeconds / normalized * (100 - normalized);
+                    var candidate = Math.Clamp(measured * 1.2 + 15, 1, 24 * 60 * 60);
+                    _remainingSeconds = _remainingSeconds.HasValue
+                        ? Math.Min(_remainingSeconds.Value, candidate)
+                        : candidate;
+                }
+
+                _lastPercent = Math.Max(_lastPercent, normalized);
+                return ToTimeSpan();
+            }
+        }
+
+        public TimeSpan? Tick()
+        {
+            lock (_gate)
+            {
+                TickCore();
+                return ToTimeSpan();
+            }
+        }
+
+        private void TickCore()
+        {
+            var elapsed = _timer.Elapsed;
+            if (_remainingSeconds.HasValue && _lastPercent < 100)
+            {
+                _remainingSeconds = Math.Max(1, _remainingSeconds.Value - (elapsed - _lastSample).TotalSeconds);
+            }
+            _lastSample = elapsed;
+        }
+
+        private TimeSpan? ToTimeSpan() => _remainingSeconds.HasValue
+            ? TimeSpan.FromSeconds(_remainingSeconds.Value)
+            : null;
     }
 
     private async Task<PortableImageData> ReadPortableImageAsync(string path, bool compress)

@@ -18,6 +18,7 @@ public sealed class AppShell : Shell
     private readonly FlyoutItem _statisticsItem;
     private readonly FlyoutItem _collectionsItem;
     private readonly FlyoutItem _tagsItem;
+    private readonly FlyoutItem _genresItem;
     private readonly FlyoutItem _settingsItem;
     private readonly FlyoutItem _peopleItem;
     private readonly FlyoutItem _profileItem;
@@ -58,6 +59,7 @@ public sealed class AppShell : Shell
         _statisticsItem = CreateItem("Statistics", nameof(StatisticsPage), () => _services.GetRequiredService<StatisticsPage>());
         _collectionsItem = CreateItem("Collections", nameof(CollectionsPage), () => _services.GetRequiredService<CollectionsPage>());
         _tagsItem = CreateItem("Tags", nameof(TagsPage), () => _services.GetRequiredService<TagsPage>());
+        _genresItem = CreateItem("Genres", nameof(GenresPage), () => _services.GetRequiredService<GenresPage>());
         _peopleItem = CreateItem("People", nameof(PeoplePage), () => _services.GetRequiredService<PeoplePage>());
         _profileItem = CreateItem("Profile", nameof(ProfilePage), () => _services.GetRequiredService<ProfilePage>());
         _settingsItem = CreateItem("Settings", nameof(SettingsPage), () => _services.GetRequiredService<SettingsPage>());
@@ -67,6 +69,7 @@ public sealed class AppShell : Shell
         Items.Add(_statisticsItem);
         Items.Add(_collectionsItem);
         Items.Add(_tagsItem);
+        Items.Add(_genresItem);
         Items.Add(_peopleItem);
         Items.Add(_profileItem);
         Items.Add(_settingsItem);
@@ -76,6 +79,7 @@ public sealed class AppShell : Shell
         Routing.RegisterRoute(nameof(EditMediaItemPage), typeof(EditMediaItemPage));
         Routing.RegisterRoute(nameof(CategoryManagementPage), typeof(CategoryManagementPage));
         Routing.RegisterRoute(nameof(TagDetailsPage), typeof(TagDetailsPage));
+        Routing.RegisterRoute(nameof(GenreDetailsPage), typeof(GenreDetailsPage));
         Routing.RegisterRoute(nameof(PersonDetailsPage), typeof(PersonDetailsPage));
         Routing.RegisterRoute(nameof(PersonEditorPage), typeof(PersonEditorPage));
         Routing.RegisterRoute(nameof(PersonGalleryPage), typeof(PersonGalleryPage));
@@ -168,6 +172,7 @@ public sealed class AppShell : Shell
         navigation.Children.Add(CreateNavButton("▥", T("Shell.Statistics"), "//Statistics", false));
         navigation.Children.Add(CreateNavButton("◎", T("Collections.Title"), "//Collections", false));
         navigation.Children.Add(CreateNavButton("#", T("Tags.Title"), "//Tags", false));
+        navigation.Children.Add(CreateNavButton("◈", T("Genres.Title"), "//Genres", false));
         navigation.Children.Add(CreateNavButton("♟", T("People.Title"), "//People", false));
         navigation.Children.Add(CreateNavButton("⚙", T("Settings.Title"), "//Settings", false));
         navigation.Children.Add(new Label
@@ -501,7 +506,7 @@ public sealed class AppShell : Shell
         BackgroundColor = backgroundPath is null ? AppBackgroundColor : Colors.Transparent;
         BackgroundImageSource = CreateBackgroundImageSource(backgroundPath);
 
-        Shell.SetBackgroundColor(this, AppBackgroundColor);
+        Shell.SetBackgroundColor(this, backgroundPath is null ? AppBackgroundColor : Colors.Transparent);
         Shell.SetForegroundColor(this, ForegroundColor);
         Shell.SetTitleColor(this, ForegroundColor);
         Shell.SetUnselectedColor(this, SecondaryForegroundColor);
@@ -581,6 +586,7 @@ public sealed class AppShell : Shell
         _statisticsItem.Title = T("Shell.Statistics");
         _collectionsItem.Title = T("Collections.Title");
         _tagsItem.Title = T("Tags.Title");
+        _genresItem.Title = T("Genres.Title");
         _peopleItem.Title = T("People.Title");
         _profileItem.Title = T("Profile.Title");
         _settingsItem.Title = T("Settings.Title");

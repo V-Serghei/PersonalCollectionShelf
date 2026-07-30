@@ -110,6 +110,9 @@ internal static class AppNavigation
     public static Task OpenTagAsync(string tagName) =>
         Shell.Current.GoToAsync($"{nameof(TagDetailsPage)}?tag={Uri.EscapeDataString(tagName)}");
 
+    public static Task OpenGenreAsync(string genreName) =>
+        Shell.Current.GoToAsync($"{nameof(GenreDetailsPage)}?genre={Uri.EscapeDataString(genreName)}");
+
     public static async Task OpenPersonAsync(Guid personId)
     {
         if (!UsesModalNavigation || Shell.Current.Navigation.ModalStack.Count == 0)

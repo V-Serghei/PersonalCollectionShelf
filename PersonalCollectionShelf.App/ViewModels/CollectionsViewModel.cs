@@ -238,7 +238,7 @@ public partial class CollectionsViewModel : BaseViewModel
         var visibleItems = VisibleItems(collection, mediaType);
         var covers = visibleItems
             .Where(item => MediaPresentation.HasValidCoverUrl(item.CoverUrl))
-            .Select(item => _thumbnailCache.GetDisplaySource(item.CoverUrl))
+            .Select(item => ResolveCoverSource(item.CoverUrl!))
             .Where(source => !string.IsNullOrWhiteSpace(source))
             .Distinct(StringComparer.Ordinal)
             .Take(5)
@@ -280,7 +280,7 @@ public partial class CollectionsViewModel : BaseViewModel
             if (!sourceById.TryGetValue(card.Id, out var collection)) continue;
             var covers = VisibleItems(collection, mediaType)
                 .Where(item => MediaPresentation.HasValidCoverUrl(item.CoverUrl))
-                .Select(item => _thumbnailCache.GetDisplaySource(item.CoverUrl))
+                .Select(item => ResolveCoverSource(item.CoverUrl!))
                 .Where(source => !string.IsNullOrWhiteSpace(source))
                 .Distinct(StringComparer.Ordinal)
                 .Take(5)
@@ -288,6 +288,14 @@ public partial class CollectionsViewModel : BaseViewModel
             card.SetCovers(covers);
         }
         OnPropertyChanged(nameof(Collections));
+    }
+
+    private string ResolveCoverSource(string originalSource)
+    {
+        var thumbnail = _thumbnailCache.GetDisplaySource(originalSource);
+        // A local thumbnail is created asynchronously. Keep the original file
+        // visible until it is ready instead of rendering an empty cover stack.
+        return string.IsNullOrWhiteSpace(thumbnail) ? originalSource : thumbnail;
     }
 
     private static IReadOnlyList<CollectionItemDto> VisibleItems(CollectionExplorerDto collection, MediaType? mediaType) =>

@@ -38,15 +38,26 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
     private bool _isSearchVisible;
     private LocalizedOption<MediaType?>? _selectedMediaTypeFilter;
     private LocalizedOption<LibrarySortOption>? _selectedSortOption;
+    private readonly bool _isGenreMode;
 
     public TagDetailsViewModel(
         IMediaItemService mediaItems,
         IAuthService auth,
         ILocalizationService localization)
+        : this(mediaItems, auth, localization, isGenreMode: false)
+    {
+    }
+
+    protected TagDetailsViewModel(
+        IMediaItemService mediaItems,
+        IAuthService auth,
+        ILocalizationService localization,
+        bool isGenreMode)
         : base(localization)
     {
         _mediaItems = mediaItems;
         _auth = auth;
+        _isGenreMode = isGenreMode;
         ReloadFilterOptions();
     }
 
@@ -65,12 +76,13 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
         }
     }
 
-    public string PageTitle => string.IsNullOrWhiteSpace(TagName) ? T("Tags.DetailsTitle") : TagName;
-    public string TagBadgeText => $"# {TagName}";
-    public string Subtitle => T("Tags.DetailsSubtitle");
-    public string EmptyText => T("Tags.DetailsEmpty");
-    public string SearchPlaceholder => T("Tags.DetailsSearchPlaceholder");
-    public string ResultsText => string.Format(T("Tags.ItemsResultFormat"), Items.Count);
+    private string LocalizationPrefix => _isGenreMode ? "Genres" : "Tags";
+    public string PageTitle => string.IsNullOrWhiteSpace(TagName) ? T($"{LocalizationPrefix}.DetailsTitle") : TagName;
+    public string TagBadgeText => _isGenreMode ? TagName : $"# {TagName}";
+    public string Subtitle => T($"{LocalizationPrefix}.DetailsSubtitle");
+    public string EmptyText => T($"{LocalizationPrefix}.DetailsEmpty");
+    public string SearchPlaceholder => T($"{LocalizationPrefix}.DetailsSearchPlaceholder");
+    public string ResultsText => string.Format(T($"{LocalizationPrefix}.ItemsResultFormat"), Items.Count);
 
     public string SearchText
     {
@@ -112,7 +124,8 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("tag", out var rawTag))
+        var queryKey = _isGenreMode ? "genre" : "tag";
+        if (query.TryGetValue(queryKey, out var rawTag))
         {
             TagName = Uri.UnescapeDataString(rawTag?.ToString() ?? string.Empty).Trim();
         }
@@ -127,7 +140,8 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
             var userId = await _auth.GetCurrentUserIdAsync() ?? "local-user";
             var library = await _mediaItems.GetLibraryAsync(userId);
             _tagItems = library
-                .Where(item => item.TagNames.Any(tag => string.Equals(tag, TagName, StringComparison.OrdinalIgnoreCase)))
+                .Where(item => (_isGenreMode ? item.Genres : item.TagNames)
+                    .Any(value => string.Equals(value, TagName, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
             ApplyFilter();
         }
@@ -170,7 +184,8 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
                 (!string.IsNullOrWhiteSpace(item.OriginalTitle) && item.OriginalTitle.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrWhiteSpace(item.Creator) && item.Creator.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrWhiteSpace(item.Category) && item.Category.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-                item.TagNames.Any(tag => tag.Contains(term, StringComparison.OrdinalIgnoreCase)));
+                item.TagNames.Any(tag => tag.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                item.Genres.Any(genre => genre.Contains(term, StringComparison.OrdinalIgnoreCase)));
         }
 
         filtered = SelectedSortOption?.Value switch
@@ -208,7 +223,9 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
             MediaPresentation.GetStatusForegroundColor(item.Status),
             MediaPresentation.GetStatusBackgroundColor(item.Status),
             category,
-            string.Join("  •  ", item.TagNames.Where(tag => !string.Equals(tag, TagName, StringComparison.OrdinalIgnoreCase)).Take(3)),
+            string.Join("  •  ", (_isGenreMode ? item.Genres : item.TagNames)
+                .Where(value => !string.Equals(value, TagName, StringComparison.OrdinalIgnoreCase))
+                .Take(3)),
             item.Rating?.ToString("0.#", CultureInfo.CurrentCulture) ?? string.Empty,
             item.Rating.HasValue,
             item.ReleaseYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
@@ -244,5 +261,16 @@ public partial class TagDetailsViewModel : BaseViewModel, IQueryAttributable
     {
         ReloadFilterOptions();
         base.RefreshLocalizedProperties();
+    }
+}
+
+public sealed class GenreDetailsViewModel : TagDetailsViewModel
+{
+    public GenreDetailsViewModel(
+        IMediaItemService mediaItems,
+        IAuthService auth,
+        ILocalizationService localization)
+        : base(mediaItems, auth, localization, isGenreMode: true)
+    {
     }
 }

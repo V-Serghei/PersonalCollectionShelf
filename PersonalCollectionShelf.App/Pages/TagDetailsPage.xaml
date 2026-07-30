@@ -21,7 +21,7 @@
                 Clicked="HandleSearchClicked"
                 HeightRequest="44"
                 Style="{StaticResource IconToggleButtonStyle}"
-                Text="&#x2315;"
+                Text="&#x22EE;"
                 WidthRequest="44" />
         </Grid>
 
@@ -41,6 +41,7 @@
         <CollectionView
             Grid.Row="2"
             HeightRequest="44"
+            IsVisible="{Binding IsSearchVisible}"
             ItemsSource="{Binding MediaTypeFilters}"
             SelectionMode="None">
             <CollectionView.ItemsLayout>
@@ -64,7 +65,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Grid Grid.Row="3" ColumnDefinitions="*,190" ColumnSpacing="12">
+        <Grid Grid.Row="3" ColumnDefinitions="*,190" ColumnSpacing="12" IsVisible="{Binding IsSearchVisible}">
             <Label FontSize="12" Text="{Binding ResultsText}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
             <Picker Grid.Column="1" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSortOption}" />
         </Grid>

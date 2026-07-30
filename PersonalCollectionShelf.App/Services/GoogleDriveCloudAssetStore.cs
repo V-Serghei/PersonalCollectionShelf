@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 using System.Net;
 using System.Text;
@@ -14,7 +15,7 @@ public sealed class GoogleDriveCloudAssetStore(
     private const string UploadApi = "https://www.googleapis.com/upload/drive/v3";
     private const string FolderName = "Personal Collection Shelf Assets";
     private readonly SemaphoreSlim _inventoryLock = new(1, 1);
-    private Dictionary<string, string>? _fileIds;
+    private ConcurrentDictionary<string, string>? _fileIds;
     private string? _folderId;
 
     public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default) =>
@@ -87,7 +88,7 @@ public sealed class GoogleDriveCloudAssetStore(
             }
 
             _folderId = await GetOrCreateFolderAsync(token, cancellationToken);
-            var files = new Dictionary<string, string>(StringComparer.Ordinal);
+            var files = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
             string? pageToken = null;
             do
             {

@@ -12,7 +12,8 @@ public sealed record TagCardViewModel(
     string Name,
     int ItemCount,
     string ItemCountText,
-    string CategorySummary);
+    string CategorySummary,
+    string Icon);
 
 public partial class TagsViewModel : BaseViewModel
 {
@@ -26,15 +27,26 @@ public partial class TagsViewModel : BaseViewModel
     private Task? _loadingTask;
     private LocalizedOption<MediaType?>? _selectedMediaTypeFilter;
     private LocalizedOption<TagSortOption>? _selectedSortOption;
+    private readonly bool _isGenreMode;
 
     public TagsViewModel(
         IMediaItemService mediaItems,
         IAuthService auth,
         ILocalizationService localization)
+        : this(mediaItems, auth, localization, isGenreMode: false)
+    {
+    }
+
+    protected TagsViewModel(
+        IMediaItemService mediaItems,
+        IAuthService auth,
+        ILocalizationService localization,
+        bool isGenreMode)
         : base(localization)
     {
         _mediaItems = mediaItems;
         _auth = auth;
+        _isGenreMode = isGenreMode;
         IsBusy = true;
         ReloadFilterOptions();
     }
@@ -48,15 +60,16 @@ public partial class TagsViewModel : BaseViewModel
     public ObservableCollection<LocalizedOption<MediaType?>> MediaTypeFilters { get; } = [];
     public ObservableCollection<LocalizedOption<TagSortOption>> SortOptions { get; } = [];
 
-    public string PageTitle => T("Tags.Title");
-    public string Subtitle => T("Tags.Subtitle");
-    public string EmptyText => T("Tags.Empty");
-    public string SearchPlaceholder => T("Tags.SearchPlaceholder");
-    public string SortPlaceholder => T("Tags.SortPlaceholder");
-    public string ResultsText => string.Format(T("Tags.ResultsFormat"), Tags.Count);
-    public string OptionsText => T("Tags.Options");
-    public string CategoryFilterLabel => T("Tags.CategoryFilter");
-    public string LoadingText => T("Tags.Loading");
+    private string LocalizationPrefix => _isGenreMode ? "Genres" : "Tags";
+    public string PageTitle => T($"{LocalizationPrefix}.Title");
+    public string Subtitle => T($"{LocalizationPrefix}.Subtitle");
+    public string EmptyText => T($"{LocalizationPrefix}.Empty");
+    public string SearchPlaceholder => T($"{LocalizationPrefix}.SearchPlaceholder");
+    public string SortPlaceholder => T($"{LocalizationPrefix}.SortPlaceholder");
+    public string ResultsText => string.Format(T($"{LocalizationPrefix}.ResultsFormat"), Tags.Count);
+    public string OptionsText => T($"{LocalizationPrefix}.Options");
+    public string CategoryFilterLabel => T($"{LocalizationPrefix}.CategoryFilter");
+    public string LoadingText => T($"{LocalizationPrefix}.Loading");
 
     public string SearchText
     {
@@ -116,7 +129,8 @@ public partial class TagsViewModel : BaseViewModel
             var userId = await _auth.GetCurrentUserIdAsync() ?? "local-user";
             var library = await _mediaItems.GetLibraryAsync(userId);
             _allTags = library
-                .SelectMany(item => item.TagNames.Select(tag => (Name: tag.Trim(), Item: item)))
+                .SelectMany(item => (_isGenreMode ? item.Genres : item.TagNames)
+                    .Select(value => (Name: value.Trim(), Item: item)))
                 .Where(value => value.Name.Length > 0)
                 .GroupBy(value => value.Name, StringComparer.OrdinalIgnoreCase)
                 .Select(group => new TagSourceGroup(
@@ -146,7 +160,9 @@ public partial class TagsViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private Task OpenTagAsync(TagCardViewModel tag) => AppNavigation.OpenTagAsync(tag.Name);
+    private Task OpenTagAsync(TagCardViewModel tag) => _isGenreMode
+        ? AppNavigation.OpenGenreAsync(tag.Name)
+        : AppNavigation.OpenTagAsync(tag.Name);
 
     private void ApplyFilter()
     {
@@ -192,8 +208,9 @@ public partial class TagsViewModel : BaseViewModel
             cards.Add(new TagCardViewModel(
                 group.Name,
                 visibleItems.Count,
-                string.Format(T("Tags.ItemCountFormat"), visibleItems.Count),
-                categorySummary));
+                string.Format(T($"{LocalizationPrefix}.ItemCountFormat"), visibleItems.Count),
+                categorySummary,
+                _isGenreMode ? "◈" : "#"));
         }
 
         Tags = new ObservableCollection<TagCardViewModel>(cards);
@@ -221,7 +238,7 @@ public partial class TagsViewModel : BaseViewModel
             SortOptions.Clear();
             foreach (var sortOption in Enum.GetValues<TagSortOption>())
             {
-                SortOptions.Add(new LocalizedOption<TagSortOption>(sortOption, T($"Tags.Sort.{sortOption}")));
+                SortOptions.Add(new LocalizedOption<TagSortOption>(sortOption, T($"{LocalizationPrefix}.Sort.{sortOption}")));
             }
 
             _selectedMediaTypeFilter = null;
@@ -245,4 +262,15 @@ public partial class TagsViewModel : BaseViewModel
     }
 
     private sealed record TagSourceGroup(string Name, IReadOnlyList<MediaItemDto> Items);
+}
+
+public sealed class GenresViewModel : TagsViewModel
+{
+    public GenresViewModel(
+        IMediaItemService mediaItems,
+        IAuthService auth,
+        ILocalizationService localization)
+        : base(mediaItems, auth, localization, isGenreMode: true)
+    {
+    }
 }

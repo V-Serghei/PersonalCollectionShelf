@@ -324,5 +324,18 @@ public sealed class AppearanceService : IAppearanceService
         application.Resources["PageBackground"] = BackgroundImagePath is null
             ? Color.FromArgb(palette["Background"])
             : Colors.Transparent;
+
+        var backgroundPath = BackgroundImagePath;
+        if (backgroundPath is null)
+        {
+            application.Resources.Remove("PageBackgroundImage");
+        }
+        else
+        {
+            application.Resources["PageBackgroundImage"] = new StreamImageSource
+            {
+                Stream = cancellationToken => Task.FromResult<Stream>(File.OpenRead(backgroundPath))
+            };
+        }
     }
 }

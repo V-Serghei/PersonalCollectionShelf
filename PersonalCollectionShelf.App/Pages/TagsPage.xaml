@@ -59,7 +59,7 @@
                             <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:TagsPage}}, Path=ViewModel.OpenTagCommand, x:DataType={x:Type pages:TagsPage}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers>
                             <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="5">
                                 <Border Grid.RowSpan="2" Padding="8,5" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Primary}" StrokeShape="RoundRectangle 9">
-                                    <Label FontAttributes="Bold" FontSize="15" Text="#" TextColor="{DynamicResource Primary}" />
+                                    <Label FontAttributes="Bold" FontSize="15" Text="{Binding Icon}" TextColor="{DynamicResource Primary}" />
                                 </Border>
                                 <Label Grid.Column="1" Grid.ColumnSpan="2" FontAttributes="Bold" FontSize="14" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding Name}" />
                                 <Label Grid.Row="1" Grid.Column="1" FontSize="9" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding CategorySummary}" TextColor="{DynamicResource MutedForeground}" />
