@@ -14,11 +14,52 @@ public sealed class MediaItem
 
     public string? Description { get; set; }
 
+    public string? Category { get; set; }
+
+    public Guid? CategoryId { get; set; }
+
+    public string? Tags { get; set; }
+
+    public Guid? CreatorId { get; set; }
+
+    public Guid? StudioId { get; set; }
+
+    public string? SerialNumber { get; set; }
+
+    public int? TmdbId { get; set; }
+
+    public string? ImdbId { get; set; }
+
+    public int? KinopoiskId { get; set; }
+
+    public decimal? TmdbRating { get; set; }
+
+    public int? TmdbVoteCount { get; set; }
+
+    public decimal? ImdbRating { get; set; }
+
+    public int? ImdbVoteCount { get; set; }
+
+    public decimal? KinopoiskRating { get; set; }
+
+    public int? KinopoiskVoteCount { get; set; }
+
+    public DateTime? ExternalRatingsUpdatedAt { get; set; }
+    public string? CatalogProvider { get; set; }
+    public string? CatalogItemId { get; set; }
+    public string? CatalogSourceUrl { get; set; }
+    public string? CatalogRatingPrimarySource { get; set; }
+    public decimal? CatalogRatingPrimary { get; set; }
+    public int? CatalogRatingPrimaryCount { get; set; }
+    public string? CatalogRatingSecondarySource { get; set; }
+    public decimal? CatalogRatingSecondary { get; set; }
+    public int? CatalogRatingSecondaryCount { get; set; }
+
     public MediaType MediaType { get; set; } = MediaType.Other;
 
     public MediaStatus Status { get; set; } = MediaStatus.Planned;
 
-    public int? Rating { get; set; }
+    public decimal? Rating { get; set; }
 
     public int ProgressCurrent { get; set; }
 

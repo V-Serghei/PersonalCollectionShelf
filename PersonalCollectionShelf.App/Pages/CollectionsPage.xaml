@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.CollectionsPage"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:PersonalCollectionShelf.App.Models"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:CollectionsViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+    <Grid Padding="{OnIdiom Phone='14,12', Default='24'}" RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="{OnIdiom Phone=28, Default=32}" Text="{Binding PageTitle}" />
+                <Label FontSize="12" Text="{Binding ResultsText}" TextColor="{DynamicResource MutedForeground}" />
+            </VerticalStackLayout>
+            <Button
+                Grid.Column="1"
+                Command="{Binding ToggleOptionsCommand}"
+                HeightRequest="44"
+                Style="{StaticResource IconToggleButtonStyle}"
+                Text="&#x22EE;"
+                WidthRequest="44" />
+        </Grid>
+
+        <Border Grid.Row="1" IsVisible="{Binding IsOptionsVisible}" Padding="14" Style="{StaticResource CardBorderStyle}">
+            <VerticalStackLayout Spacing="10">
+                <Label FontAttributes="Bold" FontSize="16" Text="{Binding OptionsText}" />
+                <Border Padding="11,0" Style="{StaticResource MutedBorderStyle}">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <Label FontSize="16" Text="&#x2315;" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                        <Entry
+                            Grid.Column="1"
+                            BackgroundColor="Transparent"
+                            ClearButtonVisibility="WhileEditing"
+                            Placeholder="{Binding SearchPlaceholder}"
+                            Text="{Binding SearchText}" />
+                    </Grid>
+                </Border>
+                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CategoryFilterLabel}" />
+                <CollectionView HeightRequest="44" ItemsSource="{Binding MediaTypeFilters}" SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout ItemSpacing="8" Orientation="Horizontal" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:DisplayOption">
+                            <Button
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type pages:CollectionsPage}}, Path=ViewModel.SelectMediaTypeFilterCommand, x:DataType={x:Type pages:CollectionsPage}}"
+                                CommandParameter="{Binding .}"
+                                Style="{StaticResource PillButtonStyle}"
+                                Text="{Binding DisplayName}">
+                                <Button.Triggers>
+                                    <DataTrigger Binding="{Binding IsSelected}" TargetType="Button" Value="True">
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource Primary}" />
+                                        <Setter Property="TextColor" Value="{DynamicResource PrimaryForeground}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SortLabel}" VerticalTextAlignment="Center" />
+                    <Picker Grid.Column="1" HorizontalOptions="Fill" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSortOption}" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <VerticalStackLayout HorizontalOptions="Center" IsVisible="{Binding IsBusy}" Spacing="10" VerticalOptions="Center">
+                <ActivityIndicator HeightRequest="42" IsRunning="{Binding IsBusy}" WidthRequest="42" />
+                <Label Text="{Binding LoadingText}" TextColor="{DynamicResource MutedForeground}" />
+            </VerticalStackLayout>
+
+            <CollectionView
+                x:Name="CollectionsList"
+                IsVisible="{Binding IsNotBusy}"
+                ItemSizingStrategy="MeasureFirstItem"
+                ItemsSource="{Binding Collections}"
+                SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout
+                        HorizontalItemSpacing="12"
+                        Orientation="Vertical"
+                        Span="{OnIdiom Phone=2, Tablet=3, Desktop=4}"
+                        VerticalItemSpacing="14" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.EmptyView>
+                    <Border Margin="0,36,0,0" Padding="24" Style="{StaticResource CardBorderStyle}">
+                        <Label HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" />
+                    </Border>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:CollectionCardViewModel">
+                        <Grid HeightRequest="238" RowDefinitions="13,*">
+                            <Border
+                                Margin="12,0,0,-3"
+                                BackgroundColor="{DynamicResource MutedSoft}"
+                                HorizontalOptions="Start"
+                                Stroke="{DynamicResource Border}"
+                                StrokeShape="RoundRectangle 8,8,0,0"
+                                WidthRequest="72" />
+                            <Border Grid.Row="1" Padding="10" Style="{StaticResource CardBorderStyle}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type pages:CollectionsPage}}, Path=ViewModel.OpenCollectionCommand, x:DataType={x:Type pages:CollectionsPage}}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Grid RowDefinitions="102,Auto,Auto,Auto" RowSpacing="6">
+                                    <Grid HorizontalOptions="Center" WidthRequest="118">
+                                        <Border
+                                            IsVisible="{Binding HasFifthCover}"
+                                            HeightRequest="78"
+                                            HorizontalOptions="Center"
+                                            Rotation="13"
+                                            Stroke="{DynamicResource Border}"
+                                            StrokeShape="RoundRectangle 6"
+                                            TranslationX="32"
+                                            VerticalOptions="Center"
+                                            WidthRequest="53">
+                                            <Image Aspect="AspectFill" Source="{Binding FifthCover}" />
+                                        </Border>
+                                        <Border
+                                            IsVisible="{Binding HasFourthCover}"
+                                            HeightRequest="81"
+                                            HorizontalOptions="Center"
+                                            Rotation="-12"
+                                            Stroke="{DynamicResource Border}"
+                                            StrokeShape="RoundRectangle 6"
+                                            TranslationX="-31"
+                                            VerticalOptions="Center"
+                                            WidthRequest="55">
+                                            <Image Aspect="AspectFill" Source="{Binding FourthCover}" />
+                                        </Border>
+                                        <Border
+                                            IsVisible="{Binding HasThirdCover}"
+                                            HeightRequest="86"
+                                            HorizontalOptions="Center"
+                                            Rotation="8"
+                                            Stroke="{DynamicResource Border}"
+                                            StrokeShape="RoundRectangle 6"
+                                            TranslationX="24"
+                                            VerticalOptions="Center"
+                                            WidthRequest="58">
+                                            <Image Aspect="AspectFill" Source="{Binding ThirdCover}" />
+                                        </Border>
+                                        <Border
+                                            IsVisible="{Binding HasSecondCover}"
+                                            HeightRequest="90"
+                                            HorizontalOptions="Center"
+                                            Rotation="-7"
+                                            Stroke="{DynamicResource Border}"
+                                            StrokeShape="RoundRectangle 6"
+                                            TranslationX="-23"
+                                            VerticalOptions="Center"
+                                            WidthRequest="61">
+                                            <Image Aspect="AspectFill" Source="{Binding SecondCover}" />
+                                        </Border>
+                                        <Border
+                                            IsVisible="{Binding HasFirstCover}"
+                                            HeightRequest="96"
+                                            HorizontalOptions="Center"
+                                            Stroke="{DynamicResource Primary}"
+                                            StrokeShape="RoundRectangle 6"
+                                            StrokeThickness="1"
+                                            VerticalOptions="Center"
+                                            WidthRequest="66">
+                                            <Image Aspect="AspectFill" Source="{Binding FirstCover}" />
+                                        </Border>
+                                        <Label
+                                            FontSize="48"
+                                            HorizontalTextAlignment="Center"
+                                            IsVisible="{Binding HasNoCovers}"
+                                            Text="&#x25F2;"
+                                            TextColor="{DynamicResource Primary}"
+                                            VerticalTextAlignment="Center" />
+                                    </Grid>
+                                    <Label Grid.Row="1" FontAttributes="Bold" FontSize="15" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding Name}" />
+                                    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                        <Label FontSize="10" Text="{Binding ItemCountText}" TextColor="{DynamicResource MutedForeground}" />
+                                        <Border Grid.Column="1" Padding="6,2" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 8">
+                                            <Label FontSize="9" Text="{Binding KindLabel}" />
+                                        </Border>
+                                    </Grid>
+                                    <Label Grid.Row="3" FontSize="9" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding CategorySummary}" TextColor="{DynamicResource MutedForeground}" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+    </Grid>
+</ContentPage>

@@ -6,5 +6,7 @@ public interface ISyncService
 {
     Task<SyncStatusDto> GetSyncStatusAsync(CancellationToken cancellationToken = default);
 
-    Task RequestSyncAsync(CancellationToken cancellationToken = default);
+    Task<SyncResultDto> RequestSyncAsync(
+        IProgress<SyncProgressDto>? progress = null,
+        CancellationToken cancellationToken = default);
 }

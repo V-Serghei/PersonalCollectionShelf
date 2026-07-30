@@ -1,4 +1,5 @@
 using PersonalCollectionShelf.Application.DTOs;
+using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.Application.Validation;
 
@@ -8,6 +9,8 @@ public static class MediaItemValidator
     {
         var result = new ValidationResult();
         ValidateShared(request.UserId, request.Title, request.Rating, request.ProgressCurrent, request.ProgressTotal, request.ReleaseYear, result);
+        ValidateBook(request.MediaType, request.BookDetails, result);
+        ValidateMovie(request.MediaType, request.MovieDetails, result);
         return result;
     }
 
@@ -21,13 +24,15 @@ public static class MediaItemValidator
         }
 
         ValidateShared(request.UserId, request.Title, request.Rating, request.ProgressCurrent, request.ProgressTotal, request.ReleaseYear, result);
+        ValidateBook(request.MediaType, request.BookDetails, result);
+        ValidateMovie(request.MediaType, request.MovieDetails, result);
         return result;
     }
 
     private static void ValidateShared(
         string userId,
         string title,
-        int? rating,
+        decimal? rating,
         int progressCurrent,
         int? progressTotal,
         int? releaseYear,
@@ -43,7 +48,7 @@ public static class MediaItemValidator
             result.Add("Validation.TitleRequired", nameof(title));
         }
 
-        if (rating is < 1 or > 10)
+        if (rating is < 0 or > 10 || (rating.HasValue && decimal.Round(rating.Value, 1) != rating.Value))
         {
             result.Add("Validation.RatingRange", nameof(rating));
         }
@@ -68,4 +73,69 @@ public static class MediaItemValidator
             result.Add("Validation.ReleaseYearRange", nameof(releaseYear));
         }
     }
+
+    private static void ValidateBook(MediaType mediaType, BookDetailsInput? book, ValidationResult result)
+    {
+        if (book is null)
+        {
+            return;
+        }
+
+        if (mediaType != MediaType.Book)
+        {
+            result.Add("Validation.BookDetailsType", nameof(book));
+        }
+
+        ValidateYear(book.EditionYear, nameof(book.EditionYear), result);
+        ValidateYear(book.OriginalPublicationYear, nameof(book.OriginalPublicationYear), result);
+        ValidateYear(book.TranslationYear, nameof(book.TranslationYear), result);
+
+        if (book.PageCount is < 1)
+        {
+            result.Add("Validation.PageCountInvalid", nameof(book.PageCount));
+        }
+
+        if (book.EditionNumber is < 1)
+        {
+            result.Add("Validation.EditionNumberInvalid", nameof(book.EditionNumber));
+        }
+
+        if (!string.IsNullOrWhiteSpace(book.Isbn10) && NormalizeIsbn(book.Isbn10).Length != 10)
+        {
+            result.Add("Validation.Isbn10Invalid", nameof(book.Isbn10));
+        }
+
+        if (!string.IsNullOrWhiteSpace(book.Isbn13) && NormalizeIsbn(book.Isbn13).Length != 13)
+        {
+            result.Add("Validation.Isbn13Invalid", nameof(book.Isbn13));
+        }
+    }
+
+    private static void ValidateYear(int? year, string fieldName, ValidationResult result)
+    {
+        if (year is < 1 or > 2200)
+        {
+            result.Add("Validation.BookYearRange", fieldName);
+        }
+    }
+
+    private static void ValidateMovie(MediaType mediaType, MovieDetailsInput? movie, ValidationResult result)
+    {
+        if (movie is null)
+        {
+            return;
+        }
+
+        if (mediaType is not (MediaType.Movie or MediaType.Cartoon))
+        {
+            result.Add("Validation.MovieDetailsType", nameof(movie));
+        }
+
+        if (movie.RuntimeMinutes is < 1 or > 1440)
+        {
+            result.Add("Validation.MovieRuntimeInvalid", nameof(movie.RuntimeMinutes));
+        }
+    }
+
+    private static string NormalizeIsbn(string value) => value.Replace("-", string.Empty).Replace(" ", string.Empty);
 }

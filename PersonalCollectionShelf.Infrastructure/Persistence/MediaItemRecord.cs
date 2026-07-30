@@ -19,12 +19,60 @@ public sealed class MediaItemRecord
     public string? Description { get; set; }
 
     [Indexed]
+    public string? Category { get; set; }
+
+    [Indexed]
+    public string? CategoryId { get; set; }
+
+    public string? Tags { get; set; }
+
+    [Indexed]
+    public string? CreatorId { get; set; }
+
+    [Indexed]
+    public string? StudioId { get; set; }
+
+    public string? SerialNumber { get; set; }
+
+    [Indexed]
+    public int? TmdbId { get; set; }
+
+    [Indexed]
+    public string? ImdbId { get; set; }
+
+    [Indexed]
+    public int? KinopoiskId { get; set; }
+
+    public decimal? TmdbRating { get; set; }
+
+    public int? TmdbVoteCount { get; set; }
+
+    public decimal? ImdbRating { get; set; }
+
+    public int? ImdbVoteCount { get; set; }
+
+    public decimal? KinopoiskRating { get; set; }
+
+    public int? KinopoiskVoteCount { get; set; }
+
+    public DateTime? ExternalRatingsUpdatedAt { get; set; }
+    public string? CatalogProvider { get; set; }
+    public string? CatalogItemId { get; set; }
+    public string? CatalogSourceUrl { get; set; }
+    public string? CatalogRatingPrimarySource { get; set; }
+    public decimal? CatalogRatingPrimary { get; set; }
+    public int? CatalogRatingPrimaryCount { get; set; }
+    public string? CatalogRatingSecondarySource { get; set; }
+    public decimal? CatalogRatingSecondary { get; set; }
+    public int? CatalogRatingSecondaryCount { get; set; }
+
+    [Indexed]
     public int MediaType { get; set; }
 
     [Indexed]
     public int Status { get; set; }
 
-    public int? Rating { get; set; }
+    public decimal? Rating { get; set; }
 
     public int ProgressCurrent { get; set; }
 

@@ -14,11 +14,67 @@ public sealed record UpdateMediaItemRequest
 
     public string? Description { get; init; }
 
+    public string? Category { get; init; }
+
+    public Guid? MediaCategoryId { get; init; }
+
+    public string? Tags { get; init; }
+
+    public string? Creator { get; init; }
+
+    public string? Publisher { get; init; }
+
+    public string? SerialNumber { get; init; }
+
+    public int? TmdbId { get; init; }
+    public string? ImdbId { get; init; }
+    public int? KinopoiskId { get; init; }
+    public decimal? TmdbRating { get; init; }
+    public int? TmdbVoteCount { get; init; }
+    public decimal? ImdbRating { get; init; }
+    public int? ImdbVoteCount { get; init; }
+    public decimal? KinopoiskRating { get; init; }
+    public int? KinopoiskVoteCount { get; init; }
+    public DateTime? ExternalRatingsUpdatedAt { get; init; }
+    public string? CatalogProvider { get; init; }
+    public string? CatalogItemId { get; init; }
+    public string? CatalogSourceUrl { get; init; }
+    public string? CatalogRatingPrimarySource { get; init; }
+    public decimal? CatalogRatingPrimary { get; init; }
+    public int? CatalogRatingPrimaryCount { get; init; }
+    public string? CatalogRatingSecondarySource { get; init; }
+    public decimal? CatalogRatingSecondary { get; init; }
+    public int? CatalogRatingSecondaryCount { get; init; }
+
+    public IReadOnlyList<string>? Cast { get; init; }
+
     public MediaType MediaType { get; init; } = MediaType.Other;
 
     public MediaStatus Status { get; init; } = MediaStatus.Planned;
 
-    public int? Rating { get; init; }
+    public decimal? Rating { get; init; }
+
+    public IReadOnlyList<string>? TagNames { get; init; }
+
+    public IReadOnlyList<string>? Genres { get; init; }
+
+    public IReadOnlyList<PersonCreditInput>? Contributions { get; init; }
+
+    public IReadOnlyList<StudioCreditInput>? StudioCredits { get; init; }
+
+    public BookDetailsInput? BookDetails { get; init; }
+
+    public MovieDetailsInput? MovieDetails { get; init; }
+
+    public EpisodicDetailsInput? EpisodicDetails { get; init; }
+
+    public GraphicPublicationDetailsInput? GraphicPublicationDetails { get; init; }
+
+    public GameDetailsInput? GameDetails { get; init; }
+
+    public CollectionMembershipInput? Collection { get; init; }
+
+    public IReadOnlyList<MediaRelationInput>? Relations { get; init; }
 
     public int ProgressCurrent { get; init; }
 

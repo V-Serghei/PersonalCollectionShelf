@@ -3,53 +3,319 @@
     x:Class="PersonalCollectionShelf.App.Pages.MediaDetailsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:MediaDetailsViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="14">
-            <Label
-                FontAttributes="Bold"
-                FontSize="24"
-                Text="{Binding PageTitle}" />
-            <Label
-                IsVisible="{Binding HasErrorMessage}"
-                Text="{Binding ErrorMessage}"
-                TextColor="#B91C1C" />
+    <Grid>
+      <ScrollView>
+        <VerticalStackLayout
+            x:Name="DetailsContent"
+            Padding="24"
+            Spacing="18"
+            HorizontalOptions="Center"
+            MaximumWidthRequest="1120">
 
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="10">
-                <Label Grid.Row="0" Grid.Column="0" FontAttributes="Bold" Text="{Binding TypeLabel}" />
-                <Label Grid.Row="0" Grid.Column="1" Text="{Binding TypeValue}" />
-                <Label Grid.Row="1" Grid.Column="0" FontAttributes="Bold" Text="{Binding StatusLabel}" />
-                <Label Grid.Row="1" Grid.Column="1" Text="{Binding StatusValue}" />
-                <Label Grid.Row="2" Grid.Column="0" FontAttributes="Bold" Text="{Binding ProgressLabel}" />
-                <Label Grid.Row="2" Grid.Column="1" Text="{Binding ProgressValue}" />
-                <Label Grid.Row="3" Grid.Column="0" FontAttributes="Bold" Text="{Binding RatingLabel}" />
-                <Label Grid.Row="3" Grid.Column="1" Text="{Binding RatingValue}" />
-                <Label Grid.Row="4" Grid.Column="0" FontAttributes="Bold" Text="{Binding OriginalTitleLabel}" />
-                <Label Grid.Row="4" Grid.Column="1" Text="{Binding OriginalTitleValue}" />
-                <Label Grid.Row="5" Grid.Column="0" FontAttributes="Bold" Text="{Binding DescriptionLabel}" />
-                <Label Grid.Row="5" Grid.Column="1" Text="{Binding DescriptionValue}" />
-                <Label Grid.Row="6" Grid.Column="0" FontAttributes="Bold" Text="{Binding NotesLabel}" />
-                <Label Grid.Row="6" Grid.Column="1" Text="{Binding NotesValue}" />
-                <Label Grid.Row="7" Grid.Column="0" FontAttributes="Bold" Text="{Binding StartDateLabel}" />
-                <Label Grid.Row="7" Grid.Column="1" Text="{Binding StartDateValue}" />
-                <Label Grid.Row="8" Grid.Column="0" FontAttributes="Bold" Text="{Binding FinishDateLabel}" />
-                <Label Grid.Row="8" Grid.Column="1" Text="{Binding FinishDateValue}" />
-                <Label Grid.Row="9" Grid.Column="0" FontAttributes="Bold" Text="{Binding ReleaseYearLabel}" />
-                <Label Grid.Row="9" Grid.Column="1" Text="{Binding ReleaseYearValue}" />
-                <Label Grid.Row="10" Grid.Column="0" FontAttributes="Bold" Text="{Binding FavoriteLabel}" />
-                <Label Grid.Row="10" Grid.Column="1" Text="{Binding FavoriteValue}" />
-                <Label Grid.Row="11" Grid.Column="0" FontAttributes="Bold" Text="{Binding CreatedAtLabel}" />
-                <Label Grid.Row="11" Grid.Column="1" Text="{Binding CreatedAtValue}" />
-                <Label Grid.Row="12" Grid.Column="0" FontAttributes="Bold" Text="{Binding UpdatedAtLabel}" />
-                <Label Grid.Row="12" Grid.Column="1" Text="{Binding UpdatedAtValue}" />
+            <Button
+                Command="{Binding BackCommand}"
+                HorizontalOptions="Start"
+                Style="{StaticResource SecondaryButtonStyle}"
+                Text="{Binding BackButtonText}" />
+
+            <Border
+                Padding="12"
+                BackgroundColor="#1AF87171"
+                IsVisible="{Binding HasErrorMessage}"
+                Stroke="#40F87171"
+                StrokeShape="RoundRectangle 10">
+                <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource Danger}" />
+            </Border>
+
+            <!-- Hero: cover, identity and visible actions -->
+            <Border x:Name="HeroCard" Padding="22" Style="{StaticResource CardBorderStyle}">
+                <Grid x:Name="HeroGrid" ColumnDefinitions="180,*" ColumnSpacing="26">
+                    <Border
+                        x:Name="HeroCover"
+                        Grid.Column="0"
+                        BackgroundColor="{DynamicResource Muted}"
+                        HeightRequest="264"
+                        Stroke="{DynamicResource Border}"
+                        StrokeShape="RoundRectangle 12"
+                        WidthRequest="176">
+                        <Grid>
+                            <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="58"
+                                HorizontalOptions="Center"
+                                IsVisible="{Binding HasNoCoverUrl}"
+                                Text="{Binding Initial}"
+                                TextColor="{DynamicResource MutedForeground}"
+                                VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
+                    <Grid x:Name="HeroInfo" Grid.Column="1" RowDefinitions="Auto,*,Auto" RowSpacing="18">
+                        <VerticalStackLayout Spacing="9">
+                            <Label Style="{StaticResource PageTitleLabelStyle}" Text="{Binding PageTitle}" />
+                            <Label FontSize="15" IsVisible="{Binding HasOriginalTitle}" Text="{Binding OriginalTitleValue}" TextColor="{DynamicResource MutedForeground}" />
+                            <Label FontSize="13" Text="{Binding HeroMetaValue}" TextColor="{DynamicResource Primary}" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Border Padding="11,5" BackgroundColor="{Binding MediaTypeColor}" StrokeThickness="0" StrokeShape="RoundRectangle 13">
+                                    <Label FontAttributes="Bold" FontSize="11" Text="{Binding TypeValue}" TextColor="White" />
+                                </Border>
+                                <Border Padding="11,5" BackgroundColor="{Binding StatusBackgroundColor}" Stroke="{Binding StatusForegroundColor}" StrokeShape="RoundRectangle 13">
+                                    <Label FontAttributes="Bold" FontSize="11" Text="{Binding StatusValue}" TextColor="{Binding StatusForegroundColor}" />
+                                </Border>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Spacing="4" VerticalOptions="Center">
+                            <Label
+                                FontSize="14"
+                                LineBreakMode="TailTruncation"
+                                MaxLines="{Binding DescriptionMaxLines}"
+                                Text="{Binding DescriptionValue}"
+                                TextColor="{DynamicResource MutedForeground}" />
+                            <Button
+                                Command="{Binding ToggleDescriptionCommand}"
+                                HorizontalOptions="Start"
+                                IsVisible="{Binding CanToggleDescription}"
+                                Style="{StaticResource LinkButtonStyle}"
+                                Text="{Binding ToggleDescriptionText}" />
+                        </VerticalStackLayout>
+
+                        <HorizontalStackLayout Grid.Row="2" Spacing="10">
+                            <Button
+                                BackgroundColor="{DynamicResource Muted}"
+                                BorderColor="{DynamicResource Border}"
+                                BorderWidth="1"
+                                Command="{Binding EditCommand}"
+                                CornerRadius="12"
+                                FontSize="23"
+                                HeightRequest="48"
+                                Padding="0"
+                                Pressed="HandleEditButtonPressed"
+                                Released="HandleEditButtonReleased"
+                                Text="&#x270E;"
+                                ToolTipProperties.Text="{Binding EditButtonText}"
+                                WidthRequest="48" />
+                            <Border
+                                BackgroundColor="#14F87171"
+                                HeightRequest="48"
+                                Stroke="#40F87171"
+                                StrokeShape="RoundRectangle 12"
+                                ToolTipProperties.Text="{Binding DeleteButtonText}"
+                                WidthRequest="48">
+                                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding DeleteCommand}" /></Border.GestureRecognizers>
+                                <Label FontSize="22" HorizontalTextAlignment="Center" Text="&#x1F5D1;" TextColor="{StaticResource Danger}" VerticalTextAlignment="Center" />
+                            </Border>
+                            <Border
+                                x:Name="RefreshMetadataButton"
+                                BackgroundColor="{DynamicResource Muted}"
+                                HeightRequest="48"
+                                IsEnabled="{Binding IsNotBusy}"
+                                IsVisible="{Binding CanRefreshOnlineMetadata}"
+                                Stroke="{DynamicResource Border}"
+                                StrokeShape="RoundRectangle 12"
+                                ToolTipProperties.Text="{Binding RefreshMetadataTooltip}"
+                                WidthRequest="48">
+                                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding RefreshMetadataCommand}" Tapped="HandleRefreshMetadataTapped" /></Border.GestureRecognizers>
+                                <Grid>
+                                    <Label FontSize="25" HorizontalTextAlignment="Center" IsVisible="{Binding IsNotRefreshingMetadata}" Text="&#x21BB;" VerticalTextAlignment="Center" />
+                                    <ActivityIndicator Color="{DynamicResource Primary}" IsRunning="{Binding IsRefreshingMetadata}" IsVisible="{Binding IsRefreshingMetadata}" />
+                                </Grid>
+                            </Border>
+                        </HorizontalStackLayout>
+                    </Grid>
+
+                    <Border
+                        Grid.ColumnSpan="2"
+                        BackgroundColor="#D91B1725"
+                        HeightRequest="48"
+                        HorizontalOptions="End"
+                        Stroke="{DynamicResource Border}"
+                        StrokeShape="RoundRectangle 24"
+                        ToolTipProperties.Text="{Binding FavoriteActionText}"
+                        VerticalOptions="Start"
+                        WidthRequest="48"
+                        ZIndex="10">
+                        <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding ToggleFavoriteCommand}" /></Border.GestureRecognizers>
+                        <Label FontSize="29" HorizontalTextAlignment="Center" Text="{Binding FavoriteIcon}" TextColor="#F07CB8" VerticalTextAlignment="Center" />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- At-a-glance metrics -->
+            <Grid x:Name="MetricsGrid" ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border x:Name="RatingMetric" Padding="16" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RatingLabel}" /><Label FontAttributes="Bold" FontSize="24" Text="{Binding RatingValue}" TextColor="{StaticResource Warning}" /></VerticalStackLayout>
+                </Border>
+                <Border x:Name="YearMetric" Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ReleaseYearLabel}" /><Label FontAttributes="Bold" FontSize="20" Text="{Binding ReleaseYearValue}" /></VerticalStackLayout>
+                </Border>
             </Grid>
 
-            <HorizontalStackLayout Spacing="10">
-                <Button Command="{Binding EditCommand}" Text="{Binding EditButtonText}" />
-                <Button Command="{Binding DeleteCommand}" Text="{Binding DeleteButtonText}" />
-            </HorizontalStackLayout>
+            <Border IsVisible="{Binding HasExternalMetadata}" Padding="16" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ExternalRatingsLabel}" />
+                    <FlexLayout BindableLayout.ItemsSource="{Binding ExternalRatingCards}" Direction="Row" Wrap="Wrap">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:ExternalRatingCardViewModel">
+                                <Border Margin="0,0,10,8" Padding="9,7" Style="{StaticResource MutedBorderStyle}">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type pages:MediaDetailsPage}}, Path=ViewModel.OpenExternalRatingCommand, x:DataType={x:Type pages:MediaDetailsPage}}"
+                                            CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Border Padding="7,3" BackgroundColor="{Binding IconBackground}" StrokeThickness="0" StrokeShape="RoundRectangle 5" VerticalOptions="Center">
+                                            <Label FontAttributes="Bold" FontSize="11" Text="{Binding IconText}" TextColor="{Binding IconForeground}" />
+                                        </Border>
+                                        <VerticalStackLayout Spacing="0" VerticalOptions="Center">
+                                            <Label FontAttributes="Bold" FontSize="15" Text="{Binding RatingText}" />
+                                            <Label FontSize="9" Text="{Binding VotesText}" TextColor="{DynamicResource MutedForeground}" />
+                                        </VerticalStackLayout>
+                                    </HorizontalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Grouped content instead of one long property list -->
+            <Grid x:Name="DetailsColumnsGrid" ColumnDefinitions="*,*" ColumnSpacing="18">
+                <VerticalStackLayout x:Name="DetailsLeftColumn" Spacing="18">
+                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="16">
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding DetailsSectionTitle}" />
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+                                <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CategoryLabel}" /><Label FontAttributes="Bold" Text="{Binding CategoryValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TagsLabel}" /><Label Text="{Binding TagsValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Row="1" Padding="13" Style="{StaticResource MutedBorderStyle}">
+                                    <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCreatorCommand}" /></Border.GestureRecognizers>
+                                    <VerticalStackLayout Spacing="5">
+                                        <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CreatorLabel}" />
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label FontAttributes="Bold" Text="{Binding CreatorValue}" TextColor="{DynamicResource Primary}" />
+                                            <Label Grid.Column="1" IsVisible="{Binding HasCreatorContributor}" Text="&#x203A;" TextColor="{DynamicResource Primary}" />
+                                        </Grid>
+                                    </VerticalStackLayout>
+                                </Border>
+                                <Border Grid.Row="1" Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding PublisherLabel}" /><Label Text="{Binding PublisherValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Row="2" Grid.ColumnSpan="2" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SerialNumberLabel}" /><Label Text="{Binding SerialNumberValue}" /></VerticalStackLayout></Border>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                </VerticalStackLayout>
+
+                <VerticalStackLayout x:Name="DetailsRightColumn" Grid.Column="1" Spacing="18">
+                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="16">
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding StatusLabel}" />
+                            <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StatusLabel}" /><Label FontAttributes="Bold" Text="{Binding StatusValue}" /></VerticalStackLayout></Border>
+                            <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StartDateLabel}" /><Label Text="{Binding DatesValue}" /></VerticalStackLayout></Border>
+                            <Border Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding UpdatedAtLabel}" /><Label Text="{Binding AuditValue}" /></VerticalStackLayout></Border>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Padding="20" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding NotesLabel}" /><Label FontSize="14" Text="{Binding NotesValue}" /></VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Border IsVisible="{Binding ShowBookDetails}" Padding="20" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding BookDetailsSectionTitle}" />
+                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+                        <Border Padding="14" Style="{StaticResource MutedBorderStyle}">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AuthorsLabel}" />
+                                <FlexLayout BindableLayout.ItemsSource="{Binding AuthorContributors}" Direction="Row" Wrap="Wrap">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="viewModels:DetailsContributorViewModel">
+                                            <Button Margin="0,0,5,5" Command="{Binding Source={RelativeSource AncestorType={x:Type pages:MediaDetailsPage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:MediaDetailsPage}}" CommandParameter="{Binding .}" Padding="7,3" Style="{StaticResource LinkButtonStyle}" Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+                                <Label FontAttributes="Bold" Text="{Binding AuthorsValue}">
+                                    <Label.Triggers><DataTrigger Binding="{Binding HasAuthorContributors}" TargetType="Label" Value="True"><Setter Property="IsVisible" Value="False" /></DataTrigger></Label.Triggers>
+                                </Label>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TranslatorsLabel}" />
+                                <FlexLayout BindableLayout.ItemsSource="{Binding TranslatorContributors}" Direction="Row" Wrap="Wrap">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="viewModels:DetailsContributorViewModel">
+                                            <Button Margin="0,0,5,5" Command="{Binding Source={RelativeSource AncestorType={x:Type pages:MediaDetailsPage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:MediaDetailsPage}}" CommandParameter="{Binding .}" Padding="7,3" Style="{StaticResource LinkButtonStyle}" Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+                                <Label Text="{Binding TranslatorsValue}">
+                                    <Label.Triggers><DataTrigger Binding="{Binding HasTranslatorContributors}" TargetType="Label" Value="True"><Setter Property="IsVisible" Value="False" /></DataTrigger></Label.Triggers>
+                                </Label>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="2" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding GenresLabel}" /><Label Text="{Binding GenresValue}" /></VerticalStackLayout></Border>
+                        <Border Grid.Row="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BookDetailsSectionTitle}" /><Label Text="{Binding BookMetadataValue}" /></VerticalStackLayout></Border>
+                        <Border Grid.Row="1" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CollectionLabel}" /><Label Text="{Binding CollectionValue}" /></VerticalStackLayout></Border>
+                        <Border Grid.Row="1" Grid.Column="2" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RelationsLabel}" /><Label Text="{Binding RelationsValue}" /></VerticalStackLayout></Border>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border IsVisible="{Binding ShowScreenProductionDetails}" Padding="20" Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ScreenProductionSectionTitle}" />
+                    <Border IsVisible="{Binding ShowMovieDetails}" Padding="14" Style="{StaticResource MutedBorderStyle}">
+                        <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding MovieDetailsSectionTitle}" /><Label Text="{Binding MovieMetadataValue}" /></VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border IsVisible="{Binding HasContributors}" Padding="20" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FeaturedContributorsTitle}" />
+                        <FlexLayout BindableLayout.ItemsSource="{Binding FeaturedContributors}" Direction="Row" Wrap="Wrap">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="viewModels:DetailsContributorViewModel">
+                                    <Button Margin="0,0,8,8"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type pages:MediaDetailsPage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:MediaDetailsPage}}"
+                                            CommandParameter="{Binding .}"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Text="{Binding Name}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                        <Button Command="{Binding OpenAllContributorsCommand}" HorizontalOptions="Start" Style="{StaticResource LinkButtonStyle}" Text="{Binding ShowAllContributorsText}" />
+                    </VerticalStackLayout>
+            </Border>
+            <Border IsVisible="{Binding ShowEpisodicDetails}" Padding="20" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="12"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding EpisodicDetailsSectionTitle}" /><Label Text="{Binding ExtendedTypeMetadataValue}" /></VerticalStackLayout></Border>
+            <Border IsVisible="{Binding ShowGraphicPublicationDetails}" Padding="20" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="12"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding GraphicDetailsSectionTitle}" /><Label Text="{Binding ExtendedTypeMetadataValue}" /></VerticalStackLayout></Border>
+            <Border IsVisible="{Binding ShowGameDetails}" Padding="20" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="12"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding GameDetailsSectionTitle}" /><Label Text="{Binding ExtendedTypeMetadataValue}" /></VerticalStackLayout></Border>
         </VerticalStackLayout>
-    </ScrollView>
+      </ScrollView>
+
+      <Grid
+          BackgroundColor="#66000000"
+          IsVisible="{Binding ShowEditorLoading}"
+          ZIndex="100">
+          <Border
+              Padding="22"
+              BackgroundColor="{DynamicResource Card}"
+              HorizontalOptions="Center"
+              Stroke="{DynamicResource Border}"
+              StrokeShape="RoundRectangle 14"
+              VerticalOptions="Center">
+              <ActivityIndicator Color="{DynamicResource Primary}" IsRunning="{Binding ShowEditorLoading}" />
+          </Border>
+      </Grid>
+    </Grid>
 </ContentPage>

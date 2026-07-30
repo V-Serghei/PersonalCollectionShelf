@@ -20,13 +20,24 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
         return records.Select(ToDomain).ToList();
     }
 
-    public async Task<MediaItem?> GetByIdAsync(Guid id, string userId, CancellationToken cancellationToken = default)
+    public async Task<int> CountAsync(string userId, CancellationToken cancellationToken = default)
     {
         await databaseService.InitializeAsync(cancellationToken);
 
+        return await databaseService.Connection
+            .Table<MediaItemRecord>()
+            .Where(record => record.UserId == userId && record.DeletedAt == null)
+            .CountAsync();
+    }
+
+    public async Task<MediaItem?> GetByIdAsync(Guid id, string userId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        var idText = id.ToString();
+
         var record = await databaseService.Connection
             .Table<MediaItemRecord>()
-            .FirstOrDefaultAsync(item => item.Id == id.ToString() && item.UserId == userId && item.DeletedAt == null);
+            .FirstOrDefaultAsync(item => item.Id == idText && item.UserId == userId && item.DeletedAt == null);
 
         return record is null ? null : ToDomain(record);
     }
@@ -62,6 +73,8 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
         string? searchTerm,
         MediaType? mediaType,
         MediaStatus? status,
+        string? category,
+        string? tag,
         CancellationToken cancellationToken = default)
     {
         var items = await GetAllAsync(userId, cancellationToken);
@@ -73,6 +86,10 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             query = query.Where(item =>
                 Contains(item.Title, searchTerm) ||
                 Contains(item.OriginalTitle, searchTerm) ||
+                Contains(item.Description, searchTerm) ||
+                Contains(item.Category, searchTerm) ||
+                Contains(item.Tags, searchTerm) ||
+                Contains(item.SerialNumber, searchTerm) ||
                 Contains(item.Notes, searchTerm));
         }
 
@@ -86,15 +103,80 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             query = query.Where(item => item.Status == status.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            query = query.Where(item => string.Equals(item.Category, category.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(tag))
+        {
+            query = query.Where(item => HasTag(item.Tags, tag));
+        }
+
         return query
             .OrderByDescending(item => item.IsFavorite)
             .ThenBy(item => item.Title)
             .ToList();
     }
 
+    public async Task<IReadOnlyList<Guid>> GetCastPersonIdsAsync(Guid mediaItemId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+
+        var mediaItemIdText = mediaItemId.ToString();
+        var records = await databaseService.Connection
+            .Table<MediaItemCastMemberRecord>()
+            .Where(record => record.MediaItemId == mediaItemIdText)
+            .ToListAsync();
+
+        return records.Select(record => Guid.Parse(record.PersonId)).ToList();
+    }
+
+    public async Task ReplaceCastAsync(Guid mediaItemId, IReadOnlyList<Guid> personIds, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+
+        var mediaItemIdText = mediaItemId.ToString();
+        var existing = await databaseService.Connection
+            .Table<MediaItemCastMemberRecord>()
+            .Where(record => record.MediaItemId == mediaItemIdText)
+            .ToListAsync();
+
+        foreach (var record in existing)
+        {
+            await databaseService.Connection.DeleteAsync(record);
+        }
+
+        foreach (var personId in personIds)
+        {
+            await databaseService.Connection.InsertAsync(new MediaItemCastMemberRecord
+            {
+                MediaItemId = mediaItemIdText,
+                PersonId = personId.ToString()
+            });
+        }
+    }
+
+    private static Guid? ParseGuid(string? value)
+    {
+        return Guid.TryParse(value, out var parsed) ? parsed : null;
+    }
+
     private static bool Contains(string? source, string searchTerm)
     {
         return source?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static bool HasTag(string? tags, string tag)
+    {
+        if (string.IsNullOrWhiteSpace(tags))
+        {
+            return false;
+        }
+
+        return tags
+            .Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Any(candidate => string.Equals(candidate, tag.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
     private static MediaItem ToDomain(MediaItemRecord record)
@@ -106,6 +188,31 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             Title = record.Title,
             OriginalTitle = record.OriginalTitle,
             Description = record.Description,
+            Category = record.Category,
+            CategoryId = ParseGuid(record.CategoryId),
+            Tags = record.Tags,
+            CreatorId = ParseGuid(record.CreatorId),
+            StudioId = ParseGuid(record.StudioId),
+            SerialNumber = record.SerialNumber,
+            TmdbId = record.TmdbId,
+            ImdbId = record.ImdbId,
+            KinopoiskId = record.KinopoiskId,
+            TmdbRating = record.TmdbRating,
+            TmdbVoteCount = record.TmdbVoteCount,
+            ImdbRating = record.ImdbRating,
+            ImdbVoteCount = record.ImdbVoteCount,
+            KinopoiskRating = record.KinopoiskRating,
+            KinopoiskVoteCount = record.KinopoiskVoteCount,
+            ExternalRatingsUpdatedAt = record.ExternalRatingsUpdatedAt,
+            CatalogProvider = record.CatalogProvider,
+            CatalogItemId = record.CatalogItemId,
+            CatalogSourceUrl = record.CatalogSourceUrl,
+            CatalogRatingPrimarySource = record.CatalogRatingPrimarySource,
+            CatalogRatingPrimary = record.CatalogRatingPrimary,
+            CatalogRatingPrimaryCount = record.CatalogRatingPrimaryCount,
+            CatalogRatingSecondarySource = record.CatalogRatingSecondarySource,
+            CatalogRatingSecondary = record.CatalogRatingSecondary,
+            CatalogRatingSecondaryCount = record.CatalogRatingSecondaryCount,
             MediaType = (MediaType)record.MediaType,
             Status = (MediaStatus)record.Status,
             Rating = record.Rating,
@@ -132,6 +239,31 @@ public sealed class MediaItemRepository(LocalDatabaseService databaseService) : 
             Title = item.Title,
             OriginalTitle = item.OriginalTitle,
             Description = item.Description,
+            Category = item.Category,
+            CategoryId = item.CategoryId?.ToString(),
+            Tags = item.Tags,
+            CreatorId = item.CreatorId?.ToString(),
+            StudioId = item.StudioId?.ToString(),
+            SerialNumber = item.SerialNumber,
+            TmdbId = item.TmdbId,
+            ImdbId = item.ImdbId,
+            KinopoiskId = item.KinopoiskId,
+            TmdbRating = item.TmdbRating,
+            TmdbVoteCount = item.TmdbVoteCount,
+            ImdbRating = item.ImdbRating,
+            ImdbVoteCount = item.ImdbVoteCount,
+            KinopoiskRating = item.KinopoiskRating,
+            KinopoiskVoteCount = item.KinopoiskVoteCount,
+            ExternalRatingsUpdatedAt = item.ExternalRatingsUpdatedAt,
+            CatalogProvider = item.CatalogProvider,
+            CatalogItemId = item.CatalogItemId,
+            CatalogSourceUrl = item.CatalogSourceUrl,
+            CatalogRatingPrimarySource = item.CatalogRatingPrimarySource,
+            CatalogRatingPrimary = item.CatalogRatingPrimary,
+            CatalogRatingPrimaryCount = item.CatalogRatingPrimaryCount,
+            CatalogRatingSecondarySource = item.CatalogRatingSecondarySource,
+            CatalogRatingSecondary = item.CatalogRatingSecondary,
+            CatalogRatingSecondaryCount = item.CatalogRatingSecondaryCount,
             MediaType = (int)item.MediaType,
             Status = (int)item.Status,
             Rating = item.Rating,

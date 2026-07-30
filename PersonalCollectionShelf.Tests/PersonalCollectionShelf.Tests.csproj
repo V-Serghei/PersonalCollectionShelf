@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PersonalCollectionShelf.Application\PersonalCollectionShelf.Application.csproj" />
     <ProjectReference Include="..\PersonalCollectionShelf.Domain\PersonalCollectionShelf.Domain.csproj" />
+    <ProjectReference Include="..\PersonalCollectionShelf.Infrastructure\PersonalCollectionShelf.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

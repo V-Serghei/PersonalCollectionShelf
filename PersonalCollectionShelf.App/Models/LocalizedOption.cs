@@ -1,9 +1,26 @@
+using System.ComponentModel;
+
 namespace PersonalCollectionShelf.App.Models;
 
-public sealed record LocalizedOption<T>(T Value, string DisplayName)
+public abstract record DisplayOption(string DisplayName) : INotifyPropertyChanged
 {
-    public override string ToString()
+    private bool _isSelected;
+    public bool IsSelected
     {
-        return DisplayName;
+        get => _isSelected;
+        set
+        {
+            if (_isSelected == value) return;
+            _isSelected = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
+        }
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    public override string ToString() => DisplayName;
+}
+
+public sealed record LocalizedOption<T>(T Value, string DisplayName) : DisplayOption(DisplayName)
+{
+    public override string ToString() => DisplayName;
 }
