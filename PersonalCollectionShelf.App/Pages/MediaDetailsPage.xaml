@@ -3,6 +3,7 @@
     x:Class="PersonalCollectionShelf.App.Pages.MediaDetailsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:MediaDetailsViewModel"
     BackgroundColor="{DynamicResource PageBackground}"
@@ -79,33 +80,65 @@
                             TextColor="{DynamicResource MutedForeground}"
                             VerticalOptions="Center" />
 
-                        <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,Auto,Auto,*" ColumnSpacing="10">
-                            <Button Command="{Binding EditCommand}" Text="{Binding EditButtonText}" />
-                            <Button Grid.Column="1" Command="{Binding ToggleFavoriteCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding FavoriteActionText}" />
-                            <Button Grid.Column="2" Command="{Binding DeleteCommand}" Style="{StaticResource DangerButtonStyle}" Text="{Binding DeleteButtonText}" />
-                            <Button
-                                Grid.Column="3"
-                                Command="{Binding RefreshMetadataCommand}"
-                                FontSize="23"
+                        <HorizontalStackLayout Grid.Row="2" Spacing="10">
+                            <Border
+                                BackgroundColor="{DynamicResource Muted}"
+                                HeightRequest="48"
+                                Stroke="{DynamicResource Border}"
+                                StrokeShape="RoundRectangle 12"
+                                ToolTipProperties.Text="{Binding EditButtonText}"
+                                WidthRequest="48">
+                                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding EditCommand}" /></Border.GestureRecognizers>
+                                <Label FontSize="23" HorizontalTextAlignment="Center" Text="&#x270E;" VerticalTextAlignment="Center" />
+                            </Border>
+                            <Border
+                                BackgroundColor="#14F87171"
+                                HeightRequest="48"
+                                Stroke="#40F87171"
+                                StrokeShape="RoundRectangle 12"
+                                ToolTipProperties.Text="{Binding DeleteButtonText}"
+                                WidthRequest="48">
+                                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding DeleteCommand}" /></Border.GestureRecognizers>
+                                <Label FontSize="22" HorizontalTextAlignment="Center" Text="&#x1F5D1;" TextColor="{StaticResource Danger}" VerticalTextAlignment="Center" />
+                            </Border>
+                            <Border
+                                BackgroundColor="{DynamicResource Muted}"
+                                HeightRequest="48"
                                 IsEnabled="{Binding IsNotBusy}"
                                 IsVisible="{Binding CanRefreshOnlineMetadata}"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                Text="↻"
-                                ToolTipProperties.Text="{Binding RefreshMetadataTooltip}" />
-                        </Grid>
+                                Stroke="{DynamicResource Border}"
+                                StrokeShape="RoundRectangle 12"
+                                ToolTipProperties.Text="{Binding RefreshMetadataTooltip}"
+                                WidthRequest="48">
+                                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding RefreshMetadataCommand}" /></Border.GestureRecognizers>
+                                <Label FontSize="25" HorizontalTextAlignment="Center" Text="&#x21BB;" VerticalTextAlignment="Center" />
+                            </Border>
+                        </HorizontalStackLayout>
                     </Grid>
+
+                    <Border
+                        Grid.ColumnSpan="2"
+                        BackgroundColor="#D91B1725"
+                        HeightRequest="48"
+                        HorizontalOptions="End"
+                        Stroke="{DynamicResource Border}"
+                        StrokeShape="RoundRectangle 24"
+                        ToolTipProperties.Text="{Binding FavoriteActionText}"
+                        VerticalOptions="Start"
+                        WidthRequest="48"
+                        ZIndex="10">
+                        <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding ToggleFavoriteCommand}" /></Border.GestureRecognizers>
+                        <Label FontSize="29" HorizontalTextAlignment="Center" Text="{Binding FavoriteIcon}" TextColor="#F07CB8" VerticalTextAlignment="Center" />
+                    </Border>
                 </Grid>
             </Border>
 
             <!-- At-a-glance metrics -->
-            <Grid x:Name="MetricsGrid" ColumnDefinitions="*,*,*" ColumnSpacing="12">
+            <Grid x:Name="MetricsGrid" ColumnDefinitions="*,*" ColumnSpacing="12">
                 <Border x:Name="RatingMetric" Padding="16" Style="{StaticResource CardBorderStyle}">
                     <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding RatingLabel}" /><Label FontAttributes="Bold" FontSize="24" Text="{Binding RatingValue}" TextColor="{StaticResource Warning}" /></VerticalStackLayout>
                 </Border>
-                <Border x:Name="FavoriteMetric" Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}">
-                    <Grid ColumnDefinitions="*,Auto"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FavoriteLabel}" /><Label FontAttributes="Bold" FontSize="16" Text="{Binding FavoriteValue}" /></VerticalStackLayout><Button Grid.Column="1" Command="{Binding ToggleFavoriteCommand}" FontSize="28" Padding="8,0" Style="{StaticResource LinkButtonStyle}" Text="{Binding FavoriteIcon}" TextColor="#F07CB8" /></Grid>
-                </Border>
-                <Border x:Name="YearMetric" Grid.Column="2" Padding="16" Style="{StaticResource CardBorderStyle}">
+                <Border x:Name="YearMetric" Grid.Column="1" Padding="16" Style="{StaticResource CardBorderStyle}">
                     <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ReleaseYearLabel}" /><Label FontAttributes="Bold" FontSize="20" Text="{Binding ReleaseYearValue}" /></VerticalStackLayout>
                 </Border>
             </Grid>
@@ -129,8 +162,7 @@
                                 <Border Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding TagsLabel}" /><Label Text="{Binding TagsValue}" /></VerticalStackLayout></Border>
                                 <Border Grid.Row="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CreatorLabel}" /><Label FontAttributes="Bold" Text="{Binding CreatorValue}" /></VerticalStackLayout></Border>
                                 <Border Grid.Row="1" Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding PublisherLabel}" /><Label Text="{Binding PublisherValue}" /></VerticalStackLayout></Border>
-                                <Border Grid.Row="2" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SerialNumberLabel}" /><Label Text="{Binding SerialNumberValue}" /></VerticalStackLayout></Border>
-                                <Border Grid.Row="2" Grid.Column="1" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CastLabel}" /><Label Text="{Binding CastValue}" /></VerticalStackLayout></Border>
+                                <Border Grid.Row="2" Grid.ColumnSpan="2" Padding="13" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SerialNumberLabel}" /><Label Text="{Binding SerialNumberValue}" /></VerticalStackLayout></Border>
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
@@ -176,18 +208,25 @@
                     <Border IsVisible="{Binding ShowMovieDetails}" Padding="14" Style="{StaticResource MutedBorderStyle}">
                         <VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding MovieDetailsSectionTitle}" /><Label Text="{Binding MovieMetadataValue}" /></VerticalStackLayout>
                     </Border>
-                    <Grid x:Name="MovieCreditsGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="14">
-                        <Border x:Name="MovieDirectorsCard" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding DirectorsLabel}" /><Label FontAttributes="Bold" Text="{Binding DirectorsValue}" /></VerticalStackLayout></Border>
-                        <Border x:Name="MovieScreenwritersCard" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ScreenwritersLabel}" /><Label Text="{Binding ScreenwritersValue}" /></VerticalStackLayout></Border>
-                        <Border x:Name="MovieProducersCard" Grid.Row="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProducersLabel}" /><Label Text="{Binding ProducersValue}" /></VerticalStackLayout></Border>
-                        <Border x:Name="MovieCinematographersCard" Grid.Row="1" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CinematographersLabel}" /><Label Text="{Binding CinematographersValue}" /></VerticalStackLayout></Border>
-                        <Border x:Name="MovieComposersCard" Grid.Row="2" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ComposersLabel}" /><Label Text="{Binding ComposersValue}" /></VerticalStackLayout></Border>
-                        <Border x:Name="MovieStudiosCard" Grid.Row="2" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding MovieStudiosLabel}" /><Label Text="{Binding MovieStudiosValue}" /></VerticalStackLayout></Border>
-                        <Border x:Name="MovieCastingDirectorsCard" Grid.Row="3" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CastingDirectorsLabel}" /><Label Text="{Binding CastingDirectorsValue}" /></VerticalStackLayout></Border>
-                        <Border x:Name="MovieProductionDesignersCard" Grid.Row="3" Grid.Column="1" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ProductionDesignersLabel}" /><Label Text="{Binding ProductionDesignersValue}" /></VerticalStackLayout></Border>
-                        <Border x:Name="MovieActorsCard" Grid.Row="4" Grid.ColumnSpan="2" Padding="14" Style="{StaticResource MutedBorderStyle}"><VerticalStackLayout Spacing="5"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ActorsLabel}" /><Label Text="{Binding ActorsValue}" /></VerticalStackLayout></Border>
-                    </Grid>
                 </VerticalStackLayout>
+            </Border>
+
+            <Border IsVisible="{Binding HasContributors}" Padding="20" Style="{StaticResource CardBorderStyle}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FeaturedContributorsTitle}" />
+                        <FlexLayout BindableLayout.ItemsSource="{Binding FeaturedContributors}" Direction="Row" Wrap="Wrap">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="viewModels:DetailsContributorViewModel">
+                                    <Button Margin="0,0,8,8"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type pages:MediaDetailsPage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:MediaDetailsPage}}"
+                                            CommandParameter="{Binding .}"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Text="{Binding Name}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                        <Button Command="{Binding OpenAllContributorsCommand}" HorizontalOptions="Start" Style="{StaticResource LinkButtonStyle}" Text="{Binding ShowAllContributorsText}" />
+                    </VerticalStackLayout>
             </Border>
             <Border IsVisible="{Binding ShowEpisodicDetails}" Padding="20" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="12"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding EpisodicDetailsSectionTitle}" /><Label Text="{Binding ExtendedTypeMetadataValue}" /></VerticalStackLayout></Border>
             <Border IsVisible="{Binding ShowGraphicPublicationDetails}" Padding="20" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="12"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding GraphicDetailsSectionTitle}" /><Label Text="{Binding ExtendedTypeMetadataValue}" /></VerticalStackLayout></Border>

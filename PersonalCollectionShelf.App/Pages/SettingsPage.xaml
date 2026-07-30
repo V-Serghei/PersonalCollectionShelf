@@ -180,7 +180,7 @@
                                     IsRunning="{Binding IsSyncing}"
                                     IsVisible="{Binding IsSyncing}"
                                     VerticalOptions="Center" />
-                                <Button Grid.Column="2" Command="{Binding SyncNowCommand}" IsEnabled="{Binding IsNotSyncing}" Text="{Binding SyncNowButtonText}" />
+                                <Button Grid.Column="2" Command="{Binding SyncNowCommand}" IsEnabled="{Binding IsNotBusy}" Text="{Binding SyncNowButtonText}" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
                             <Grid Padding="16" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">

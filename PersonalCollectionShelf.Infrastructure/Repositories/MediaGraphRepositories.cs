@@ -125,6 +125,13 @@ public sealed class MediaCategoryRepository(LocalDatabaseService databaseService
 
 public sealed class BookDetailsRepository(LocalDatabaseService databaseService) : IBookDetailsRepository
 {
+    public async Task<IReadOnlyList<BookDetails>> GetAllAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        return (await databaseService.Connection.Table<BookDetailsRecord>().Where(record => record.UserId == userId).ToListAsync())
+            .Select(ToDomain).ToList();
+    }
+
     public async Task<BookDetails?> GetAsync(Guid mediaItemId, string userId, CancellationToken cancellationToken = default)
     {
         await databaseService.InitializeAsync(cancellationToken);
@@ -191,6 +198,13 @@ public sealed class BookDetailsRepository(LocalDatabaseService databaseService) 
 
 public sealed class MovieDetailsRepository(LocalDatabaseService databaseService) : IMovieDetailsRepository
 {
+    public async Task<IReadOnlyList<MovieDetails>> GetAllAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        await databaseService.InitializeAsync(cancellationToken);
+        return (await databaseService.Connection.Table<MovieDetailsRecord>().Where(record => record.UserId == userId).ToListAsync())
+            .Select(ToDomain).ToList();
+    }
+
     public async Task<MovieDetails?> GetAsync(Guid mediaItemId, string userId, CancellationToken cancellationToken = default)
     {
         await databaseService.InitializeAsync(cancellationToken);

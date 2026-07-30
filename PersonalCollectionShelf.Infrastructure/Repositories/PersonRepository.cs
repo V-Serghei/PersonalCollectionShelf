@@ -83,19 +83,27 @@ public sealed class PersonRepository(LocalDatabaseService databaseService) : IPe
     {
         await databaseService.InitializeAsync(cancellationToken);
 
-        var records = await databaseService.Connection
+        var query = databaseService.Connection
             .Table<PersonRecord>()
-            .Where(record => record.UserId == userId && record.DeletedAt == null)
-            .ToListAsync();
+            .Where(record => record.UserId == userId && record.DeletedAt == null);
 
         var term = searchTerm?.Trim();
+        if (string.IsNullOrWhiteSpace(term))
+        {
+            var limitedRecords = await query
+                .OrderBy(record => record.Name)
+                .Take(Math.Clamp(limit, 1, 50_000))
+                .ToListAsync();
+            return limitedRecords.Select(ToDomain).ToList();
+        }
+
+        var records = await query.ToListAsync();
         return records
-            .Where(record => string.IsNullOrWhiteSpace(term) ||
-                record.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+            .Where(record => record.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 record.SortName?.Contains(term, StringComparison.OrdinalIgnoreCase) == true ||
                 record.PenName?.Contains(term, StringComparison.OrdinalIgnoreCase) == true)
             .OrderBy(record => record.Name)
-            .Take(Math.Clamp(limit, 1, 500))
+            .Take(Math.Clamp(limit, 1, 50_000))
             .Select(ToDomain)
             .ToList();
     }

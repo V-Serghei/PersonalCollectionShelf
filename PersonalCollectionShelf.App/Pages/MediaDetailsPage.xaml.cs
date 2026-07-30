@@ -89,48 +89,11 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
             usesCompactLayout,
             18,
             18);
-        ConfigureMovieCreditsGrid(usesCompactLayout);
-    }
-
-    private void ConfigureMovieCreditsGrid(bool usesCompactLayout)
-    {
-        View[] cards =
-        [
-            MovieDirectorsCard,
-            MovieScreenwritersCard,
-            MovieProducersCard,
-            MovieCinematographersCard,
-            MovieComposersCard,
-            MovieStudiosCard,
-            MovieCastingDirectorsCard,
-            MovieProductionDesignersCard,
-            MovieActorsCard
-        ];
-        var columnCount = usesCompactLayout ? 1 : 2;
-        MovieCreditsGrid.ColumnDefinitions.Clear();
-        MovieCreditsGrid.RowDefinitions.Clear();
-        for (var column = 0; column < columnCount; column++)
-        {
-            MovieCreditsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-        }
-
-        for (var row = 0; row < (int)Math.Ceiling(cards.Length / (double)columnCount); row++)
-        {
-            MovieCreditsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        }
-
-        MovieCreditsGrid.ColumnSpacing = usesCompactLayout ? 0 : 14;
-        foreach (var (card, index) in cards.Select((value, index) => (value, index)))
-        {
-            Grid.SetColumn(card, index % columnCount);
-            Grid.SetRow(card, index / columnCount);
-            Grid.SetColumnSpan(card, 1);
-        }
     }
 
     private void ConfigureMetricGrid(bool usesCompactLayout)
     {
-        var metrics = new View[] { RatingMetric, FavoriteMetric, YearMetric };
+        var metrics = new View[] { RatingMetric, YearMetric };
         MetricsGrid.ColumnDefinitions.Clear();
         MetricsGrid.RowDefinitions.Clear();
         MetricsGrid.RowSpacing = usesCompactLayout ? 12 : 0;
@@ -140,11 +103,10 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
             MetricsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             MetricsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             MetricsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            MetricsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             for (var index = 0; index < metrics.Length; index++)
             {
                 Grid.SetColumn(metrics[index], index % 2);
-                Grid.SetRow(metrics[index], index / 2);
+                Grid.SetRow(metrics[index], 0);
             }
         }
         else
@@ -192,5 +154,5 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
         }
     }
 
-    private MediaDetailsViewModel ViewModel => (MediaDetailsViewModel)BindingContext;
+    public MediaDetailsViewModel ViewModel => (MediaDetailsViewModel)BindingContext;
 }

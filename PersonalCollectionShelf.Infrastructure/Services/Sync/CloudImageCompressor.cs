@@ -1,15 +1,47 @@
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using PersonalCollectionShelf.Infrastructure.Persistence;
 using SkiaSharp;
 
 namespace PersonalCollectionShelf.Infrastructure.Services.Sync;
 
-public sealed class CloudImageCompressor
+public sealed class CloudImageCompressor(LocalDatabaseService database)
 {
     private const int MaxDimension = 768;
     private const int WebpQuality = 78;
+    private readonly string _cacheDirectory = Path.Combine(
+        Path.GetDirectoryName(database.DatabasePath) ?? AppContext.BaseDirectory,
+        "compressed-image-cache");
 
     public async Task<CompressedCloudImage> CompressAsync(string path, CancellationToken cancellationToken)
     {
+        Directory.CreateDirectory(_cacheDirectory);
+        var sourceInfo = new FileInfo(path);
+        var fingerprint = $"{Path.GetFullPath(path)}|{sourceInfo.Length}|{sourceInfo.LastWriteTimeUtc.Ticks}";
+        var cacheKey = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fingerprint))).ToLowerInvariant();
+        var imageCachePath = Path.Combine(_cacheDirectory, cacheKey + ".webp");
+        var metadataCachePath = Path.Combine(_cacheDirectory, cacheKey + ".json");
+        if (File.Exists(imageCachePath) && File.Exists(metadataCachePath))
+        {
+            try
+            {
+                var metadata = JsonSerializer.Deserialize<CompressionCacheMetadata>(
+                    await File.ReadAllTextAsync(metadataCachePath, cancellationToken));
+                if (metadata is not null)
+                {
+                    return new CompressedCloudImage(
+                        metadata.SourceHash,
+                        metadata.CloudHash,
+                        await File.ReadAllBytesAsync(imageCachePath, cancellationToken));
+                }
+            }
+            catch (JsonException)
+            {
+                // Rebuild a corrupt cache entry below.
+            }
+        }
+
         await using var input = File.OpenRead(path);
         var sourceHash = Convert.ToHexString(await SHA256.HashDataAsync(input, cancellationToken)).ToLowerInvariant();
         input.Position = 0;
@@ -28,8 +60,15 @@ public sealed class CloudImageCompressor
             ?? throw new InvalidDataException($"Unable to encode image: {path}");
         var bytes = encoded.ToArray();
         var cloudHash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        await File.WriteAllBytesAsync(imageCachePath, bytes, cancellationToken);
+        await File.WriteAllTextAsync(
+            metadataCachePath,
+            JsonSerializer.Serialize(new CompressionCacheMetadata(sourceHash, cloudHash)),
+            cancellationToken);
         return new CompressedCloudImage(sourceHash, cloudHash, bytes);
     }
+
+    private sealed record CompressionCacheMetadata(string SourceHash, string CloudHash);
 }
 
 public sealed record CompressedCloudImage(string SourceHash, string CloudHash, byte[] Bytes);

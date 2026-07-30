@@ -4,7 +4,6 @@
     x:Name="Root"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application"
     xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:PeopleViewModel"
@@ -40,8 +39,8 @@
         </Grid>
 
         <Grid Grid.Row="3">
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-            <CollectionView x:Name="GridPeopleList" IsVisible="{Binding IsGridView}" ItemsUpdatingScrollMode="KeepScrollOffset" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding People}" RemainingItemsThreshold="60" RemainingItemsThresholdReachedCommand="{Binding LoadMorePeopleCommand}" SelectionMode="None">
+            <ActivityIndicator HorizontalOptions="Center" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" VerticalOptions="Center" ZIndex="20" />
+            <CollectionView x:Name="GridPeopleList" IsVisible="{Binding IsGridView}" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding People}" Scrolled="HandlePeopleScrolled" SelectionMode="None">
                 <CollectionView.ItemsLayout>
                     <GridItemsLayout HorizontalItemSpacing="8" Orientation="Vertical" SnapPointsAlignment="Start" SnapPointsType="None" Span="{Binding GridColumnCount}" VerticalItemSpacing="10" />
                 </CollectionView.ItemsLayout>
@@ -74,31 +73,23 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <CollectionView x:Name="ListPeopleList" IsVisible="{Binding IsListView}" ItemsUpdatingScrollMode="KeepScrollOffset" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding People}" RemainingItemsThreshold="60" RemainingItemsThresholdReachedCommand="{Binding LoadMorePeopleCommand}" SelectionMode="None">
+            <CollectionView x:Name="ListPeopleList" IsVisible="{Binding IsListView}" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding People}" Scrolled="HandlePeopleScrolled" SelectionMode="None">
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout Orientation="Vertical" SnapPointsAlignment="Start" SnapPointsType="None" />
                 </CollectionView.ItemsLayout>
                 <CollectionView.EmptyView><Label Margin="0,40" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:PersonCardViewModel">
-                        <Border Margin="0,0,0,10" Padding="12" Style="{StaticResource CardBorderStyle}">
+                        <Border HeightRequest="106" Margin="0,0,0,10" Padding="10" Style="{StaticResource CardBorderStyle}">
                             <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PeoplePage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:PeoplePage}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers>
                             <Grid ColumnDefinitions="72,*,Auto" ColumnSpacing="14">
                                 <Border HeightRequest="86" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="72">
                                     <Grid><Image Aspect="AspectFill" IsVisible="{Binding HasPhoto}" Source="{Binding PhotoPath}" /><Label FontAttributes="Bold" FontSize="25" HorizontalTextAlignment="Center" IsVisible="{Binding HasDefaultPhoto}" Text="{Binding Initial}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" /></Grid>
                                 </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
                                     <Label FontAttributes="Bold" FontSize="16" Text="{Binding Name}" />
-                                    <Label FontSize="11" Text="{Binding RoleSummary}" TextColor="{DynamicResource Primary}" />
-                                    <FlexLayout BindableLayout.ItemsSource="{Binding TopWorks}" Direction="Row" Wrap="Wrap">
-                                        <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="dto:PersonWorkDto">
-                                                <Border Margin="0,2,6,2" Padding="7,3" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9">
-                                                    <Label FontSize="10"><Label.FormattedText><FormattedString><Span Text="{Binding Title}" /><Span Text="  ★ " TextColor="{StaticResource Warning}" /><Span Text="{Binding Rating}" /></FormattedString></Label.FormattedText></Label>
-                                                </Border>
-                                            </DataTemplate>
-                                        </BindableLayout.ItemTemplate>
-                                    </FlexLayout>
+                                    <Label FontSize="11" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding RoleSummary}" TextColor="{DynamicResource Primary}" />
+                                    <Label FontSize="10" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding TopWorksSummary}" TextColor="{DynamicResource MutedForeground}" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="2" HorizontalOptions="End" Spacing="5">
                                     <Label FontAttributes="Bold" FontSize="12" IsVisible="{Binding HasRating}" Text="{Binding AverageRatingText, StringFormat='★ {0}'}" TextColor="{StaticResource Warning}" />
@@ -110,6 +101,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+
         </Grid>
     </Grid>
 </ContentPage>

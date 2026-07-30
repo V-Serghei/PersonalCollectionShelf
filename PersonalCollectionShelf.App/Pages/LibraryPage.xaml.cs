@@ -7,6 +7,11 @@ namespace PersonalCollectionShelf.App.Pages;
 public partial class LibraryPage : ContentPage
 {
     private bool? _usesCompactLayout;
+    private int _lastThumbnailCenter = -100;
+#if ANDROID
+    private AndroidNativeCatalogRenderer.NativeCatalogBinding<MediaItemListItemViewModel>? _nativeGridBinding;
+    private AndroidNativeCatalogRenderer.NativeCatalogBinding<MediaItemListItemViewModel>? _nativeListBinding;
+#endif
 
     public LibraryPage()
         : this(App.Services.GetRequiredService<LibraryViewModel>())
@@ -18,8 +23,14 @@ public partial class LibraryPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+#if ANDROID
+        GridLibraryList.HandlerChanged += (_, _) => AttachNativeLists();
+        ListLibraryList.HandlerChanged += (_, _) => AttachNativeLists();
+        AttachNativeLists();
+#else
         AttachFreeScrolling(GridLibraryList);
         AttachFreeScrolling(ListLibraryList);
+#endif
     }
 
     public LibraryViewModel ViewModel => (LibraryViewModel)BindingContext;
@@ -38,6 +49,12 @@ public partial class LibraryPage : ContentPage
 
     private void HandleViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+#if ANDROID
+        if (e.PropertyName == nameof(LibraryViewModel.MediaItems))
+        {
+            Dispatcher.Dispatch(AttachNativeLists);
+        }
+#endif
         if (e.PropertyName != nameof(LibraryViewModel.SelectedMediaTypeFilter) || ViewModel.SelectedMediaTypeFilter is null) return;
         Dispatcher.Dispatch(() => MediaTypeFilterList.ScrollTo(ViewModel.SelectedMediaTypeFilter, position: ScrollToPosition.Center, animate: true));
     }
@@ -78,10 +95,11 @@ public partial class LibraryPage : ContentPage
 
     private void HandleLibraryScrolled(object? sender, ItemsViewScrolledEventArgs e)
     {
-        if (e.VerticalOffset > 24 && e.VerticalDelta > 4)
-        {
-            ViewModel.CollapseFilters();
-        }
+        ViewModel.EnsureThumbnailLookAhead(e.LastVisibleItemIndex);
+        var center = (e.FirstVisibleItemIndex + e.LastVisibleItemIndex) / 2;
+        if (Math.Abs(center - _lastThumbnailCenter) < 12) return;
+        _lastThumbnailCenter = center;
+        ViewModel.PreloadThumbnails(e.FirstVisibleItemIndex, e.LastVisibleItemIndex);
     }
 
     protected override async void OnAppearing()
@@ -94,6 +112,13 @@ public partial class LibraryPage : ContentPage
             {
                 viewModel.RefreshDisplayPreferences();
                 await viewModel.LoadAsync();
+#if ANDROID
+                AttachNativeLists();
+#else
+                ApplyFreeScrolling();
+                await Task.Delay(100);
+                ApplyFreeScrolling();
+#endif
             }
             catch (Exception exception)
             {
@@ -101,4 +126,45 @@ public partial class LibraryPage : ContentPage
             }
         }
     }
+
+    private void ApplyFreeScrolling()
+    {
+        CollectionViewScrollTuner.EnableFreeScrolling(GridLibraryList);
+        CollectionViewScrollTuner.EnableFreeScrolling(ListLibraryList);
+    }
+
+#if ANDROID
+    private void AttachNativeLists()
+    {
+        if (_nativeGridBinding is null || !_nativeGridBinding.IsCurrent(GridLibraryList))
+        {
+            _nativeGridBinding?.Dispose();
+            _nativeGridBinding = AndroidNativeCatalogRenderer.AttachMedia(
+                GridLibraryList,
+                ViewModel.MediaItems,
+                grid: true,
+                ViewModel.GridColumnCount,
+                item => ViewModel.OpenMediaItemCommand.Execute(item));
+        }
+        else
+        {
+            _nativeGridBinding.Update(ViewModel.MediaItems);
+        }
+
+        if (_nativeListBinding is null || !_nativeListBinding.IsCurrent(ListLibraryList))
+        {
+            _nativeListBinding?.Dispose();
+            _nativeListBinding = AndroidNativeCatalogRenderer.AttachMedia(
+                ListLibraryList,
+                ViewModel.MediaItems,
+                grid: false,
+                1,
+                item => ViewModel.OpenMediaItemCommand.Execute(item));
+        }
+        else
+        {
+            _nativeListBinding.Update(ViewModel.MediaItems);
+        }
+    }
+#endif
 }

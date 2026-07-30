@@ -72,6 +72,7 @@ public sealed class AppShell : Shell
         Items.Add(_settingsItem);
 
         Routing.RegisterRoute(nameof(MediaDetailsPage), typeof(MediaDetailsPage));
+        Routing.RegisterRoute(nameof(MediaContributorsPage), typeof(MediaContributorsPage));
         Routing.RegisterRoute(nameof(EditMediaItemPage), typeof(EditMediaItemPage));
         Routing.RegisterRoute(nameof(CategoryManagementPage), typeof(CategoryManagementPage));
         Routing.RegisterRoute(nameof(TagDetailsPage), typeof(TagDetailsPage));

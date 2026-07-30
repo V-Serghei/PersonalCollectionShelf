@@ -34,8 +34,15 @@ public sealed class CloudAssetSyncService(
                 continue;
             }
 
-            var compressed = await compressor.CompressAsync(localPath, cancellationToken);
             var state = await database.Connection.FindAsync<CloudAssetStateRecord>(candidate.Id);
+            var sourceFingerprint = GetSourceFingerprint(localPath);
+            if (state?.SourceFingerprint == sourceFingerprint &&
+                !string.IsNullOrWhiteSpace(state.CloudObjectName))
+            {
+                continue;
+            }
+
+            var compressed = await compressor.CompressAsync(localPath, cancellationToken);
             if (state?.SourceHash == compressed.SourceHash)
             {
                 if (!string.Equals(state.OriginalPath, candidate.Path, StringComparison.Ordinal))
@@ -73,6 +80,7 @@ public sealed class CloudAssetSyncService(
                 OriginalPath = candidate.Path,
                 CachePath = state?.CachePath,
                 SourceHash = compressed.SourceHash,
+                SourceFingerprint = sourceFingerprint,
                 CloudObjectName = objectName,
                 CloudHash = compressed.CloudHash,
                 UpdatedAtUtc = changedAt
@@ -206,6 +214,7 @@ public sealed class CloudAssetSyncService(
             OriginalPath = originalPath ?? existing?.OriginalPath,
             CachePath = cachePath,
             SourceHash = existing?.SourceHash,
+            SourceFingerprint = existing?.SourceFingerprint,
             CloudObjectName = metadata.ObjectName,
             CloudHash = metadata.CloudHash,
             UpdatedAtUtc = document.ChangedAtUtc
@@ -228,6 +237,12 @@ public sealed class CloudAssetSyncService(
         }
 
         return File.Exists(value) ? Path.GetFullPath(value) : null;
+    }
+
+    private static string GetSourceFingerprint(string path)
+    {
+        var file = new FileInfo(path);
+        return $"{file.Length}:{file.LastWriteTimeUtc.Ticks}";
     }
 
     private sealed record LocalAssetCandidate(string Id, string OwnerType, string OwnerId, string Slot, string Path);

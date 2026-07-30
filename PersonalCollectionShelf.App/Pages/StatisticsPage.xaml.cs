@@ -22,6 +22,16 @@ public partial class StatisticsPage : ContentPage
         MonthlyChart.Drawable = new MonthlyActivityDrawable(viewModel);
         DonutChart.Drawable = new CategoryDonutDrawable(viewModel);
         BarChart.Drawable = new StatusBarDrawable(viewModel);
+        ReleaseYearChart.Drawable = new VerticalPointBarDrawable(viewModel.ReleaseYearStatistics);
+        AddedYearChart.Drawable = new PointTrendDrawable(viewModel.AddedYearStatistics);
+        DecadeChart.Drawable = new PointDonutDrawable(viewModel.DecadeStatistics);
+        GenreChart.Drawable = new HorizontalPointBarDrawable(viewModel.GenreStatistics);
+        CountryChart.Drawable = new HorizontalPointBarDrawable(viewModel.CountryStatistics);
+        RatingChart.Drawable = new VerticalPointBarDrawable(viewModel.RatingStatistics);
+        AverageByTypeChart.Drawable = new HorizontalPointBarDrawable(viewModel.AverageRatingByTypeStatistics, "0.0");
+        CompletionByTypeChart.Drawable = new HorizontalPointBarDrawable(viewModel.CompletionByTypeStatistics, "0'%'", 100);
+        FavoritesByTypeChart.Drawable = new HorizontalPointBarDrawable(viewModel.FavoritesByTypeStatistics);
+        SelectTab("overview");
     }
 
     protected override async void OnAppearing()
@@ -42,6 +52,37 @@ public partial class StatisticsPage : ContentPage
             MonthlyChart.Invalidate();
             DonutChart.Invalidate();
             BarChart.Invalidate();
+            ReleaseYearChart.Invalidate();
+            AddedYearChart.Invalidate();
+            DecadeChart.Invalidate();
+            GenreChart.Invalidate();
+            CountryChart.Invalidate();
+            RatingChart.Invalidate();
+            AverageByTypeChart.Invalidate();
+            CompletionByTypeChart.Invalidate();
+            FavoritesByTypeChart.Invalidate();
+        }
+    }
+
+    private void HandleStatisticsTabClicked(object? sender, EventArgs e)
+    {
+        if (sender is Button { CommandParameter: string tab }) SelectTab(tab);
+    }
+
+    private void SelectTab(string tab)
+    {
+        OverviewSection.IsVisible = tab == "overview";
+        TimeSection.IsVisible = tab == "time";
+        GenresSection.IsVisible = tab == "genres";
+        RatingsSection.IsVisible = tab == "ratings";
+        foreach (var (button, key) in new[]
+                 {
+                     (OverviewTabButton, "overview"), (TimeTabButton, "time"),
+                     (GenresTabButton, "genres"), (RatingsTabButton, "ratings")
+                 })
+        {
+            button.BackgroundColor = key == tab ? Color.FromArgb("#9D7FF4") : Colors.Transparent;
+            button.TextColor = key == tab ? Colors.White : Color.FromArgb("#9D7FF4");
         }
     }
 
@@ -63,44 +104,11 @@ public partial class StatisticsPage : ContentPage
         _usesCompactLayout = usesCompactLayout;
         TopBar.ColumnDefinitions.Clear();
         TopBar.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-        TopBar.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
         TopBar.Padding = usesCompactLayout ? new Thickness(12, 7) : new Thickness(18, 7);
         StatisticsContent.Padding = usesCompactLayout
-            ? new Thickness(14, 18, 14, 30)
+            ? new Thickness(12, 8, 12, 30)
             : new Thickness(0, 24, 0, 30);
-        StatisticsContent.Spacing = usesCompactLayout ? 18 : 28;
-
-        ConfigureStackingGrid(SummaryGrid, [RatingCard, CompletionCard, CollectionCard], usesCompactLayout);
-        ConfigureStackingGrid(BreakdownGrid, [CategoryChartCard, StatusChartCard], usesCompactLayout);
-    }
-
-    private static void ConfigureStackingGrid(Grid grid, IReadOnlyList<View> children, bool usesCompactLayout)
-    {
-        grid.ColumnDefinitions.Clear();
-        grid.RowDefinitions.Clear();
-        grid.ColumnSpacing = usesCompactLayout ? 0 : 14;
-        grid.RowSpacing = usesCompactLayout ? 12 : 0;
-
-        if (usesCompactLayout)
-        {
-            grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            for (var index = 0; index < children.Count; index++)
-            {
-                grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                Grid.SetColumn(children[index], 0);
-                Grid.SetRow(children[index], index);
-            }
-        }
-        else
-        {
-            for (var index = 0; index < children.Count; index++)
-            {
-                grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                Grid.SetColumn(children[index], index);
-                Grid.SetRow(children[index], 0);
-            }
-            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        }
+        StatisticsContent.Spacing = usesCompactLayout ? 14 : 20;
     }
 
     private sealed class MonthlyActivityDrawable(LibraryViewModel viewModel) : IDrawable
@@ -297,6 +305,115 @@ public partial class StatisticsPage : ContentPage
             }
 
             canvas.RestoreState();
+        }
+    }
+
+    private sealed class HorizontalPointBarDrawable(
+        IReadOnlyList<StatisticPoint> points,
+        string valueFormat = "0",
+        double? fixedMaximum = null) : IDrawable
+    {
+        public void Draw(ICanvas canvas, RectF dirtyRect)
+        {
+            var values = points.Where(point => point.Value > 0).Take(18).ToList();
+            if (values.Count == 0) return;
+            var max = fixedMaximum ?? Math.Max(1, values.Max(point => point.Value));
+            var labelWidth = Math.Min(150f, dirtyRect.Width * .34f);
+            var rowHeight = dirtyRect.Height / values.Count;
+            for (var index = 0; index < values.Count; index++)
+            {
+                var point = values[index];
+                var y = index * rowHeight + 3;
+                var height = Math.Max(8, rowHeight - 9);
+                var available = dirtyRect.Width - labelWidth - 48;
+                var width = Math.Max(3, (float)(point.Value / max * available));
+                canvas.FontSize = 10;
+                canvas.FontColor = Color.FromArgb("#C6BEE0");
+                canvas.DrawString(point.Label, 0, y, labelWidth - 8, height, HorizontalAlignment.Right, VerticalAlignment.Center);
+                canvas.FillColor = Color.FromArgb("#241E38");
+                canvas.FillRoundedRectangle(labelWidth, y, available, height, height / 2);
+                canvas.FillColor = point.Color;
+                canvas.FillRoundedRectangle(labelWidth, y, width, height, height / 2);
+                canvas.FontColor = Color.FromArgb("#EDE9F8");
+                canvas.DrawString(point.Value.ToString(valueFormat, CultureInfo.InvariantCulture), labelWidth + available + 6, y, 42, height, HorizontalAlignment.Left, VerticalAlignment.Center);
+            }
+        }
+    }
+
+    private sealed class VerticalPointBarDrawable(IReadOnlyList<StatisticPoint> points) : IDrawable
+    {
+        public void Draw(ICanvas canvas, RectF dirtyRect)
+        {
+            var values = points.Where(point => point.Value >= 0).ToList();
+            if (values.Count == 0) return;
+            var max = Math.Max(1, values.Max(point => point.Value));
+            var bottom = dirtyRect.Height - 30;
+            var availableHeight = dirtyRect.Height - 54;
+            var slot = dirtyRect.Width / values.Count;
+            var barWidth = Math.Max(3, Math.Min(32, slot * .62f));
+            for (var index = 0; index < values.Count; index++)
+            {
+                var point = values[index];
+                var height = Math.Max(2, point.Value / max * availableHeight);
+                var x = index * slot + (slot - barWidth) / 2;
+                canvas.FillColor = point.Color;
+                canvas.FillRoundedRectangle((float)x, (float)(bottom - height), (float)barWidth, (float)height, 5);
+                canvas.FontSize = values.Count > 14 ? 7 : 9;
+                canvas.FontColor = Color.FromArgb("#8179A3");
+                canvas.DrawString(point.Label, (float)(index * slot), bottom + 5, (float)slot, 16, HorizontalAlignment.Center, VerticalAlignment.Top);
+            }
+        }
+    }
+
+    private sealed class PointTrendDrawable(IReadOnlyList<StatisticPoint> points) : IDrawable
+    {
+        public void Draw(ICanvas canvas, RectF dirtyRect)
+        {
+            var values = points.ToList();
+            if (values.Count == 0) return;
+            var max = Math.Max(1, values.Max(point => point.Value));
+            var left = 18f;
+            var width = dirtyRect.Width - 36;
+            var height = dirtyRect.Height - 48;
+            var path = new PathF();
+            for (var index = 0; index < values.Count; index++)
+            {
+                var x = values.Count == 1 ? left + width / 2 : left + width * index / (values.Count - 1);
+                var y = 12 + height - values[index].Value / max * height;
+                if (index == 0) path.MoveTo(x, (float)y); else path.LineTo(x, (float)y);
+                canvas.FillColor = values[index].Color;
+                canvas.FillCircle(x, (float)y, 4);
+                canvas.FontSize = 9;
+                canvas.FontColor = Color.FromArgb("#8179A3");
+                canvas.DrawString(values[index].Label, x - 25, dirtyRect.Height - 24, 50, 14, HorizontalAlignment.Center, VerticalAlignment.Top);
+            }
+            canvas.StrokeColor = Color.FromArgb("#9D7FF4");
+            canvas.StrokeSize = 3;
+            canvas.DrawPath(path);
+        }
+    }
+
+    private sealed class PointDonutDrawable(IReadOnlyList<StatisticPoint> points) : IDrawable
+    {
+        public void Draw(ICanvas canvas, RectF dirtyRect)
+        {
+            var values = points.Where(point => point.Value > 0).ToList();
+            var total = values.Sum(point => point.Value);
+            if (total <= 0) return;
+            var size = Math.Min(dirtyRect.Width, dirtyRect.Height) - 36;
+            var rect = new RectF((dirtyRect.Width - size) / 2, (dirtyRect.Height - size) / 2, size, size);
+            var start = -90f;
+            foreach (var point in values)
+            {
+                var sweep = (float)(point.Value / total * 360);
+                canvas.StrokeColor = point.Color;
+                canvas.StrokeSize = 30;
+                canvas.DrawArc(rect, start, start + Math.Max(0, sweep - 2), false, false);
+                start += sweep;
+            }
+            canvas.FontColor = Color.FromArgb("#EDE9F8");
+            canvas.FontSize = 22;
+            canvas.DrawString(total.ToString("0", CultureInfo.InvariantCulture), dirtyRect.Center.X - 60, dirtyRect.Center.Y - 12, 120, 24, HorizontalAlignment.Center, VerticalAlignment.Center);
         }
     }
 }

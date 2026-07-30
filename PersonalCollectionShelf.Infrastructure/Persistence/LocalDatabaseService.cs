@@ -81,6 +81,8 @@ public sealed class LocalDatabaseService
             await Connection.CreateTableAsync<CloudSyncMetadataRecord>();
             await Connection.CreateTableAsync<CloudAssetStateRecord>();
 
+            await ConfigureForReadPerformanceAsync();
+            await CreateQueryIndexesAsync();
             await MigrateLegacyDataAsync();
             _isInitialized = true;
         }
@@ -90,10 +92,64 @@ public sealed class LocalDatabaseService
         }
     }
 
+    private async Task ConfigureForReadPerformanceAsync()
+    {
+        // journal_mode returns the active mode as a result row. ExecuteAsync expects
+        // SQLITE_DONE and sqlite-net reports that row as the misleading
+        // "SQLiteException: not an error", so read the returned value explicitly.
+        _ = await Connection.ExecuteScalarAsync<string>("PRAGMA journal_mode=WAL");
+        await Connection.ExecuteAsync("PRAGMA synchronous=NORMAL");
+        await Connection.ExecuteAsync("PRAGMA temp_store=MEMORY");
+        await Connection.ExecuteAsync("PRAGMA cache_size=-32768");
+    }
+
+    private async Task CreateQueryIndexesAsync()
+    {
+        string[] statements =
+        [
+            "CREATE INDEX IF NOT EXISTS IX_MediaItems_User_Deleted_Title ON MediaItems(UserId, DeletedAt, Title)",
+            "CREATE INDEX IF NOT EXISTS IX_MediaItems_User_Deleted_Type_Status ON MediaItems(UserId, DeletedAt, MediaType, Status)",
+            "CREATE INDEX IF NOT EXISTS IX_MediaItems_User_Deleted_Created ON MediaItems(UserId, DeletedAt, CreatedAt DESC)",
+            "CREATE INDEX IF NOT EXISTS IX_MediaItems_User_Deleted_Rating ON MediaItems(UserId, DeletedAt, Rating DESC)",
+            "CREATE INDEX IF NOT EXISTS IX_People_User_Deleted_Name ON People(UserId, DeletedAt, Name)",
+            "CREATE INDEX IF NOT EXISTS IX_Contributions_User_Person_Item ON MediaContributions(UserId, PersonId, MediaItemId)",
+            "CREATE INDEX IF NOT EXISTS IX_Contributions_User_Item_Person ON MediaContributions(UserId, MediaItemId, PersonId)",
+            "CREATE INDEX IF NOT EXISTS IX_ItemTags_User_Item_Tag ON MediaItemTags(UserId, MediaItemId, TagId)",
+            "CREATE INDEX IF NOT EXISTS IX_PersonPhotos_User_Person_Primary ON PersonPhotos(UserId, PersonId, IsPrimary)",
+            "CREATE INDEX IF NOT EXISTS IX_PersonProfessions_User_Person ON PersonProfessions(UserId, PersonId)",
+            "CREATE INDEX IF NOT EXISTS IX_PersonRelations_User_Person ON PersonRelations(UserId, PersonId)",
+            "CREATE INDEX IF NOT EXISTS IX_PersonRelations_User_Related ON PersonRelations(UserId, RelatedPersonId)"
+        ];
+
+        foreach (var statement in statements)
+        {
+            await Connection.ExecuteAsync(statement);
+        }
+    }
+
     private async Task MigrateLegacyDataAsync()
     {
         await SeedSystemCategoriesAsync();
         await SeedCreditRolesAsync();
+        var legacyMediaCount = await Connection.Table<MediaItemRecord>()
+            .Where(value => value.CategoryId == null || value.Tags != null)
+            .CountAsync();
+        var unmigratedLegacyCastCount = await Connection.ExecuteScalarAsync<int>(
+            """
+            SELECT COUNT(1)
+            FROM MediaItemCastMembers legacy
+            LEFT JOIN MediaContributions contribution
+              ON contribution.MediaItemId = legacy.MediaItemId
+             AND contribution.PersonId = legacy.PersonId
+             AND contribution.Role = ?
+            WHERE contribution.Id IS NULL
+            """,
+            (int)ContributionRole.Actor);
+        if (legacyMediaCount == 0 && unmigratedLegacyCastCount == 0)
+        {
+            return;
+        }
+
         var mediaItems = await Connection.Table<MediaItemRecord>().ToListAsync();
         var tags = await Connection.Table<TagRecord>().ToListAsync();
         var itemTags = await Connection.Table<MediaItemTagRecord>().ToListAsync();

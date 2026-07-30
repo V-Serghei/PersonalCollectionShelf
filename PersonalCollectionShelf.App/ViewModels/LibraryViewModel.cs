@@ -16,9 +16,14 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     private const string ViewModePreferenceKey = "library.viewMode";
     private const int LibraryPageSize = 240;
     private const string GridColumnCountPreferenceKey = "library.gridColumnCount";
+    private const int ThumbnailBatchSize = 500;
+    private const int ThumbnailBatchLead = 400;
 
     private readonly IMediaItemService _mediaItemService;
     private readonly IAuthService _authService;
+    private readonly UiThumbnailCache _thumbnailCache;
+    private readonly Dictionary<Guid, string> _coverSources = [];
+    private int _thumbnailViewportVersion;
     private IReadOnlyList<MediaItemDto> _allItems = [];
     private IReadOnlyList<MediaItemDto> _visibleItems = [];
     private IReadOnlyList<MediaItemListItemViewModel> _preparedMediaItems = [];
@@ -27,15 +32,21 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewModePreferenceKey, "grid") != "list";
     private bool _isSearchVisible;
     private bool _isFilterPanelVisible = true;
+    private bool _initialThumbnailBatchPrepared;
+    private readonly object _thumbnailBatchLock = new();
+    private int _nextThumbnailBatchStart;
+    private int _thumbnailOrderingVersion;
 
     public LibraryViewModel(
         IMediaItemService mediaItemService,
         IAuthService authService,
+        UiThumbnailCache thumbnailCache,
         ILocalizationService localizationService)
         : base(localizationService)
     {
         _mediaItemService = mediaItemService;
         _authService = authService;
+        _thumbnailCache = thumbnailCache;
         ReloadFilterOptions();
     }
 
@@ -58,6 +69,16 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     public ObservableCollection<StatusSummaryViewModel> StatusSummaries { get; } = [];
 
     public ObservableCollection<MonthlyActivityPoint> MonthlyActivity { get; } = [];
+
+    public ObservableCollection<StatisticPoint> ReleaseYearStatistics { get; } = [];
+    public ObservableCollection<StatisticPoint> AddedYearStatistics { get; } = [];
+    public ObservableCollection<StatisticPoint> DecadeStatistics { get; } = [];
+    public ObservableCollection<StatisticPoint> GenreStatistics { get; } = [];
+    public ObservableCollection<StatisticPoint> CountryStatistics { get; } = [];
+    public ObservableCollection<StatisticPoint> RatingStatistics { get; } = [];
+    public ObservableCollection<StatisticPoint> AverageRatingByTypeStatistics { get; } = [];
+    public ObservableCollection<StatisticPoint> CompletionByTypeStatistics { get; } = [];
+    public ObservableCollection<StatisticPoint> FavoritesByTypeStatistics { get; } = [];
 
     public ObservableCollection<LocalizedOption<MediaType?>> MediaTypeFilters { get; } = [];
 
@@ -114,6 +135,7 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         set => SetProperty(ref _isSearchVisible, value);
     }
 
+
     [RelayCommand]
     private void SetGridView()
     {
@@ -131,8 +153,6 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     [RelayCommand]
     private void ToggleFilters() => IsFilterPanelVisible = !IsFilterPanelVisible;
-
-    public void CollapseFilters() => IsFilterPanelVisible = false;
 
     public void RefreshDisplayPreferences()
     {
@@ -357,6 +377,20 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
     public string StatisticsItemsLabel => T("Statistics.Items");
 
+    public string StatisticsOverviewTab => T("Statistics.Tab.Overview");
+    public string StatisticsTimeTab => T("Statistics.Tab.Time");
+    public string StatisticsGenresTab => T("Statistics.Tab.Genres");
+    public string StatisticsRatingsTab => T("Statistics.Tab.Ratings");
+    public string ReleasesByYearTitle => T("Statistics.ReleasesByYear");
+    public string AddedByYearTitle => T("Statistics.AddedByYear");
+    public string ByDecadeTitle => T("Statistics.ByDecade");
+    public string ByGenreTitle => T("Statistics.ByGenre");
+    public string ByCountryTitle => T("Statistics.ByCountry");
+    public string RatingDistributionTitle => T("Statistics.RatingDistribution");
+    public string AverageRatingByTypeTitle => T("Statistics.AverageRatingByType");
+    public string CompletionByTypeTitle => T("Statistics.CompletionByType");
+    public string FavoritesByTypeTitle => T("Statistics.FavoritesByType");
+
     public string AverageRatingText
     {
         get
@@ -534,7 +568,6 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         }
     }
 
-    [RelayCommand]
     public async Task LoadAsync()
     {
         if (IsBusy)
@@ -550,6 +583,8 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             _allItems = library;
             ReloadDynamicFilterOptions(library);
             ApplyCurrentFilters();
+            StartInitialThumbnailPipeline();
+            _ = _thumbnailCache.PrimeDisplaySourcesAsync(library.Select(item => item.CoverUrl));
         }
         finally
         {
@@ -736,7 +771,8 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         var tagsLine = string.IsNullOrWhiteSpace(item.Tags)
             ? T("Library.NoTags")
             : string.Format(T("Library.TagsFormat"), item.Tags);
-        var hasCoverUrl = MediaPresentation.HasValidCoverUrl(item.CoverUrl);
+        var displayCoverUrl = _thumbnailCache.GetDisplaySource(item.CoverUrl);
+        var hasCoverUrl = MediaPresentation.HasValidCoverUrl(displayCoverUrl);
 
         return new MediaItemListItemViewModel(
             item.Id,
@@ -758,7 +794,8 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             item.Rating.HasValue,
             item.ReleaseYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             item.ReleaseYear.HasValue,
-            hasCoverUrl ? item.CoverUrl ?? string.Empty : string.Empty,
+            item.CoverUrl ?? string.Empty,
+            hasCoverUrl ? displayCoverUrl : string.Empty,
             hasCoverUrl,
             !hasCoverUrl,
             GetInitial(item.Title),
@@ -770,6 +807,11 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     private void PopulateMediaItems(IEnumerable<MediaItemDto> items)
     {
         var itemList = items.ToList();
+        _coverSources.Clear();
+        foreach (var item in itemList.Where(item => MediaPresentation.HasValidCoverUrl(item.CoverUrl)))
+        {
+            _coverSources[item.Id] = item.CoverUrl!;
+        }
 
         var preparedItems = SortItems(itemList).Select(ToListItem).ToList();
         var canUpdateInPlace = MediaItems.Count <= preparedItems.Count &&
@@ -777,11 +819,18 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
                                    .SequenceEqual(preparedItems.Take(MediaItems.Count).Select(item => item.Id));
 
         _preparedMediaItems = preparedItems;
+        Interlocked.Increment(ref _thumbnailOrderingVersion);
+        lock (_thumbnailBatchLock)
+        {
+            _nextThumbnailBatchStart = _initialThumbnailBatchPrepared
+                ? Math.Min(ThumbnailBatchSize, preparedItems.Count)
+                : 0;
+        }
         if (canUpdateInPlace && MediaItems.Count == preparedItems.Count)
         {
             for (var index = 0; index < MediaItems.Count; index++)
             {
-                if (MediaItems[index] != preparedItems[index])
+                if (!MediaItems[index].HasSameContent(preparedItems[index]))
                 {
                     MediaItems[index] = preparedItems[index];
                 }
@@ -795,6 +844,118 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
 
         PopulateDashboardCollections(itemList);
         RefreshCollectionSummary();
+        PreloadThumbnails(0, Math.Min(30, MediaItems.Count - 1));
+    }
+
+    public void PreloadThumbnails(int firstVisibleIndex, int lastVisibleIndex)
+    {
+        if (MediaItems.Count == 0 || lastVisibleIndex < 0) return;
+        var version = Interlocked.Increment(ref _thumbnailViewportVersion);
+        _ = PreloadThumbnailRangeAsync(firstVisibleIndex, lastVisibleIndex, version);
+    }
+
+    public void EnsureThumbnailLookAhead(int lastVisibleIndex)
+    {
+        if (!_initialThumbnailBatchPrepared || lastVisibleIndex < 0) return;
+
+        while (true)
+        {
+            (Guid Id, string Source)[] batch;
+            int version;
+            lock (_thumbnailBatchLock)
+            {
+                if (_nextThumbnailBatchStart >= _preparedMediaItems.Count ||
+                    lastVisibleIndex < Math.Max(0, _nextThumbnailBatchStart - ThumbnailBatchLead))
+                {
+                    return;
+                }
+
+                var start = _nextThumbnailBatchStart;
+                var count = Math.Min(ThumbnailBatchSize, _preparedMediaItems.Count - start);
+                _nextThumbnailBatchStart += count;
+                version = Volatile.Read(ref _thumbnailOrderingVersion);
+                batch = _preparedMediaItems
+                    .Skip(start)
+                    .Take(count)
+                    .Select(item => (item.Id, _coverSources.GetValueOrDefault(item.Id) ?? string.Empty))
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Item2))
+                    .ToArray();
+            }
+
+            _ = WarmThumbnailBatchAsync(batch, version);
+        }
+    }
+
+    private void StartInitialThumbnailPipeline()
+    {
+        if (_initialThumbnailBatchPrepared || _preparedMediaItems.Count == 0) return;
+        _initialThumbnailBatchPrepared = true;
+        var version = Volatile.Read(ref _thumbnailOrderingVersion);
+        var firstBatch = _preparedMediaItems
+            .Take(ThumbnailBatchSize)
+            .Select(item => (item.Id, _coverSources.GetValueOrDefault(item.Id) ?? string.Empty))
+            .Where(item => !string.IsNullOrWhiteSpace(item.Item2))
+            .ToArray();
+        lock (_thumbnailBatchLock)
+        {
+            _nextThumbnailBatchStart = Math.Min(ThumbnailBatchSize, _preparedMediaItems.Count);
+        }
+        _ = WarmThumbnailBatchAsync(firstBatch, version);
+    }
+
+    private async Task WarmThumbnailBatchAsync((Guid Id, string Source)[] batch, int version)
+    {
+        if (batch.Length == 0) return;
+        await _thumbnailCache.WarmBatchAsync(
+            batch.Select(item => item.Source),
+            batch.Length,
+            degreeOfParallelism: 1).ConfigureAwait(false);
+        if (version != Volatile.Read(ref _thumbnailOrderingVersion)) return;
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            if (version != Volatile.Read(ref _thumbnailOrderingVersion)) return;
+            var cards = MediaItems.ToDictionary(item => item.Id);
+            foreach (var (id, source) in batch)
+            {
+                if (!cards.TryGetValue(id, out var card)) continue;
+                var displaySource = _thumbnailCache.GetDisplaySource(source);
+                if (!string.IsNullOrWhiteSpace(displaySource)) card.SetCoverSource(displaySource, notify: false);
+            }
+        });
+    }
+
+    private async Task PreloadThumbnailRangeAsync(int firstVisibleIndex, int lastVisibleIndex, int version)
+    {
+        var start = Math.Max(0, firstVisibleIndex - 30);
+        var end = Math.Min(MediaItems.Count - 1, lastVisibleIndex + 30);
+        var center = Math.Clamp((firstVisibleIndex + lastVisibleIndex) / 2, start, end);
+        var indices = Enumerable.Range(start, end - start + 1)
+            .OrderBy(index => Math.Abs(index - center));
+        var ready = new List<(int Index, Guid Id, string Source)>();
+
+        foreach (var index in indices)
+        {
+            if (version != Volatile.Read(ref _thumbnailViewportVersion)) return;
+            if (index >= MediaItems.Count) return;
+            var itemId = MediaItems[index].Id;
+            if (!_coverSources.TryGetValue(itemId, out var source)) continue;
+            var thumbnail = await _thumbnailCache.GetOrCreateAsync(source).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(thumbnail)) continue;
+            ready.Add((index, itemId, thumbnail));
+        }
+
+        if (version != Volatile.Read(ref _thumbnailViewportVersion) || ready.Count == 0) return;
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            if (version != Volatile.Read(ref _thumbnailViewportVersion)) return;
+            foreach (var item in ready)
+            {
+                if (item.Index >= MediaItems.Count || MediaItems[item.Index].Id != item.Id) continue;
+                var isVisible = item.Index >= firstVisibleIndex && item.Index <= lastVisibleIndex;
+                MediaItems[item.Index].SetCoverSource(item.Source, notify: isVisible);
+            }
+        });
     }
 
     private static string GetStatusIcon(MediaStatus status) => status switch
@@ -881,6 +1042,82 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
             var culture = CultureInfo.GetCultureInfo(LocalizationService.CurrentLanguage);
             MonthlyActivity.Add(new MonthlyActivityPoint(month.ToString("MMM", culture), count));
         }
+
+        PopulateStatisticPoints(ReleaseYearStatistics, items
+            .Where(item => item.ReleaseYear.HasValue)
+            .GroupBy(item => item.ReleaseYear!.Value)
+            .OrderBy(group => group.Key)
+            .TakeLast(24)
+            .Select((group, index) => new StatisticPoint(group.Key.ToString(CultureInfo.InvariantCulture), group.Count(), ChartColor(index))));
+
+        PopulateStatisticPoints(AddedYearStatistics, items
+            .GroupBy(item => item.CreatedAt.Year)
+            .OrderBy(group => group.Key)
+            .Select((group, index) => new StatisticPoint(group.Key.ToString(CultureInfo.InvariantCulture), group.Count(), ChartColor(index))));
+
+        PopulateStatisticPoints(DecadeStatistics, items
+            .Where(item => item.ReleaseYear.HasValue)
+            .GroupBy(item => item.ReleaseYear!.Value / 10 * 10)
+            .OrderBy(group => group.Key)
+            .Select((group, index) => new StatisticPoint($"{group.Key}s", group.Count(), ChartColor(index))));
+
+        PopulateStatisticPoints(GenreStatistics, items
+            .SelectMany(item => item.Genres ?? [])
+            .Where(genre => !string.IsNullOrWhiteSpace(genre))
+            .GroupBy(genre => genre.Trim(), StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+            .Take(18)
+            .Select((group, index) => new StatisticPoint(group.Key, group.Count(), ChartColor(index))));
+
+        PopulateStatisticPoints(CountryStatistics, items
+            .Select(item => item.MovieDetails?.CountryOfOrigin ?? item.BookDetails?.CountryOfOrigin)
+            .Where(country => !string.IsNullOrWhiteSpace(country))
+            .SelectMany(country => country!.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .GroupBy(country => country, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(group => group.Count())
+            .Take(15)
+            .Select((group, index) => new StatisticPoint(group.Key, group.Count(), ChartColor(index))));
+
+        PopulateStatisticPoints(RatingStatistics, Enumerable.Range(1, 10)
+            .Select((rating, index) => new StatisticPoint(
+                rating.ToString(CultureInfo.InvariantCulture),
+                items.Count(item => item.Rating.HasValue && Math.Clamp((int)Math.Round(item.Rating.Value), 1, 10) == rating),
+                ChartColor(index))));
+
+        PopulateStatisticPoints(AverageRatingByTypeStatistics, MediaPresentation.OrderedMediaTypes
+            .Select(type =>
+            {
+                var ratings = items.Where(item => item.MediaType == type && item.Rating.HasValue).Select(item => item.Rating!.Value).ToList();
+                return new StatisticPoint(T($"MediaType.{type}"), ratings.Count == 0 ? 0 : (double)ratings.Average(), MediaPresentation.GetMediaTypeColor(type));
+            }).Where(point => point.Value > 0));
+
+        PopulateStatisticPoints(CompletionByTypeStatistics, MediaPresentation.OrderedMediaTypes
+            .Select(type =>
+            {
+                var values = items.Where(item => item.MediaType == type).ToList();
+                var percent = values.Count == 0 ? 0 : values.Count(item => item.Status == MediaStatus.Completed) * 100d / values.Count;
+                return new StatisticPoint(T($"MediaType.{type}"), percent, MediaPresentation.GetMediaTypeColor(type), $"{percent:0}%");
+            }).Where(point => point.Value > 0));
+
+        PopulateStatisticPoints(FavoritesByTypeStatistics, MediaPresentation.OrderedMediaTypes
+            .Select(type => new StatisticPoint(
+                T($"MediaType.{type}"),
+                items.Count(item => item.MediaType == type && item.IsFavorite),
+                MediaPresentation.GetMediaTypeColor(type)))
+            .Where(point => point.Value > 0));
+    }
+
+    private static void PopulateStatisticPoints(ObservableCollection<StatisticPoint> target, IEnumerable<StatisticPoint> values)
+    {
+        target.Clear();
+        foreach (var value in values) target.Add(value);
+    }
+
+    private static Color ChartColor(int index)
+    {
+        string[] colors = ["#9D7FF4", "#60A5FA", "#4ADE80", "#FBBF24", "#F07CB8", "#E07C54", "#4DD0E1", "#C47CF0"];
+        return Color.FromArgb(colors[Math.Abs(index) % colors.Length]);
     }
 
     private void RefreshCollectionSummary()

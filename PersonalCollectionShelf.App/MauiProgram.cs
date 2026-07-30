@@ -37,10 +37,12 @@ public static class MauiProgram
         builder.Services.AddSingleton<IGoogleAccountService, GoogleAccountService>();
         builder.Services.AddSingleton<IGoogleDriveBackupService, GoogleDriveBackupService>();
         builder.Services.AddSingleton<ICloudAssetStore, GoogleDriveCloudAssetStore>();
+        builder.Services.AddSingleton<UiThumbnailCache>();
 
         builder.Services.AddSingleton<AppShell>();
         builder.Services.AddTransient<LibraryViewModel>();
         builder.Services.AddTransient<MediaDetailsViewModel>();
+        builder.Services.AddTransient<MediaContributorsViewModel>();
         builder.Services.AddTransient<EditMediaItemViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddTransient<PeopleViewModel>();
@@ -58,6 +60,7 @@ public static class MauiProgram
         builder.Services.AddTransient<LibraryPage>();
         builder.Services.AddTransient<StatisticsPage>();
         builder.Services.AddTransient<MediaDetailsPage>();
+        builder.Services.AddTransient<MediaContributorsPage>();
         builder.Services.AddTransient<EditMediaItemPage>();
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<PeoplePage>();

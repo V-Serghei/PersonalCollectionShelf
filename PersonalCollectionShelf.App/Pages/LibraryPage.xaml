@@ -80,11 +80,16 @@
             </VerticalStackLayout>
 
             <Grid Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
+                <ActivityIndicator
+                    HorizontalOptions="Center"
+                    IsRunning="{Binding IsBusy}"
+                    IsVisible="{Binding IsBusy}"
+                    VerticalOptions="Center"
+                    ZIndex="20" />
                 <CollectionView
                     x:Name="GridLibraryList"
                     BackgroundColor="{DynamicResource PageBackground}"
                     IsVisible="{Binding IsGridView}"
-                    ItemsUpdatingScrollMode="KeepScrollOffset"
                     ItemSizingStrategy="MeasureFirstItem"
                     ItemsSource="{Binding MediaItems}"
                     Scrolled="HandleLibraryScrolled"
@@ -151,7 +156,6 @@
                     x:Name="ListLibraryList"
                     BackgroundColor="{DynamicResource PageBackground}"
                     IsVisible="{Binding IsListView}"
-                    ItemsUpdatingScrollMode="KeepScrollOffset"
                     ItemSizingStrategy="MeasureFirstItem"
                     ItemsSource="{Binding MediaItems}"
                     Scrolled="HandleLibraryScrolled"
@@ -170,7 +174,7 @@
                     </CollectionView.EmptyView>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
-                            <Border Padding="10" Style="{StaticResource CardBorderStyle}">
+                            <Border HeightRequest="76" Padding="10" Style="{StaticResource CardBorderStyle}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type pages:LibraryPage}}, Path=ViewModel.OpenMediaItemCommand, x:DataType={x:Type pages:LibraryPage}}"
@@ -202,5 +206,6 @@
                 </CollectionView>
             </Grid>
         </Grid>
+
     </Grid>
 </ContentPage>

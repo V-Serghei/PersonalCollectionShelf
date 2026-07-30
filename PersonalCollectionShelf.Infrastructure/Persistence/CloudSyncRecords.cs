@@ -45,6 +45,7 @@ public sealed class CloudAssetStateRecord
     public string? OriginalPath { get; set; }
     public string? CachePath { get; set; }
     public string? SourceHash { get; set; }
+    public string? SourceFingerprint { get; set; }
     public string? CloudObjectName { get; set; }
     public string? CloudHash { get; set; }
     public DateTime UpdatedAtUtc { get; set; }

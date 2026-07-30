@@ -16,7 +16,9 @@ public sealed class PeopleManagementService(
 {
     public async Task<IReadOnlyList<PersonCatalogDto>> GetCatalogAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var allPeople = await people.SearchAsync(userId, null, 500, cancellationToken);
+        // The UI virtualizes the catalog and warms photos in 500-item windows, so
+        // truncating the local catalog at 500 made every person after that invisible.
+        var allPeople = await people.SearchAsync(userId, null, 50_000, cancellationToken);
         var itemsById = mediaItems is null
             ? new Dictionary<Guid, MediaItem>()
             : (await mediaItems.GetAllAsync(userId, cancellationToken)).ToDictionary(item => item.Id);

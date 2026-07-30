@@ -41,8 +41,33 @@ internal static class AppNavigation
     public static Task OpenTagAsync(string tagName) =>
         Shell.Current.GoToAsync($"{nameof(TagDetailsPage)}?tag={Uri.EscapeDataString(tagName)}");
 
-    public static Task OpenPersonAsync(Guid personId) =>
-        Shell.Current.GoToAsync($"{nameof(PersonDetailsPage)}?id={personId}");
+    public static async Task OpenPersonAsync(Guid personId)
+    {
+        if (!UsesModalNavigation || Shell.Current.Navigation.ModalStack.Count == 0)
+        {
+            await Shell.Current.GoToAsync($"{nameof(PersonDetailsPage)}?id={personId}");
+            return;
+        }
+
+        var page = App.Services.GetRequiredService<PersonDetailsPage>();
+        page.ViewModel.ApplyQueryAttributes(new Dictionary<string, object> { ["id"] = personId });
+        await Shell.Current.Navigation.PushModalAsync(page);
+        await page.ViewModel.LoadAsync();
+    }
+
+    public static async Task OpenMediaContributorsAsync(Guid mediaItemId)
+    {
+        if (!UsesModalNavigation)
+        {
+            await Shell.Current.GoToAsync($"{nameof(MediaContributorsPage)}?id={mediaItemId}");
+            return;
+        }
+
+        var page = App.Services.GetRequiredService<MediaContributorsPage>();
+        page.SetNavigationTarget(mediaItemId);
+        await Shell.Current.Navigation.PushModalAsync(page);
+        await page.LoadNavigationTargetAsync();
+    }
 
     public static Task OpenPersonEditorAsync(Guid? personId = null)
     {

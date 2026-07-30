@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,6 +10,8 @@ using PersonalCollectionShelf.App.Services;
 using PersonalCollectionShelf.Domain.Enums;
 
 namespace PersonalCollectionShelf.App.ViewModels;
+
+public sealed record DetailsContributorViewModel(Guid PersonId, string Name, string Role, string Details);
 
 public partial class MediaDetailsViewModel : BaseViewModel
 {
@@ -35,6 +38,8 @@ public partial class MediaDetailsViewModel : BaseViewModel
     private MediaItemDto? _item;
 
     private string _errorMessage = string.Empty;
+
+    public ObservableCollection<DetailsContributorViewModel> FeaturedContributors { get; } = [];
 
     public MediaItemDto? Item
     {
@@ -189,6 +194,12 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     public string DeleteButtonText => T("Details.DeleteButton");
 
+    public string FeaturedContributorsTitle => T("Details.FeaturedContributors");
+
+    public string ShowAllContributorsText => T("Details.ShowAllContributors");
+
+    public bool HasContributors => FeaturedContributors.Count > 0;
+
     public string DeleteConfirmTitle => T("Details.DeleteConfirmTitle");
 
     public string DeleteConfirmMessage => T("Details.DeleteConfirmMessage");
@@ -277,6 +288,15 @@ public partial class MediaDetailsViewModel : BaseViewModel
             return actors is null || actors.Count == 0 ? T("Common.NotSet") : string.Join(Environment.NewLine, actors);
         }
     }
+
+    [RelayCommand]
+    private Task OpenPersonAsync(DetailsContributorViewModel contributor) =>
+        AppNavigation.OpenPersonAsync(contributor.PersonId);
+
+    [RelayCommand]
+    private Task OpenAllContributorsAsync() => Item is null
+        ? Task.CompletedTask
+        : AppNavigation.OpenMediaContributorsAsync(Item.Id);
 
     public string MovieStudiosValue
     {
@@ -612,6 +632,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
 
     private void RefreshItemProperties()
     {
+        PopulateFeaturedContributors();
         OnPropertyChanged(nameof(PageTitle));
         OnPropertyChanged(nameof(CanRefreshOnlineMetadata));
         OnPropertyChanged(nameof(RefreshMetadataTooltip));
@@ -674,6 +695,7 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(FavoriteValue));
         OnPropertyChanged(nameof(FavoriteIcon));
         OnPropertyChanged(nameof(FavoriteActionText));
+        OnPropertyChanged(nameof(HasContributors));
         OnPropertyChanged(nameof(HeroMetaValue));
         OnPropertyChanged(nameof(DatesValue));
         OnPropertyChanged(nameof(AuditValue));
@@ -683,6 +705,40 @@ public partial class MediaDetailsViewModel : BaseViewModel
         OnPropertyChanged(nameof(HasCoverUrl));
         OnPropertyChanged(nameof(HasNoCoverUrl));
         OnPropertyChanged(nameof(Initial));
+    }
+
+    private void PopulateFeaturedContributors()
+    {
+        FeaturedContributors.Clear();
+        if (Item is null) return;
+
+        var primaryRoles = Item.MediaType switch
+        {
+            MediaType.Book or MediaType.Manga or MediaType.Comic => new[] { ContributionRole.Author, ContributionRole.Illustrator },
+            MediaType.Game => new[] { ContributionRole.Developer, ContributionRole.Director, ContributionRole.Screenwriter },
+            _ => new[] { ContributionRole.Director, ContributionRole.Screenwriter, ContributionRole.Producer }
+        };
+
+        var selected = Item.Contributions
+            .Where(value => primaryRoles.Contains(value.Role))
+            .OrderBy(value => Array.IndexOf(primaryRoles, value.Role))
+            .ThenBy(value => value.SortOrder)
+            .Take(5)
+            .Concat(Item.Contributions
+                .Where(value => value.Role is ContributionRole.Actor or ContributionRole.VoiceActor)
+                .OrderBy(value => value.SortOrder)
+                .Take(5))
+            .DistinctBy(value => value.PersonId)
+            .Take(10);
+
+        foreach (var contribution in selected)
+        {
+            FeaturedContributors.Add(new DetailsContributorViewModel(
+                contribution.PersonId,
+                contribution.PersonName,
+                T($"ContributionRole.{contribution.Role}"),
+                contribution.Details ?? string.Empty));
+        }
     }
 
     private string FormatDate(DateTime? value)

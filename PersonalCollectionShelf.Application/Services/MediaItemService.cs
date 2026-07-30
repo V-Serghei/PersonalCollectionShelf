@@ -65,9 +65,15 @@ public sealed class MediaItemService : IMediaItemService
     public async Task<IReadOnlyList<MediaItemDto>> GetLibraryAsync(string userId, CancellationToken cancellationToken = default)
     {
         var items = await _mediaItems.GetAllAsync(userId, cancellationToken);
+        var booksByItem = _bookDetails is null
+            ? new Dictionary<Guid, BookDetails>()
+            : (await _bookDetails.GetAllAsync(userId, cancellationToken)).ToDictionary(value => value.MediaItemId);
+        var moviesByItem = _movieDetails is null
+            ? new Dictionary<Guid, MovieDetails>()
+            : (await _movieDetails.GetAllAsync(userId, cancellationToken)).ToDictionary(value => value.MediaItemId);
         if (_tags is null)
         {
-            return items.Select(item => ToLibraryDto(item, SplitTags(item.Tags), [])).ToList();
+            return items.Select(item => ToLibraryDto(item, SplitTags(item.Tags), [], booksByItem.GetValueOrDefault(item.Id), moviesByItem.GetValueOrDefault(item.Id))).ToList();
         }
 
         var tagsByItem = await _tags.GetForItemsAsync(
@@ -81,7 +87,9 @@ public sealed class MediaItemService : IMediaItemService
             return ToLibraryDto(
                 item,
                 itemTags.Where(tag => tag.Kind == TagKind.Tag).Select(tag => tag.Name).ToList(),
-                itemTags.Where(tag => tag.Kind == TagKind.Genre).Select(tag => tag.Name).ToList());
+                itemTags.Where(tag => tag.Kind == TagKind.Genre).Select(tag => tag.Name).ToList(),
+                booksByItem.GetValueOrDefault(item.Id),
+                moviesByItem.GetValueOrDefault(item.Id));
         }).ToList();
     }
 
@@ -689,7 +697,9 @@ public sealed class MediaItemService : IMediaItemService
     private static MediaItemDto ToLibraryDto(
         MediaItem item,
         IReadOnlyList<string> tagNames,
-        IReadOnlyList<string> genres) => new()
+        IReadOnlyList<string> genres,
+        BookDetails? bookDetails,
+        MovieDetails? movieDetails) => new()
     {
         Id = item.Id,
         UserId = item.UserId,
@@ -701,6 +711,20 @@ public sealed class MediaItemService : IMediaItemService
         Tags = tagNames.Count == 0 ? null : string.Join(", ", tagNames),
         TagNames = tagNames,
         Genres = genres,
+        BookDetails = bookDetails is null ? null : new BookDetailsDto
+        {
+            CountryOfOrigin = bookDetails.CountryOfOrigin,
+            Language = bookDetails.Language,
+            PageCount = bookDetails.PageCount,
+            OriginalPublicationYear = bookDetails.OriginalPublicationYear
+        },
+        MovieDetails = movieDetails is null ? null : new MovieDetailsDto
+        {
+            CountryOfOrigin = movieDetails.CountryOfOrigin,
+            Language = movieDetails.Language,
+            OriginalLanguage = movieDetails.OriginalLanguage,
+            RuntimeMinutes = movieDetails.RuntimeMinutes
+        },
         CreatorId = item.CreatorId,
         StudioId = item.StudioId,
         SerialNumber = item.SerialNumber,

@@ -433,6 +433,7 @@ public partial class SettingsViewModel : BaseViewModel
         IsBusy = true;
         IsSyncing = true;
         SetSyncStatus("Sync.Status.Started");
+        UserNotification.Show(StatusMessage);
         CrashReporter.LogMessage("SettingsViewModel.SyncNowAsync", "Synchronization started.");
         try
         {
@@ -452,11 +453,13 @@ public partial class SettingsViewModel : BaseViewModel
             {
                 SetSyncStatus("Sync.Status.CompletedWithoutDrive");
             }
+            UserNotification.Show(StatusMessage);
             CrashReporter.LogMessage("SettingsViewModel.SyncNowAsync", "Synchronization completed.");
         }
         catch (Exception exception)
         {
             SetSyncStatus("Sync.Status.Failed");
+            UserNotification.Show(StatusMessage);
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.SyncNowAsync");
         }
         finally
@@ -479,6 +482,7 @@ public partial class SettingsViewModel : BaseViewModel
         IsBusy = true;
         IsDriveBackupRunning = true;
         SetSyncStatus("Settings.DriveBackup.Preparing");
+        UserNotification.Show(StatusMessage);
         CrashReporter.LogMessage("SettingsViewModel.BackupToDriveAsync", "Google Drive backup started.");
         try
         {
@@ -489,11 +493,13 @@ public partial class SettingsViewModel : BaseViewModel
             SetSyncStatus("Settings.DriveBackup.Uploading");
             await _driveBackupService.UploadBackupAsync(name, archive);
             SetSyncStatus("Settings.DriveBackup.Completed");
+            UserNotification.Show(StatusMessage);
             CrashReporter.LogMessage("SettingsViewModel.BackupToDriveAsync", "Google Drive backup completed.");
         }
         catch (Exception exception)
         {
             SetSyncStatus("Settings.DriveBackup.Failed");
+            UserNotification.Show(StatusMessage);
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.BackupToDriveAsync");
         }
         finally
@@ -635,6 +641,7 @@ public partial class SettingsViewModel : BaseViewModel
         IsBusy = true;
         IsDriveRestoreRunning = true;
         SetSyncStatus("Settings.DriveRestore.Downloading");
+        UserNotification.Show(StatusMessage);
         CrashReporter.LogMessage("SettingsViewModel.RestoreFromDriveAsync", "Google Drive restore started.");
         try
         {
@@ -643,6 +650,7 @@ public partial class SettingsViewModel : BaseViewModel
             if (backup is null)
             {
                 SetSyncStatus("Settings.DriveRestore.NotFound");
+                UserNotification.Show(StatusMessage);
                 return;
             }
 
@@ -672,11 +680,13 @@ public partial class SettingsViewModel : BaseViewModel
             SetSyncStatus("Settings.DriveRestore.Importing");
             await ImportDocumentAsync(document);
             SetSyncStatus("Settings.DriveRestore.Completed");
+            UserNotification.Show(StatusMessage);
             CrashReporter.LogMessage("SettingsViewModel.RestoreFromDriveAsync", "Google Drive restore completed.");
         }
         catch (Exception exception)
         {
             SetSyncStatus("Settings.DriveRestore.Failed");
+            UserNotification.Show(StatusMessage);
             await CrashReporter.ReportAsync(exception, "SettingsViewModel.RestoreFromDriveAsync");
         }
         finally
