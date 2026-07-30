@@ -18,7 +18,7 @@ internal static class AppNavigation
 
         var page = App.Services.GetRequiredService<EditMediaItemPage>();
         page.SetNavigationTarget(mediaItemId);
-        await Shell.Current.Navigation.PushModalAsync(page);
+        await PushOpaqueModalAsync(page);
         await page.LoadNavigationTargetAsync();
     }
 
@@ -32,7 +32,7 @@ internal static class AppNavigation
 
         var page = App.Services.GetRequiredService<MediaDetailsPage>();
         page.SetNavigationTarget(mediaItemId);
-        await Shell.Current.Navigation.PushModalAsync(page);
+        await PushOpaqueModalAsync(page);
         await page.LoadNavigationTargetAsync();
     }
 
@@ -51,7 +51,7 @@ internal static class AppNavigation
 
         var page = App.Services.GetRequiredService<PersonDetailsPage>();
         page.ViewModel.ApplyQueryAttributes(new Dictionary<string, object> { ["id"] = personId });
-        await Shell.Current.Navigation.PushModalAsync(page);
+        await PushOpaqueModalAsync(page);
         await page.ViewModel.LoadAsync();
     }
 
@@ -65,7 +65,7 @@ internal static class AppNavigation
 
         var page = App.Services.GetRequiredService<MediaContributorsPage>();
         page.SetNavigationTarget(mediaItemId);
-        await Shell.Current.Navigation.PushModalAsync(page);
+        await PushOpaqueModalAsync(page);
         await page.LoadNavigationTargetAsync();
     }
 
@@ -100,11 +100,27 @@ internal static class AppNavigation
     {
         if (UsesModalNavigation)
         {
-            await Shell.Current.Navigation.PushModalAsync(pageFactory());
+            await PushOpaqueModalAsync(pageFactory());
             return;
         }
 
         await Shell.Current.GoToAsync(route);
+    }
+
+    private static Task PushOpaqueModalAsync(Page page)
+    {
+        var background = Microsoft.Maui.Controls.Application.Current?.Resources.TryGetValue("Background", out var value) == true &&
+                         value is Microsoft.Maui.Graphics.Color color
+            ? color
+            : Microsoft.Maui.Graphics.Color.FromArgb("#201C2D");
+
+        page.BackgroundColor = background;
+        NavigationPage.SetHasNavigationBar(page, false);
+        var window = new NavigationPage(page)
+        {
+            BackgroundColor = background
+        };
+        return Shell.Current.Navigation.PushModalAsync(window, animated: true);
     }
 
     private static bool UsesModalNavigation =>

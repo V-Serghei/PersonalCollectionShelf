@@ -46,20 +46,47 @@ public partial class MediaContributorsViewModel(
             Groups.Clear();
             if (item is null) return;
 
-            foreach (var group in item.Contributions
-                         .GroupBy(value => value.Role)
+            var uniquePeople = item.Contributions
+                .GroupBy(value => value.PersonId)
+                .Select(personCredits =>
+                {
+                    var orderedCredits = personCredits
+                        .OrderBy(value => RoleOrder(value.Role))
+                        .ThenBy(value => value.SortOrder)
+                        .ToList();
+                    var primaryCredit = orderedCredits[0];
+                    var roles = orderedCredits
+                        .Select(value => value.Role)
+                        .Distinct()
+                        .Select(value => T($"ContributionRole.{value}"));
+                    var creditDetails = orderedCredits
+                        .Select(value => value.Details)
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase);
+                    var details = string.Join("  ·  ", roles.Concat(creditDetails!));
+                    var creditedAs = orderedCredits
+                        .Select(value => value.CreditedAs)
+                        .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value) &&
+                                                 !string.Equals(value, primaryCredit.PersonName, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+                    return new
+                    {
+                        PrimaryRole = primaryCredit.Role,
+                        Item = new MediaContributorItemViewModel(
+                            primaryCredit.PersonId,
+                            primaryCredit.PersonName,
+                            details,
+                            creditedAs)
+                    };
+                })
+                .ToList();
+
+            foreach (var group in uniquePeople
+                         .GroupBy(value => value.PrimaryRole)
                          .OrderBy(group => RoleOrder(group.Key)))
             {
                 var people = group
-                    .OrderBy(value => value.SortOrder)
-                    .ThenBy(value => value.PersonName, StringComparer.OrdinalIgnoreCase)
-                    .Select(value => new MediaContributorItemViewModel(
-                        value.PersonId,
-                        value.PersonName,
-                        value.Details ?? string.Empty,
-                        string.IsNullOrWhiteSpace(value.CreditedAs) || string.Equals(value.CreditedAs, value.PersonName, StringComparison.OrdinalIgnoreCase)
-                            ? string.Empty
-                            : value.CreditedAs!))
+                    .Select(value => value.Item)
+                    .OrderBy(value => value.Name, StringComparer.OrdinalIgnoreCase)
                     .ToList();
                 Groups.Add(new MediaContributorGroupViewModel(group.Key, T($"ContributionRole.{group.Key}"), people));
             }
