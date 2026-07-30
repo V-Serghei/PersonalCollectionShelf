@@ -5,6 +5,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:dto="clr-namespace:PersonalCollectionShelf.Application.DTOs;assembly=PersonalCollectionShelf.Application"
+    xmlns:models="clr-namespace:PersonalCollectionShelf.App.Models"
     xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:PersonDetailsViewModel"
@@ -69,6 +70,20 @@
             <Border Padding="18" Style="{StaticResource CardBorderStyle}">
                 <VerticalStackLayout Spacing="10">
                     <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AllWorksTitle}" />
+                    <CollectionView HeightRequest="44" ItemsSource="{Binding WorkRoleTabs}" SelectionMode="None">
+                        <CollectionView.ItemsLayout><LinearItemsLayout ItemSpacing="8" Orientation="Horizontal" /></CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:DisplayOption">
+                                <Button
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonDetailsPage}}, Path=ViewModel.SelectWorkRoleCommand, x:DataType={x:Type pages:PersonDetailsPage}}"
+                                    CommandParameter="{Binding .}"
+                                    Style="{StaticResource PillButtonStyle}"
+                                    Text="{Binding DisplayName}">
+                                    <Button.Triggers><DataTrigger Binding="{Binding IsSelected}" TargetType="Button" Value="True"><Setter Property="BackgroundColor" Value="{DynamicResource Primary}" /><Setter Property="TextColor" Value="{DynamicResource PrimaryForeground}" /></DataTrigger></Button.Triggers>
+                                </Button>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Works}" Spacing="7">
                         <BindableLayout.ItemTemplate><DataTemplate x:DataType="viewModels:PersonWorkViewModel"><Grid Padding="9" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8"><Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PersonDetailsPage}}, Path=ViewModel.OpenWorkCommand, x:DataType={x:Type pages:PersonDetailsPage}}" CommandParameter="{Binding .}" /></Grid.GestureRecognizers><VerticalStackLayout><Label FontAttributes="Bold" Text="{Binding Title}" /><Label FontSize="10" Text="{Binding RoleLabel}" TextColor="{DynamicResource MutedForeground}" /></VerticalStackLayout><Label Grid.Column="1" Text="{Binding MediaTypeLabel}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" /><Label Grid.Column="2" Text="{Binding Rating, StringFormat='★ {0}'}" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" /></Grid></DataTemplate></BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
