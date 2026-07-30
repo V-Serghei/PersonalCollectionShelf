@@ -8,6 +8,9 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
 {
     private Guid? _mediaItemId;
     private bool? _usesCompactLayout;
+    private bool _hasLoadedNavigationTarget;
+    private bool _hasAppeared;
+    private Task? _initialLoadTask;
 
     public MediaDetailsPage()
         : this(App.Services.GetRequiredService<MediaDetailsViewModel>())
@@ -26,8 +29,8 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
         {
             if (query.TryGetValue("id", out var value) && Guid.TryParse(value?.ToString(), out var mediaItemId))
             {
-                _mediaItemId = mediaItemId;
-                await ViewModel.LoadAsync(mediaItemId);
+                SetNavigationTarget(mediaItemId);
+                await LoadNavigationTargetAsync();
             }
         }
         catch (Exception exception)
@@ -39,10 +42,20 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
     public void SetNavigationTarget(Guid mediaItemId)
     {
         _mediaItemId = mediaItemId;
+        _hasLoadedNavigationTarget = false;
+        _hasAppeared = false;
+        _initialLoadTask = null;
     }
 
-    public Task LoadNavigationTargetAsync() =>
-        _mediaItemId.HasValue ? ViewModel.LoadAsync(_mediaItemId.Value) : Task.CompletedTask;
+    public Task LoadNavigationTargetAsync()
+    {
+        if (!_mediaItemId.HasValue)
+        {
+            return Task.CompletedTask;
+        }
+
+        return _initialLoadTask ??= LoadNavigationTargetCoreAsync(_mediaItemId.Value);
+    }
 
     protected override async void OnAppearing()
     {
@@ -52,12 +65,35 @@ public partial class MediaDetailsPage : ContentPage, IQueryAttributable
         {
             try
             {
-                await ViewModel.ReloadAsync();
+                if (!_hasLoadedNavigationTarget)
+                {
+                    await LoadNavigationTargetAsync();
+                }
+                else if (_hasAppeared)
+                {
+                    await ViewModel.ReloadAsync();
+                }
+
+                _hasAppeared = true;
             }
             catch (Exception exception)
             {
                 await CrashReporter.ReportAsync(exception, "MediaDetailsPage.OnAppearing");
             }
+        }
+    }
+
+    private async Task LoadNavigationTargetCoreAsync(Guid mediaItemId)
+    {
+        try
+        {
+            await ViewModel.LoadAsync(mediaItemId);
+            _hasLoadedNavigationTarget = true;
+        }
+        catch
+        {
+            _initialLoadTask = null;
+            throw;
         }
     }
 

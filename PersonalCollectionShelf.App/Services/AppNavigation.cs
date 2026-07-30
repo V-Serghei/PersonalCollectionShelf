@@ -5,6 +5,8 @@ namespace PersonalCollectionShelf.App.Services;
 
 internal static class AppNavigation
 {
+    private static readonly SemaphoreSlim MediaDetailsNavigationGate = new(1, 1);
+
     public static async Task OpenEditMediaItemAsync(Guid? mediaItemId = null)
     {
         if (!UsesModalNavigation)
@@ -24,16 +26,37 @@ internal static class AppNavigation
 
     public static async Task OpenMediaDetailsAsync(Guid mediaItemId)
     {
-        if (!UsesModalNavigation)
+        if (!await MediaDetailsNavigationGate.WaitAsync(0))
         {
-            await Shell.Current.GoToAsync($"{nameof(MediaDetailsPage)}?id={mediaItemId}");
             return;
         }
 
-        var page = App.Services.GetRequiredService<MediaDetailsPage>();
-        page.SetNavigationTarget(mediaItemId);
-        await PushOpaqueModalAsync(page);
-        await page.LoadNavigationTargetAsync();
+        try
+        {
+            if (HasOpenMediaDetailsPage())
+            {
+                return;
+            }
+
+            if (!UsesModalNavigation)
+            {
+                await Shell.Current.GoToAsync($"{nameof(MediaDetailsPage)}?id={mediaItemId}");
+                return;
+            }
+
+            var page = App.Services.GetRequiredService<MediaDetailsPage>();
+            page.SetNavigationTarget(mediaItemId);
+            await page.LoadNavigationTargetAsync();
+
+            if (!HasOpenMediaDetailsPage())
+            {
+                await PushOpaqueModalAsync(page);
+            }
+        }
+        finally
+        {
+            MediaDetailsNavigationGate.Release();
+        }
     }
 
     public static Task OpenPeopleAsync() => Shell.Current.GoToAsync("//People");
@@ -121,6 +144,19 @@ internal static class AppNavigation
             BackgroundColor = background
         };
         return Shell.Current.Navigation.PushModalAsync(window, animated: true);
+    }
+
+    private static bool HasOpenMediaDetailsPage()
+    {
+        if (Shell.Current.CurrentPage is MediaDetailsPage)
+        {
+            return true;
+        }
+
+        return Shell.Current.Navigation.ModalStack.Any(page =>
+            page is MediaDetailsPage ||
+            page is NavigationPage navigationPage &&
+            navigationPage.Navigation.NavigationStack.Any(candidate => candidate is MediaDetailsPage));
     }
 
     private static bool UsesModalNavigation =>

@@ -34,6 +34,9 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     private bool _isGridView = Microsoft.Maui.Storage.Preferences.Get(ViewModePreferenceKey, "grid") != "list";
     private bool _isSearchVisible;
     private bool _isFilterPanelVisible = true;
+    private bool _isOpeningMediaItem;
+    private bool _showMediaItemLoading;
+    private int _mediaItemNavigationVersion;
     private bool _initialThumbnailBatchPrepared;
     private readonly object _thumbnailBatchLock = new();
     private int _nextThumbnailBatchStart;
@@ -119,6 +122,18 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     }
 
     public bool IsListView => !_isGridView;
+
+    public bool IsOpeningMediaItem
+    {
+        get => _isOpeningMediaItem;
+        private set => SetProperty(ref _isOpeningMediaItem, value);
+    }
+
+    public bool ShowMediaItemLoading
+    {
+        get => _showMediaItemLoading;
+        private set => SetProperty(ref _showMediaItemLoading, value);
+    }
 
     public string ViewModeIcon => IsGridView ? "≡" : "▦";
 
@@ -679,10 +694,14 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
     [RelayCommand]
     private async Task OpenMediaItemAsync(MediaItemListItemViewModel? item)
     {
-        if (item is null)
+        if (item is null || IsOpeningMediaItem)
         {
             return;
         }
+
+        IsOpeningMediaItem = true;
+        var navigationVersion = ++_mediaItemNavigationVersion;
+        _ = ShowMediaItemLoadingAfterDelayAsync(navigationVersion);
 
         try
         {
@@ -691,6 +710,20 @@ public partial class LibraryViewModel : BaseViewModel, IQueryAttributable
         catch (Exception exception)
         {
             await CrashReporter.ReportAsync(exception, $"LibraryViewModel.OpenMediaItemAsync id={item.Id}");
+        }
+        finally
+        {
+            IsOpeningMediaItem = false;
+            ShowMediaItemLoading = false;
+        }
+    }
+
+    private async Task ShowMediaItemLoadingAfterDelayAsync(int navigationVersion)
+    {
+        await Task.Delay(150);
+        if (IsOpeningMediaItem && navigationVersion == _mediaItemNavigationVersion)
+        {
+            ShowMediaItemLoading = true;
         }
     }
 

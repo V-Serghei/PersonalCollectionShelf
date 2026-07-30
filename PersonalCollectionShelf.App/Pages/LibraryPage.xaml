@@ -207,5 +207,21 @@
             </Grid>
         </Grid>
 
+        <Grid
+            Grid.RowSpan="2"
+            BackgroundColor="#66000000"
+            IsVisible="{Binding ShowMediaItemLoading}"
+            ZIndex="100">
+            <Border
+                Padding="22"
+                BackgroundColor="{DynamicResource Card}"
+                HorizontalOptions="Center"
+                Stroke="{DynamicResource Border}"
+                StrokeShape="RoundRectangle 14"
+                VerticalOptions="Center">
+                <ActivityIndicator Color="{DynamicResource Primary}" IsRunning="{Binding ShowMediaItemLoading}" />
+            </Border>
+        </Grid>
+
     </Grid>
 </ContentPage>

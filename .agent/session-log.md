@@ -155,3 +155,6 @@
   show-all/show-less controls, and the duplicate full-description section was removed.
 - Hid the original-title line in the media hero card when no original title is stored instead of showing a
   localized "not set" placeholder.
+- Prevented delayed double taps on library and dashboard cards from stacking duplicate details pages. Media
+  details now preload once before modal presentation, navigation is globally gated, and a delayed blocking
+  activity indicator appears on the source page when opening takes longer than 150 ms.
