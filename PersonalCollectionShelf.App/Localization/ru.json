@@ -16,6 +16,8 @@
   "MediaType.Comic": "Комикс",
   "MediaType.Game": "Игра",
   "MediaType.Anime": "Аниме",
+  "MediaType.Cartoon": "Мультфильм",
+  "MediaType.AnimatedSeries": "Мультсериал",
   "MediaType.Other": "Другое",
   "MediaStatus.Planned": "В планах",
   "MediaStatus.InProgress": "В процессе",
@@ -28,9 +30,31 @@
   "Library.SearchPlaceholder": "Поиск по коллекции",
   "Library.MediaTypeFilterPlaceholder": "Тип",
   "Library.StatusFilterPlaceholder": "Статус",
+  "Library.CategoryFilterPlaceholder": "Категория",
+  "Library.TagFilterPlaceholder": "Тег",
+  "Library.SortByPlaceholder": "Сортировка",
+  "Library.SortOption.DateAddedNewest": "Сначала новые",
+  "Library.SortOption.DateAddedOldest": "Сначала старые",
+  "Library.SortOption.TitleAsc": "Название А-Я",
+  "Library.SortOption.TitleDesc": "Название Я-А",
+  "Library.SortOption.RatingHighest": "Сначала с высокой оценкой",
+  "Library.SortOption.RatingLowest": "Сначала с низкой оценкой",
+  "Library.SortOption.ReleaseYearNewest": "Сначала новые по году",
+  "Library.SortOption.ReleaseYearOldest": "Сначала старые по году",
   "Library.AddButton": "Добавить",
   "Library.Empty": "Медиаобъектов пока нет.",
   "Library.OpenButton": "Открыть",
+  "Library.FavoriteMarker": "Избранное",
+  "Library.CategoryFormat": "Категория: {0}",
+  "Library.TagsFormat": "Теги: {0}",
+  "Library.NoCategory": "Без категории",
+  "Library.NoTags": "Без тегов",
+  "Library.QuickFilter.All": "Все",
+  "Library.QuickFilter.Favorites": "Избранное",
+  "Library.QuickFilter.MissingCategory": "Без категории",
+  "Library.QuickFilter.MissingCover": "Без обложки",
+  "Library.QuickFilter.Completed": "Завершено",
+  "Library.QuickFilter.InProgress": "В процессе",
   "Library.RatingFormat": "Оценка: {0}/10",
   "Library.NoRating": "Без оценки",
   "Library.ProgressFormat": "Прогресс: {0}",
@@ -43,6 +67,15 @@
   "Details.NotesLabel": "Заметки",
   "Details.OriginalTitleLabel": "Оригинальное название",
   "Details.DescriptionLabel": "Описание",
+  "Details.ShowAll": "Показать всё",
+  "Details.ShowLess": "Свернуть",
+  "Details.CategoryLabel": "Категория",
+  "Details.TagsLabel": "Теги",
+  "Details.CreatorLabel": "Автор",
+  "Details.PublisherLabel": "Издатель",
+  "Details.SerialNumberLabel": "ISBN / серийный номер",
+  "Details.CastLabel": "Актёры",
+  "Details.MinutesFormat": "{0} мин",
   "Details.StartDateLabel": "Дата начала",
   "Details.FinishDateLabel": "Дата завершения",
   "Details.ReleaseYearLabel": "Год выпуска",
@@ -50,7 +83,12 @@
   "Details.CreatedAtLabel": "Создано",
   "Details.UpdatedAtLabel": "Обновлено",
   "Details.EditButton": "Редактировать",
+  "Details.AddFavoriteButton": "В избранное",
+  "Details.RemoveFavoriteButton": "Убрать из избранного",
   "Details.DeleteButton": "Удалить",
+  "Details.DeleteConfirmTitle": "Удалить запись",
+  "Details.DeleteConfirmMessage": "Удалить \"{0}\" из локальной библиотеки?",
+  "Details.DeleteConfirmButton": "Удалить",
   "Details.NotFound": "Медиаобъект не найден.",
   "Edit.Title.Create": "Создать медиаобъект",
   "Edit.Title.Edit": "Редактировать медиаобъект",
@@ -60,6 +98,23 @@
   "Edit.Placeholder.OriginalTitle": "Введите оригинальное название",
   "Edit.Label.Description": "Описание",
   "Edit.Placeholder.Description": "Введите описание",
+  "Edit.Label.Category": "Категория",
+  "Edit.Placeholder.Category": "Полка, жанр, backlog, работа...",
+  "Edit.Label.Tags": "Теги",
+  "Edit.Placeholder.Tags": "Тег + Enter",
+  "Edit.Label.Creator.Director": "Режиссёр",
+  "Edit.Label.Creator.Author": "Автор",
+  "Edit.Label.Creator.Developer": "Разработчик",
+  "Edit.Label.Creator.Studio": "Студия",
+  "Edit.Label.Creator.Generic": "Автор",
+  "Edit.Placeholder.Creator": "Необязательно",
+  "Edit.Label.Publisher": "Издатель",
+  "Edit.Label.Studio": "Студия / кинокомпания",
+  "Edit.Placeholder.Publisher": "Необязательно",
+  "Edit.Label.SerialNumber": "ISBN / серийный номер",
+  "Edit.Placeholder.SerialNumber": "Необязательно",
+  "Edit.Label.Cast": "Актёры",
+  "Edit.Placeholder.Cast": "Актёр + Enter",
   "Edit.Label.MediaType": "Тип медиа",
   "Edit.Label.Status": "Статус",
   "Edit.Label.Rating": "Оценка",
@@ -68,40 +123,509 @@
   "Edit.Placeholder.ProgressCurrent": "0",
   "Edit.Label.ProgressTotal": "Общий прогресс",
   "Edit.Placeholder.ProgressTotal": "Необязательно",
-  "Edit.Label.StartDate": "Использовать дату начала",
-  "Edit.Label.FinishDate": "Использовать дату завершения",
+  "Edit.Label.StartDate": "Дата начала",
+  "Edit.Label.FinishDate": "Дата завершения",
   "Edit.Label.ReleaseYear": "Год выпуска",
   "Edit.Placeholder.ReleaseYear": "Необязательно",
+  "Edit.AddCover": "Добавить обложку",
   "Edit.Label.CoverUrl": "URL обложки",
   "Edit.Placeholder.CoverUrl": "Необязательно",
+  "Edit.CoverPicker.Title": "Выберите обложку",
   "Edit.Label.Notes": "Заметки",
   "Edit.Placeholder.Notes": "Личные заметки",
   "Edit.Label.Favorite": "Избранное",
   "Edit.Error.NotFound": "Выбранный медиаобъект не удалось загрузить.",
+  "Edit.Section.Essentials": "Основное",
+  "Edit.Section.Details": "Детали",
+  "Edit.Section.Progress": "Прогресс",
   "Settings.Title": "Настройки",
   "Settings.Account.Title": "Аккаунт",
-  "Settings.Account.Description": "Заглушка локального аккаунта. Firebase Auth будет добавлен позже.",
+  "Settings.Account.Description": "Войдите через Google или по электронной почте, чтобы синхронизировать личную библиотеку.",
+  "Settings.Account.EmailPlaceholder": "Электронная почта",
+  "Settings.Account.PasswordPlaceholder": "Пароль",
+  "Settings.Account.SignIn": "Войти",
+  "Settings.Account.SignOut": "Выйти",
+  "Settings.Account.SignUp": "Создать аккаунт",
+  "Settings.Account.GoogleSignIn": "Продолжить с Google",
+  "Settings.Account.SignedIn": "Вы вошли",
+  "Settings.Account.SignedInMessage": "Вход выполнен.",
+  "Settings.Account.SignedOutMessage": "Вы вышли из аккаунта.",
   "Settings.Sync.Title": "Статус синхронизации",
-  "Settings.Sync.Description": "Облачная синхронизация подготовлена для Firebase и сейчас отключена.",
+  "Settings.Sync.Description": "Данные синхронизируются через Firebase, а оптимизированные изображения хранятся на Google Диске.",
   "Settings.Sync.Button": "Синхронизировать",
   "Settings.ExportImport.Title": "Экспорт и импорт",
   "Settings.Export.Button": "Экспорт",
   "Settings.Import.Button": "Импорт",
-  "Settings.Export.Placeholder": "Экспорт будет доступен в будущей версии.",
-  "Settings.Import.Placeholder": "Импорт будет доступен в будущей версии.",
+  "Settings.Export.Completed": "Экспортировано записей: {0}. Файл: {1}",
+  "Settings.Export.ShareTitle": "Экспорт коллекции JSON",
+  "Settings.Import.PickerTitle": "Выберите JSON коллекции",
+  "Settings.Import.Completed": "Импортировано записей: {0}, обновлено: {1}.",
+  "Settings.Import.InvalidFile": "Это невалидный файл экспорта коллекции.",
   "Settings.Theme.Title": "Тема",
   "Settings.Theme.Description": "Пока используется системная тема.",
   "Settings.Language.Title": "Язык",
   "Settings.Language.Description": "Выберите язык приложения.",
+  "Auth.Error.EmailExists": "Аккаунт с этим адресом электронной почты уже существует.",
+  "Auth.Error.InvalidCredentials": "Неверный адрес электронной почты или пароль.",
+  "Auth.Error.InvalidEmail": "Недопустимый адрес электронной почты.",
+  "Auth.Error.MissingCredentials": "Введите адрес электронной почты и пароль.",
+  "Auth.Error.Network": "Ошибка сети. Проверьте подключение и повторите попытку.",
+  "Auth.Error.Cancelled": "Вход через Google отменён.",
+  "Auth.Error.GoogleNotConfigured": "Вход через Google не настроен. Добавьте OAuth Client ID в firebase.json.",
+  "Auth.Google.Completed": "Авторизация завершена. Можно вернуться в приложение.",
+  "Auth.Error.NotConfigured": "Firebase не настроен. Добавьте firebase.json, чтобы включить аккаунты.",
+  "Auth.Error.TooManyAttempts": "Слишком много попыток. Повторите позже.",
+  "Auth.Error.Unknown": "Не удалось войти. Повторите попытку позже.",
+  "Auth.Error.UserDisabled": "Этот аккаунт отключен.",
+  "Auth.Error.WeakPassword": "Слишком слабый пароль. Используйте не менее 6 символов.",
   "Sync.Status.NotConfigured": "Синхронизация Firebase еще не настроена.",
-  "Sync.Status.Requested": "Запрос синхронизации принят. Облачная синхронизация пока является заглушкой.",
+  "Sync.Status.Ready": "Облачная синхронизация готова.",
+  "Sync.Status.SignInRequired": "Войдите в аккаунт, чтобы синхронизировать это устройство.",
+  "Sync.Status.Started": "Синхронизация запущена…",
+  "Sync.Status.DataInProgress": "Синхронизация данных через Firebase…",
+  "Sync.Status.DriveInProgress": "Подготовка изображений и загрузка резервной копии на Google Диск…",
+  "Sync.Status.InProgressButton": "Синхронизация…",
+  "Sync.Status.CompletedWithDrive": "Синхронизация завершена. Данные обновлены, резервная копия сохранена на Google Диске.",
+  "Sync.Status.CompletedWithoutDrive": "Данные синхронизированы через Firebase, но резервная копия Google Диска не создана.",
+  "Sync.Status.Completed": "Синхронизация завершена. Отправлены только изменённые данные.",
+  "Sync.Status.CompletedWithWarnings": "Данные синхронизированы. Некоторые изображения не удалось отправить; они будут повторно загружены при следующей синхронизации.",
+  "Sync.Status.NetworkFailed": "Соединение прервалось. Выполненный прогресс сохранён — повторите синхронизацию, чтобы продолжить.",
+  "Sync.Progress.Preparing": "Подготовка синхронизации…",
+  "Sync.Progress.Assets": "Проверяем изменённые изображения…",
+  "Sync.Progress.Scanning": "Проверяем изменённые данные…",
+  "Sync.Progress.Downloading": "Получаем изменения из облака…",
+  "Sync.Progress.Applying": "Применяем изменения из облака…",
+  "Sync.Progress.Uploading": "Отправляем изменённые данные…",
+  "Sync.Progress.Finalizing": "Завершаем синхронизацию…",
+  "Sync.Progress.Complete": "Синхронизация завершена.",
+  "Sync.Progress.CompleteWithWarnings": "Данные синхронизированы, но часть изображений ожидает повторной загрузки.",
+  "Sync.Progress.Retrying": "Соединение прервалось. Повторяем попытку…",
+  "Progress.Estimating": "Расчёт оставшегося времени…",
+  "Progress.Remaining": "Осталось примерно {0}",
+  "Progress.Done": "Готово",
+  "Progress.Stopped": "Операция остановлена",
+  "CloudOperation.Cancelling": "Останавливаем операцию…",
+  "CloudOperation.Cancelled": "Операция отменена.",
+  "Sync.Status.Requested": "Синхронизация завершена.",
+  "Sync.Status.Failed": "Не удалось выполнить синхронизацию. Проверьте подключение и настройки Firebase.",
+  "Settings.DriveBackup.Button": "Создать копию",
+  "Settings.DriveBackup.InProgressButton": "Создание…",
+  "Settings.DriveBackup.Description": "Сжатые изображения и версионные копии с контрольной суммой хранятся на Google Диске.",
+  "Settings.DriveBackup.Preparing": "Подготовка данных и сжатых изображений для резервной копии…",
+  "Settings.DriveBackup.Uploading": "Загрузка резервной копии на Google Диск…",
+  "Settings.DriveBackup.Completed": "Резервная копия сохранена на Google Диске.",
+  "Settings.DriveBackup.Failed": "Не удалось создать копию на Google Диске. Войдите через Google и повторите.",
+  "Settings.DriveRestore.Button": "Восстановить",
+  "Settings.DriveRestore.InProgressButton": "Восстановление…",
+  "Settings.DriveRestore.Downloading": "Загрузка последней резервной копии с Google Диска…",
+  "Settings.DriveRestore.Importing": "Проверка и объединение данных резервной копии…",
+  "Settings.DriveRestore.Completed": "Последняя копия с Google Диска восстановлена.",
+  "Settings.DriveRestore.Failed": "Не удалось восстановить резервную копию с Google Диска.",
+  "Settings.DriveRestore.NotFound": "На Google Диске не найдено резервных копий Personal Collection Shelf.",
+  "Settings.DriveRestore.ConfirmTitle": "Восстановить копию?",
+  "Settings.DriveRestore.ConfirmMessage": "Последняя копия будет объединена с данными на этом устройстве и может обновить записи с совпадающими идентификаторами.",
+  "Settings.DriveRestore.Confirm": "Восстановить",
   "Validation.IdRequired": "Требуется идентификатор медиаобъекта.",
   "Validation.UserRequired": "Требуется пользователь.",
   "Validation.TitleRequired": "Название обязательно.",
-  "Validation.RatingRange": "Оценка должна быть от 1 до 10.",
+  "Validation.RatingRange": "Оценка должна быть от 0 до 10 и содержать не более одной цифры после запятой.",
   "Validation.ProgressCurrentInvalid": "Текущий прогресс не может быть отрицательным.",
   "Validation.ProgressTotalInvalid": "Общий прогресс не может быть отрицательным.",
   "Validation.ProgressCurrentExceedsTotal": "Текущий прогресс не может быть больше общего прогресса.",
   "Validation.ReleaseYearRange": "Год выпуска должен быть между 1800 и 2200.",
-  "Validation.NumberInvalid": "Используйте целые числа для числовых полей."
+  "Validation.NumberInvalid": "Введите корректные числовые значения.",
+  "Settings.Export.Description": "Полная копия библиотеки, людей, связей и фотографий. Файл можно сохранить в Google Drive.",
+  "Settings.Import.ComingSoon": "Скоро",
+  "Settings.Import.Description": "Восстановление полной копии, в том числе из файла Google Drive.",
+  "Settings.Import.Goodreads.Description": "Книги, полки и рецензии",
+  "Settings.Import.Letterboxd.Description": "Оценки фильмов и сериалов",
+  "Settings.Import.Mal.Description": "Списки аниме и манги",
+  "Settings.Import.Steam.Description": "Игры, время в игре и достижения",
+  "Shell.Categories": "КАТЕГОРИИ",
+  "Shell.DarkMode": "Тёмная тема",
+  "Shell.Home": "Главная",
+  "Shell.ItemsCollected": "В коллекции: {0}",
+  "Shell.LightMode": "Светлая тема",
+  "Shell.LocalProfile": "Локальный профиль",
+  "Shell.Statistics": "Статистика"
+  ,"Edit.Label.Authors": "Авторы",
+  "Edit.Label.Translators": "Переводчики",
+  "Edit.Label.Illustrators": "Иллюстраторы",
+  "Edit.Label.Editors": "Редакторы",
+  "Edit.Action.AddPerson": "Добавить человека",
+  "Edit.Action.CreatePerson": "Создать и добавить",
+  "Edit.Validation.PersonNameRequired": "Сначала введите имя нового человека.",
+  "Edit.Error.CreatePerson": "Не удалось создать человека. Попробуйте ещё раз.",
+  "Edit.Placeholder.SearchPerson": "Найдите человека или введите новое имя",
+  "Edit.Contributor.Author": "Добавить автора",
+  "Edit.Contributor.Translator": "Добавить переводчика",
+  "Edit.Contributor.Illustrator": "Добавить иллюстратора",
+  "Edit.Contributor.Editor": "Добавить редактора",
+  "Edit.Label.Genres": "Жанры",
+  "Edit.Placeholder.Genres": "Введите жанр и нажмите Enter",
+  "Edit.Section.BookDetails": "Данные книги",
+  "Edit.Section.MovieDetails": "Данные фильма",
+  "Edit.Section.CartoonDetails": "Данные мультфильма",
+  "Edit.Label.MovieRuntime": "Длительность (минуты)",
+  "Edit.Label.MovieOriginalLanguage": "Язык оригинала",
+  "Edit.Label.MovieLanguage": "Язык просмотра",
+  "Edit.Label.MovieCountry": "Страна производства",
+  "Edit.Label.MovieAgeRating": "Возрастной рейтинг",
+  "Edit.Section.Publication": "Издание и публикация",
+  "Edit.Section.Collections": "Серии, циклы и саги",
+  "Edit.Section.Relations": "Связанные элементы",
+  "Edit.Label.Subtitle": "Подзаголовок",
+  "Edit.Label.Edition": "Издание",
+  "Edit.Label.EditionNumber": "Номер",
+  "Edit.Label.BookFormat": "Формат",
+  "Edit.Label.OriginalPublicationYear": "Первая публикация",
+  "Edit.Label.EditionYear": "Год издания",
+  "Edit.Label.TranslationYear": "Год перевода",
+  "Edit.Label.OriginalLanguage": "Язык оригинала",
+  "Edit.Label.BookLanguage": "Язык издания",
+  "Edit.Label.PageCount": "Страницы",
+  "Edit.Label.Isbn10": "ISBN-10",
+  "Edit.Label.Isbn13": "ISBN-13",
+  "Edit.Label.Binding": "Переплёт",
+  "Edit.Label.CountryOfOrigin": "Страна",
+  "Edit.Label.AgeRating": "Возраст",
+  "Edit.Placeholder.CollectionName": "Серия, цикл или сага",
+  "Edit.Placeholder.RelatedItem": "Поиск по медиатеке",
+  "BookFormat.Hardcover": "Твёрдый переплёт",
+  "BookFormat.Paperback": "Мягкая обложка",
+  "BookFormat.Ebook": "Электронная книга",
+  "BookFormat.Audiobook": "Аудиокнига",
+  "BookFormat.Other": "Другое",
+  "CollectionKind.Series": "Серия",
+  "CollectionKind.Saga": "Сага",
+  "CollectionKind.Cycle": "Цикл",
+  "CollectionKind.Trilogy": "Трилогия",
+  "CollectionKind.Universe": "Вселенная",
+  "CollectionKind.Custom": "Пользовательская",
+  "RelationKind.Sequel": "Продолжение",
+  "RelationKind.Prequel": "Приквел",
+  "RelationKind.Adaptation": "Адаптация",
+  "RelationKind.Remake": "Ремейк",
+  "RelationKind.SpinOff": "Спин-офф",
+  "RelationKind.SameUniverse": "Та же вселенная",
+  "RelationKind.Translation": "Перевод",
+  "RelationKind.Companion": "Сопутствующее произведение",
+  "RelationKind.Other": "Другое",
+  "Validation.BookDetailsType": "Книжные поля можно сохранять только для книги.",
+  "Validation.MovieDetailsType": "Поля фильма можно сохранять только для фильма.",
+  "Validation.MovieRuntimeInvalid": "Длительность должна быть от 1 до 1440 минут.",
+  "Validation.PageCountInvalid": "Количество страниц должно быть больше нуля.",
+  "Validation.EditionNumberInvalid": "Номер издания должен быть больше нуля.",
+  "Validation.Isbn10Invalid": "ISBN-10 должен содержать 10 символов.",
+  "Validation.Isbn13Invalid": "ISBN-13 должен содержать 13 символов.",
+  "Validation.BookYearRange": "Годы книги должны быть от 1 до 2200.",
+  "Common.Back": "Назад",
+  "Common.Add": "Добавить",
+  "Common.Delete": "Удалить",
+  "Settings.LibraryData.Title": "СТРУКТУРА МЕДИАТЕКИ",
+  "Settings.People.Title": "Люди и профессии",
+  "Settings.People.Description": "Редактирование людей, их профессий и отношений.",
+  "Settings.Categories.Title": "Пользовательские категории",
+  "Settings.Categories.Description": "Создание собственных схем полей для категорий.",
+  "People.Title": "Люди",
+  "People.New": "Новый человек",
+  "People.Empty": "Людей пока нет",
+  "People.Profile": "ПРОФИЛЬ",
+  "People.Professions": "ПРОФЕССИИ",
+  "People.Relations": "ОТНОШЕНИЯ",
+  "People.Name": "Отображаемое имя",
+  "People.FirstName": "Имя",
+  "People.LastName": "Фамилия",
+  "People.PenName": "Псевдоним",
+  "People.SortName": "Имя для сортировки",
+  "People.BirthYear": "Год рождения",
+  "People.DeathYear": "Год смерти",
+  "People.Country": "Страна",
+  "People.PlaceOfBirth": "Место рождения",
+  "People.Gender": "Пол",
+  "People.Website": "Официальный сайт",
+  "People.Tagline": "Краткое описание",
+  "People.Description": "Биография",
+  "People.Notes": "Заметки",
+  "People.ProfessionPlaceholder": "Писатель, переводчик, режиссёр...",
+  "People.RelatedPerson": "Связанный человек",
+  "People.RelationKind": "Тип отношения",
+  "People.Validation.Name": "Введите отображаемое имя.",
+  "People.Validation.Year": "Год должен быть от 1 до 2200.",
+  "People.Saved": "Данные человека сохранены.",
+  "People.RelationSaveFirst": "Сначала сохраните человека.",
+  "People.RelationRequired": "Выберите человека и тип отношения.",
+  "Categories.Title": "Схемы категорий",
+  "Categories.New": "Новая категория",
+  "Categories.Name": "Название категории",
+  "Categories.BaseType": "Базовый тип медиа",
+  "Categories.BaseType.None": "Без базового типа",
+  "Categories.Fields": "ДИНАМИЧЕСКИЕ ПОЛЯ",
+  "Categories.AddField": "Добавить поле",
+  "Categories.Field.Key": "Ключ",
+  "Categories.Field.Label": "Название",
+  "Categories.Field.Type": "Тип",
+  "Categories.Field.Required": "Обязательное",
+  "Categories.SystemReadOnly": "Системные категории доступны только для чтения.",
+  "Categories.Saved": "Схема категории сохранена.",
+  "Categories.Deleted": "Категория удалена.",
+  "Categories.FieldType.text": "Короткий текст",
+  "Categories.FieldType.multiline": "Длинный текст",
+  "Categories.FieldType.number": "Число",
+  "Categories.FieldType.date": "Дата",
+  "Categories.FieldType.boolean": "Да / нет",
+  "Categories.FieldType.choice": "Выбор",
+  "PersonRelationKind.Spouse": "Супруг или супруга",
+  "PersonRelationKind.Partner": "Партнёр",
+  "PersonRelationKind.Child": "Ребёнок",
+  "PersonRelationKind.Parent": "Родитель",
+  "PersonRelationKind.Sibling": "Брат или сестра",
+  "PersonRelationKind.Relative": "Родственник",
+  "PersonRelationKind.Colleague": "Коллега",
+  "PersonRelationKind.Mentor": "Наставник",
+  "PersonRelationKind.Student": "Ученик",
+  "PersonRelationKind.Collaborator": "Соавтор",
+  "PersonRelationKind.Other": "Другое",
+  "Edit.Section.MoviePeople": "Люди и съёмочная группа",
+  "Edit.Section.PublicationCredits": "Издание и участники",
+  "Edit.Section.MovieStudios": "Студии и компании",
+  "Edit.Label.Directors": "Режиссёры",
+  "Edit.Label.Screenwriters": "Сценаристы",
+  "Edit.Label.Producers": "Продюсеры",
+  "Edit.Label.Cinematographers": "Операторы",
+  "Edit.Label.Composers": "Композиторы",
+  "Edit.Label.CastingDirectors": "Кастинг-директора",
+  "Edit.Label.ProductionDesigners": "Художники-постановщики",
+  "Edit.Label.Actors": "Актёрский состав",
+  "Edit.Label.VoiceActors": "Актёры озвучивания",
+  "Edit.Label.CharacterName": "Персонаж",
+  "Edit.Label.CreditedAs": "Имя в титрах",
+  "Edit.Placeholder.MovieStudio": "Студия или компания",
+  "Edit.Action.AddStudio": "Добавить студию",
+  "Edit.Contributor.Director": "Добавить режиссёра",
+  "Edit.Contributor.Screenwriter": "Добавить сценариста",
+  "Edit.Contributor.Producer": "Добавить продюсера",
+  "Edit.Contributor.Cinematographer": "Добавить оператора",
+  "Edit.Contributor.Composer": "Добавить композитора",
+  "Edit.Contributor.CastingDirector": "Добавить кастинг-директора",
+  "Edit.Contributor.ProductionDesigner": "Добавить художника-постановщика",
+  "Edit.Contributor.Actor": "Добавить актёра",
+  "Edit.Contributor.VoiceActor": "Добавить актёра озвучивания",
+  "StudioRole.ProductionCompany": "Производство",
+  "StudioRole.Distributor": "Дистрибуция",
+  "StudioRole.VisualEffects": "Визуальные эффекты",
+  "StudioRole.AnimationStudio": "Анимация",
+  "StudioRole.Broadcaster": "Вещатель",
+  "StudioRole.Other": "Другое"
+  ,"StudioRole.Developer": "Разработчик"
+  ,"StudioRole.Publisher": "Издатель"
+  ,"Edit.Section.EpisodicDetails": "Сезоны и эпизоды"
+  ,"Edit.Section.GraphicDetails": "Тома и публикация"
+  ,"Edit.Section.GameDetails": "Данные игры"
+  ,"Edit.Label.SeasonCount": "Сезоны"
+  ,"Edit.Label.EpisodeCount": "Эпизоды"
+  ,"Edit.Label.EpisodeRuntime": "Длительность эпизода (мин)"
+  ,"Edit.Label.Network": "Канал / сервис"
+  ,"Edit.Label.AiringStatus": "Статус выхода"
+  ,"Edit.Label.SourceMaterial": "Первоисточник"
+  ,"Edit.Label.VolumeCount": "Тома"
+  ,"Edit.Label.ChapterOrIssueCount": "Главы / выпуски"
+  ,"Edit.Label.ReadingDirection": "Направление чтения"
+  ,"Edit.Label.ColorEdition": "Полноцветное издание"
+  ,"Edit.Label.PublicationStatus": "Статус публикации"
+  ,"Edit.Label.Imprint": "Импринт"
+  ,"Edit.Label.GamePlatform": "Платформа"
+  ,"Edit.Label.MainStoryHours": "Основной сюжет (часы)"
+  ,"Edit.Label.CompletionistHours": "Полное прохождение (часы)"
+  ,"Edit.Label.GameMode": "Режим игры"
+  ,"Edit.Label.GameEngine": "Движок"
+  ,"Edit.Label.GameRegion": "Регион"
+  ,"Edit.Label.Developers": "Разработчики"
+  ,"Edit.Contributor.Developer": "Добавить разработчика"
+  ,"People.Works": "Работы и роли"
+  ,"Collections.Title": "Серии и вселенные"
+  ,"Collections.Empty": "Серии, циклы и вселенные пока не добавлены."
+  ,"Collections.SearchPlaceholder": "Поиск серий, вселенных и произведений"
+  ,"Collections.Loading": "Загружаем серии и обложки…"
+  ,"Collections.Options": "Настройка списка"
+  ,"Collections.CategoryFilter": "Категория"
+  ,"Collections.SortLabel": "Сортировка"
+  ,"Collections.ResultsFormat": "Серий и коллекций: {0}"
+  ,"Collections.ItemCountFormat": "Произведений: {0}"
+  ,"Collections.DetailsTitle": "Серия"
+  ,"Collections.DetailsEmpty": "В этой серии пока нет произведений."
+  ,"Collections.LoadingDetails": "Загружаем серию…"
+  ,"Collections.Sort.NameAscending": "Название: А–Я"
+  ,"Collections.Sort.NameDescending": "Название: Я–А"
+  ,"Collections.Sort.MostItems": "Сначала большие"
+  ,"Collections.Sort.FewestItems": "Сначала маленькие"
+  ,"Collections.Sort.Category": "По категории"
+  ,"Collections.Sort.Kind": "По виду серии"
+  ,"Tags.Title": "Теги"
+  ,"Tags.Options": "Настройки тегов"
+  ,"Tags.CategoryFilter": "Категория"
+  ,"Tags.Loading": "Загружаем теги…"
+  ,"Tags.Empty": "Подходящие теги не найдены."
+  ,"Tags.SearchPlaceholder": "Поиск тегов и связанных произведений"
+  ,"Tags.Subtitle": "Выберите тег, чтобы открыть все связанные элементы"
+  ,"Tags.SortPlaceholder": "Сортировка"
+  ,"Tags.ResultsFormat": "Найдено тегов: {0}"
+  ,"Tags.ItemCountFormat": "Элементов: {0}"
+  ,"Tags.Sort.NameAscending": "По названию А–Я"
+  ,"Tags.Sort.NameDescending": "По названию Я–А"
+  ,"Tags.Sort.MostUsed": "Сначала популярные"
+  ,"Tags.Sort.LeastUsed": "Сначала редкие"
+  ,"Tags.DetailsTitle": "Содержимое тега"
+  ,"Tags.DetailsSubtitle": "Все элементы, отмеченные этим тегом"
+  ,"Tags.DetailsEmpty": "Для выбранных условий ничего не найдено."
+  ,"Tags.DetailsSearchPlaceholder": "Поиск внутри тега"
+  ,"Tags.ItemsResultFormat": "Элементов: {0}"
+  ,"Genres.Title": "Жанры"
+  ,"Genres.Options": "Настройки жанров"
+  ,"Genres.CategoryFilter": "Категория"
+  ,"Genres.Loading": "Загружаем жанры…"
+  ,"Genres.Empty": "Подходящие жанры не найдены."
+  ,"Genres.SearchPlaceholder": "Поиск жанров и произведений"
+  ,"Genres.Subtitle": "Выберите жанр, чтобы открыть все произведения этого жанра"
+  ,"Genres.SortPlaceholder": "Сортировка"
+  ,"Genres.ResultsFormat": "Найдено жанров: {0}"
+  ,"Genres.ItemCountFormat": "Элементов: {0}"
+  ,"Genres.Sort.NameAscending": "По названию А–Я"
+  ,"Genres.Sort.NameDescending": "По названию Я–А"
+  ,"Genres.Sort.MostUsed": "Сначала популярные"
+  ,"Genres.Sort.LeastUsed": "Сначала редкие"
+  ,"Genres.DetailsTitle": "Содержимое жанра"
+  ,"Genres.DetailsSubtitle": "Все элементы выбранного жанра"
+  ,"Genres.DetailsEmpty": "Для выбранных условий ничего не найдено."
+  ,"Genres.DetailsSearchPlaceholder": "Поиск внутри жанра"
+  ,"Genres.ItemsResultFormat": "Элементов: {0}"
+  ,"Profile.Title": "Профиль"
+  ,"Profile.Account": "Аккаунт и библиотека"
+  ,"Profile.OpenSettings": "Настройки аккаунта"
+  ,"Profile.OpenPeople": "Люди и участники"
+  ,"People.SearchPlaceholder": "Поиск людей"
+  ,"People.CatalogSubtitle": "Авторы, актёры, режиссёры и другие участники"
+  ,"People.ResultsFormat": "Найдено людей: {0}"
+  ,"People.NoDescription": "Описание пока не добавлено"
+  ,"People.WorkCountFormat": "Работ: {0}"
+  ,"People.Sort.NameAscending": "По имени А–Я"
+  ,"People.Sort.NameDescending": "По имени Я–А"
+  ,"People.Sort.HighestRated": "Сначала с высокой оценкой"
+  ,"People.Sort.MostWorks": "Сначала больше работ"
+  ,"People.CreateTitle": "Новый человек"
+  ,"People.EditTitle": "Редактирование профиля"
+  ,"People.MiddleName": "Отчество / второе имя"
+  ,"People.PickMainPhoto": "Выбрать основное фото"
+  ,"People.PickPhotoTitle": "Выберите фотографию"
+  ,"People.AddPhoto": "Добавить фото"
+  ,"People.OpenGallery": "Открыть галерею"
+  ,"People.Gallery": "Фотографии"
+  ,"People.GalleryTitleFormat": "Галерея: {0}"
+  ,"People.GalleryEmpty": "Фотографии пока не добавлены"
+  ,"People.GalleryPrevious": "Предыдущее фото"
+  ,"People.GalleryNext": "Следующее фото"
+  ,"People.GalleryPositionFormat": "{0} из {1}"
+  ,"People.PrimaryPhoto": "Основное"
+  ,"People.About": "О человеке"
+  ,"People.TopWorks": "Топ-5 по моей оценке"
+  ,"People.AllWorks": "Все работы и роли"
+  ,"People.CreativeCategories": "Категории творчества"
+  ,"Common.Edit": "Редактировать"
+  ,"ContributionRole.Author": "Автор"
+  ,"ContributionRole.Translator": "Переводчик"
+  ,"ContributionRole.Illustrator": "Иллюстратор"
+  ,"ContributionRole.Editor": "Редактор"
+  ,"ContributionRole.Director": "Режиссёр"
+  ,"ContributionRole.Screenwriter": "Сценарист"
+  ,"ContributionRole.Actor": "Актёр"
+  ,"ContributionRole.Composer": "Композитор"
+  ,"ContributionRole.Artist": "Художник"
+  ,"ContributionRole.Developer": "Разработчик"
+  ,"ContributionRole.VoiceActor": "Актёр озвучивания"
+  ,"ContributionRole.Other": "Другое"
+  ,"ContributionRole.Producer": "Продюсер"
+  ,"ContributionRole.Cinematographer": "Оператор"
+  ,"ContributionRole.CastingDirector": "Кастинг-директор"
+  ,"ContributionRole.ProductionDesigner": "Художник-постановщик"
+  ,"Dashboard.Greeting.Morning": "Доброе утро"
+  ,"Dashboard.Greeting.Afternoon": "Добрый день"
+  ,"Dashboard.Greeting.Evening": "Добрый вечер"
+  ,"Dashboard.SubtitleFormat": "В процессе: {0} · запланировано: {1}"
+  ,"Dashboard.Continue": "Продолжить"
+  ,"Dashboard.RecentlyAdded": "Недавно добавленные"
+  ,"Dashboard.CategoryOverview": "Обзор категорий"
+  ,"Dashboard.SeeAll": "Показать все"
+  ,"Dashboard.FullStatistics": "Вся статистика"
+  ,"Dashboard.ItemCountFormat": "Объектов: {0}"
+  ,"Statistics.AverageRating": "Средняя оценка"
+  ,"Statistics.Completion": "Завершено"
+  ,"Statistics.Collection": "Коллекция"
+  ,"Statistics.MonthlyActivity": "Активность по месяцам"
+  ,"Statistics.MonthlyActivityHint": "Количество произведений, добавленных в библиотеку за каждый месяц."
+  ,"Statistics.ActivityYear": "Год активности"
+  ,"Statistics.ReleaseYearRange": "Годы выпуска"
+  ,"Statistics.ByCategory": "По категориям"
+  ,"Statistics.ByStatus": "По статусам"
+  ,"Statistics.Items": "объектов"
+  ,"Statistics.CompletionFormat": "Завершено: {0} из {1}"
+  ,"Statistics.CategoriesFormat": "Категорий: {0}"
+  ,"Statistics.Tab.Overview": "Обзор"
+  ,"Statistics.Tab.Time": "По времени"
+  ,"Statistics.Tab.Genres": "Жанры и страны"
+  ,"Statistics.Tab.Ratings": "Оценки"
+  ,"Statistics.ReleasesByYear": "Произведения по году выпуска"
+  ,"Statistics.AddedByYear": "Добавлено в библиотеку по годам"
+  ,"Statistics.ByDecade": "По десятилетиям"
+  ,"Statistics.ByGenre": "Популярные жанры"
+  ,"Statistics.ByCountry": "Страны происхождения"
+  ,"Statistics.RatingDistribution": "Распределение личных оценок"
+  ,"Statistics.AverageRatingByType": "Средняя оценка по типам"
+  ,"Statistics.Scope": "Данные"
+  ,"Statistics.LegendValueFormat": "{0} · {1}%"
+  ,"Details.FeaturedContributors": "Основные участники"
+  ,"Details.ShowAllContributors": "Показать весь состав →"
+  ,"Contributors.Title": "Состав и участники"
+  ,"Contributors.Empty": "Участники пока не добавлены"
+  ,"Settings.Appearance.Title": "Оформление"
+  ,"Settings.GridDensity.Title": "Карточки в ряд"
+  ,"Settings.GridDensity.Library": "Библиотека"
+  ,"Settings.GridDensity.People": "Люди"
+  ,"Settings.Accent.Title": "Цвет акцента"
+  ,"Settings.Accent.Description": "Настройте цвет выделения интерфейса"
+  ,"Settings.Background.Title": "Фон"
+  ,"Settings.Background.CustomImage": "Собственное фоновое изображение"
+  ,"Settings.Background.ChooseImage": "Выбрать изображение..."
+  ,"Settings.Background.Remove": "Удалить"
+  ,"Settings.Background.Blur": "Размытие"
+  ,"Settings.Background.None": "Фон не выбран"
+  ,"Settings.DataImport.Title": "Данные и импорт"
+  ,"Settings.Theme.ModeDescription": "Переключение между светлой и тёмной темой"
+  ,"Settings.Theme.Dark": "Тёмная"
+  ,"Settings.Theme.Light": "Светлая"
+  ,"Settings.Appearance.DarkEnabled": "Тёмная тема включена"
+  ,"Settings.Appearance.LightEnabled": "Светлая тема включена"
+  ,"Settings.Appearance.BackgroundUpdated": "Фоновое изображение обновлено"
+  ,"Settings.Appearance.BackgroundLoadError": "Не удалось загрузить фоновое изображение"
+  ,"Settings.Appearance.BackgroundCleared": "Фоновое изображение удалено"
+  ,"Settings.Appearance.AccentUpdated": "Цвет акцента обновлён"
+  ,"Metadata.Action.Search": "Найти и заполнить"
+  ,"Metadata.Title.SearchResults": "Выберите произведение"
+  ,"Metadata.Hint.Choose": "Сверьте год и актёров в главных ролях, затем выберите нужный вариант."
+  ,"Metadata.Label.ExternalRatings": "Внешние рейтинги"
+  ,"Metadata.Kinopoisk": "Кинопоиск"
+  ,"Metadata.Error.UnsupportedType": "Автозаполнение пока доступно для фильмов, мультфильмов, сериалов, мультсериалов и аниме."
+  ,"Metadata.Error.TitleRequired": "Перед поиском введите название."
+  ,"Metadata.Error.NotConfigured": "TMDB не настроен. Добавьте бесплатный API Read Access Token в metadata.json."
+  ,"Metadata.Status.Searching": "Ищем в TMDB..."
+  ,"Metadata.Status.NoResults": "Подходящие произведения не найдены."
+  ,"Metadata.Status.Loading": "Загружаем сведения и рейтинги..."
+  ,"Metadata.Error.SearchFailed": "Не удалось выполнить поиск. Проверьте интернет и токен TMDB."
+  ,"Metadata.Error.LoadFailed": "Не удалось загрузить выбранное произведение."
+  ,"Metadata.TmdbAttribution": "Приложение использует TMDB API, но не одобрено и не сертифицировано TMDB."
+  ,"Metadata.Action.Refresh": "Обновить информацию и рейтинги из интернета"
+  ,"Metadata.Error.RefreshFailed": "Не удалось обновить информацию. Проверьте интернет и повторите попытку."
+  ,"Metadata.Error.CatalogNotConfigured": "Этот источник ещё не настроен. Добавьте требуемый ключ в metadata.json."
+  ,"Metadata.CatalogAttribution": "Данные могут поступать из Google Books, Open Library, Comic Vine или RAWG. Ссылка и источник выбранной записи сохраняются."
+  ,"Metadata.Source.Format": "Источник: {0}"
+  ,"Metadata.Source.Unknown": "интернет-каталог"
 }

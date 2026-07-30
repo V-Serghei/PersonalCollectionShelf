@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.StatisticsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:LibraryViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False"
+    Title="{Binding StatisticsTitle}">
+    <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="54,Auto,*">
+        <Grid x:Name="TopBar" Padding="14,7" ColumnDefinitions="*,Auto">
+            <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding StatisticsTitle}" VerticalTextAlignment="Center" />
+            <Button
+                Grid.Column="1"
+                Clicked="HandleStatisticsOptionsClicked"
+                BackgroundColor="Transparent"
+                FontSize="25"
+                Padding="12,0"
+                Text="⋮"
+                TextColor="{DynamicResource Primary}"
+                ToolTipProperties.Text="{Binding StatisticsScopeLabel}" />
+        </Grid>
+
+        <VerticalStackLayout Grid.Row="1" Margin="12,6,12,8" Spacing="8">
+            <Grid Padding="4" BackgroundColor="{DynamicResource Muted}" ColumnDefinitions="*,*,*,*" ColumnSpacing="4">
+                <Button x:Name="OverviewTabButton" Clicked="HandleStatisticsTabClicked" CommandParameter="overview" CornerRadius="10" FontSize="21" HeightRequest="44" Padding="4,0" SemanticProperties.Description="{Binding StatisticsOverviewTab}" Text="▦" ToolTipProperties.Text="{Binding StatisticsOverviewTab}" />
+                <Button x:Name="TimeTabButton" Grid.Column="1" Clicked="HandleStatisticsTabClicked" CommandParameter="time" CornerRadius="10" FontSize="21" HeightRequest="44" Padding="4,0" SemanticProperties.Description="{Binding StatisticsTimeTab}" Text="↗" ToolTipProperties.Text="{Binding StatisticsTimeTab}" />
+                <Button x:Name="GenresTabButton" Grid.Column="2" Clicked="HandleStatisticsTabClicked" CommandParameter="genres" CornerRadius="10" FontSize="21" HeightRequest="44" Padding="4,0" SemanticProperties.Description="{Binding StatisticsGenresTab}" Text="◎" ToolTipProperties.Text="{Binding StatisticsGenresTab}" />
+                <Button x:Name="RatingsTabButton" Grid.Column="3" Clicked="HandleStatisticsTabClicked" CommandParameter="ratings" CornerRadius="10" FontSize="21" HeightRequest="44" Padding="4,0" SemanticProperties.Description="{Binding StatisticsRatingsTab}" Text="★" ToolTipProperties.Text="{Binding StatisticsRatingsTab}" />
+            </Grid>
+            <Border x:Name="StatisticsOptionsPanel" IsVisible="False" Padding="12,4" Style="{StaticResource CardBorderStyle}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding StatisticsScopeLabel}" VerticalTextAlignment="Center" />
+                    <Picker Grid.Column="1" ItemsSource="{Binding StatisticsMediaTypeFilters}" SelectedItem="{Binding SelectedStatisticsMediaType}" SelectedIndexChanged="HandleStatisticsScopeChanged" HorizontalOptions="Fill" />
+                </Grid>
+            </Border>
+        </VerticalStackLayout>
+
+        <ScrollView Grid.Row="2" BackgroundColor="{DynamicResource PageBackground}">
+            <VerticalStackLayout x:Name="StatisticsContent" Padding="12,8,12,32" HorizontalOptions="Fill" MaximumWidthRequest="920" Spacing="14">
+                <VerticalStackLayout x:Name="OverviewSection" Spacing="14">
+                    <Grid x:Name="SummaryGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                        <Border x:Name="CollectionCard" Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="3"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CollectionLabel}" /><Label FontAttributes="Bold" FontSize="28" Text="{Binding StatisticsTotalItemCount}" /></VerticalStackLayout></Border>
+                        <Border x:Name="CompletionCard" Grid.Column="1" Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="3"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding CompletionLabel}" /><Label FontAttributes="Bold" FontSize="28" Text="{Binding StatisticsCompletionPercentText}" TextColor="{DynamicResource Primary}" /></VerticalStackLayout></Border>
+                        <Border x:Name="RatingCard" Grid.Row="1" Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="3"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AverageRatingLabel}" /><Label FontAttributes="Bold" FontSize="28" Text="{Binding StatisticsAverageRatingText}" TextColor="{StaticResource Warning}" /></VerticalStackLayout></Border>
+                        <Border Grid.Row="1" Grid.Column="1" Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="3"><Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding FavoritesItemsLabel}" /><Label FontAttributes="Bold" FontSize="28" Text="{Binding StatisticsFavoritesItemCount}" TextColor="#F07CB8" /></VerticalStackLayout></Border>
+                    </Grid>
+
+                    <Border IsVisible="{Binding IsAllStatisticsMediaTypes}" Padding="14" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ByCategoryTitle}" />
+                            <GraphicsView x:Name="DonutChart" HeightRequest="220" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding CategoryLegendItems}" Spacing="8">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="viewModels:ChartLegendItem">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="9">
+                                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="{Binding Color}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Label}" LineBreakMode="TailTruncation" />
+                                            <Label Grid.Column="2" Text="{Binding Value}" TextColor="{DynamicResource MutedForeground}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ByStatusTitle}" /><GraphicsView x:Name="BarChart" HeightRequest="280" /></VerticalStackLayout></Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout x:Name="TimeSection" IsVisible="False" Spacing="14">
+                    <Border Padding="14" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding MonthlyActivityTitle}" />
+                            <Label FontSize="13" Text="{Binding MonthlyActivityHint}" TextColor="{DynamicResource MutedForeground}" />
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ActivityYearLabel}" VerticalTextAlignment="Center" />
+                                <Picker Grid.Column="1" ItemsSource="{Binding StatisticsActivityYearFilters}" SelectedItem="{Binding SelectedStatisticsActivityYear}" SelectedIndexChanged="HandleStatisticsTimeFilterChanged" />
+                            </Grid>
+                            <GraphicsView x:Name="MonthlyChart" HeightRequest="210" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Padding="14" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ReleasesByYearTitle}" />
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding ReleaseYearRangeLabel}" VerticalTextAlignment="Center" />
+                                <Picker Grid.Column="1" ItemsSource="{Binding StatisticsReleaseYearRanges}" SelectedItem="{Binding SelectedStatisticsReleaseYearRange}" SelectedIndexChanged="HandleStatisticsTimeFilterChanged" />
+                            </Grid>
+                            <GraphicsView x:Name="ReleaseYearChart" HeightRequest="250" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding AddedByYearTitle}" /><GraphicsView x:Name="AddedYearChart" HeightRequest="220" /></VerticalStackLayout></Border>
+                    <Border Padding="14" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ByDecadeTitle}" />
+                            <GraphicsView x:Name="DecadeChart" HeightRequest="240" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding DecadeLegendItems}" Spacing="8">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="viewModels:ChartLegendItem">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="9">
+                                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="{Binding Color}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Label}" />
+                                            <Label Grid.Column="2" Text="{Binding Value}" TextColor="{DynamicResource MutedForeground}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout x:Name="GenresSection" IsVisible="False" Spacing="14">
+                    <Border Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ByGenreTitle}" /><GraphicsView x:Name="GenreChart" HeightRequest="440" /></VerticalStackLayout></Border>
+                    <Border Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding ByCountryTitle}" /><GraphicsView x:Name="CountryChart" HeightRequest="370" /></VerticalStackLayout></Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout x:Name="RatingsSection" IsVisible="False" Spacing="14">
+                    <Border Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding RatingDistributionTitle}" /><GraphicsView x:Name="RatingChart" HeightRequest="230" /></VerticalStackLayout></Border>
+                    <Border IsVisible="{Binding IsAllStatisticsMediaTypes}" Padding="14" Style="{StaticResource CardBorderStyle}"><VerticalStackLayout Spacing="10"><Label Style="{StaticResource SectionTitleLabelStyle}" Text="{Binding AverageRatingByTypeTitle}" /><GraphicsView x:Name="AverageByTypeChart" HeightRequest="300" /></VerticalStackLayout></Border>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

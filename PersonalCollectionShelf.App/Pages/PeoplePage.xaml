@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.PeoplePage"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    x:DataType="viewModels:PeopleViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+    <Grid Padding="{OnIdiom Phone='12,12', Default='24'}" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <VerticalStackLayout Spacing="2">
+                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="{OnIdiom Phone=27, Default=32}" LineBreakMode="NoWrap" Text="{Binding PageTitle}" />
+                <Label FontSize="11" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding Subtitle}" TextColor="{DynamicResource MutedForeground}" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1" Clicked="HandleSearchClicked" HeightRequest="44" Style="{StaticResource IconToggleButtonStyle}" Text="&#x2315;" VerticalOptions="Start" WidthRequest="44" />
+            <Button Grid.Column="2" Command="{Binding NewPersonCommand}" FontSize="25" HeightRequest="44" Padding="0" Text="+" VerticalOptions="Start" WidthRequest="44" />
+        </Grid>
+
+        <Border Grid.Row="1" IsVisible="{Binding IsSearchVisible}" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
+            <Entry x:Name="PeopleSearch" BackgroundColor="Transparent" ClearButtonVisibility="WhileEditing" Placeholder="{Binding SearchPlaceholder}" Text="{Binding SearchText}" />
+        </Border>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,170" ColumnSpacing="10">
+            <Border Padding="3" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 12" VerticalOptions="Center">
+                <HorizontalStackLayout Spacing="2">
+                    <Button Command="{Binding SetGridViewCommand}" HeightRequest="34" Style="{StaticResource IconToggleButtonStyle}" Text="&#x25A6;" WidthRequest="34">
+                        <Button.Triggers><DataTrigger Binding="{Binding IsGridView}" TargetType="Button" Value="True"><Setter Property="BackgroundColor" Value="{DynamicResource MutedSoft}" /><Setter Property="TextColor" Value="{DynamicResource Primary}" /></DataTrigger></Button.Triggers>
+                    </Button>
+                    <Button Command="{Binding SetListViewCommand}" HeightRequest="34" Style="{StaticResource IconToggleButtonStyle}" Text="&#x2261;" WidthRequest="34">
+                        <Button.Triggers><DataTrigger Binding="{Binding IsListView}" TargetType="Button" Value="True"><Setter Property="BackgroundColor" Value="{DynamicResource MutedSoft}" /><Setter Property="TextColor" Value="{DynamicResource Primary}" /></DataTrigger></Button.Triggers>
+                    </Button>
+                </HorizontalStackLayout>
+            </Border>
+            <Label Grid.Column="1" FontSize="11" Text="{Binding ResultsText}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+            <Picker Grid.Column="2" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSortOption}" />
+        </Grid>
+
+        <Grid Grid.Row="3">
+            <ActivityIndicator HorizontalOptions="Center" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" VerticalOptions="Center" ZIndex="20" />
+            <CollectionView x:Name="GridPeopleList" IsVisible="{Binding IsGridView}" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding People}" Scrolled="HandlePeopleScrolled" SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout HorizontalItemSpacing="8" Orientation="Vertical" SnapPointsAlignment="Start" SnapPointsType="None" Span="{Binding GridColumnCount}" VerticalItemSpacing="10" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.EmptyView><Label Margin="0,40" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:PersonCardViewModel">
+                        <Border HeightRequest="220" Padding="0" Style="{StaticResource CardBorderStyle}">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PeoplePage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:PeoplePage}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers>
+                            <Grid RowDefinitions="106,*">
+                                <Grid BackgroundColor="{DynamicResource Muted}">
+                                    <Image Aspect="AspectFill" IsVisible="{Binding HasPhoto}" Source="{Binding PhotoPath}" />
+                                    <VerticalStackLayout HorizontalOptions="Center" IsVisible="{Binding HasDefaultPhoto}" VerticalOptions="Center">
+                                        <Border HeightRequest="58" BackgroundColor="{DynamicResource MutedSoft}" Stroke="{DynamicResource Primary}" StrokeShape="RoundRectangle 29" StrokeThickness="1" WidthRequest="58">
+                                            <Label FontAttributes="Bold" FontSize="23" HorizontalTextAlignment="Center" Text="{Binding Initial}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                                        </Border>
+                                    </VerticalStackLayout>
+                                    <Border Margin="6" Padding="5,2" BackgroundColor="#A0000000" HorizontalOptions="End" IsVisible="{Binding HasRating}" StrokeThickness="0" StrokeShape="RoundRectangle 7" VerticalOptions="End">
+                                        <Label FontAttributes="Bold" FontSize="9" TextColor="White"><Label.FormattedText><FormattedString><Span Text="&#x2605; " TextColor="{StaticResource Warning}" /><Span Text="{Binding AverageRatingText}" /></FormattedString></Label.FormattedText></Label>
+                                    </Border>
+                                </Grid>
+                                <VerticalStackLayout Grid.Row="1" Padding="8" Spacing="3">
+                                    <Label FontAttributes="Bold" FontSize="13" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding Name}" />
+                                    <Label FontSize="9" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding Subtitle}" TextColor="{DynamicResource MutedForeground}" />
+                                    <Label FontSize="9" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding RoleSummary}" TextColor="{DynamicResource Primary}" />
+                                    <Label FontSize="9" Text="{Binding WorkCountText}" TextColor="{DynamicResource MutedForeground}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <CollectionView x:Name="ListPeopleList" IsVisible="{Binding IsListView}" ItemSizingStrategy="MeasureFirstItem" ItemsSource="{Binding People}" Scrolled="HandlePeopleScrolled" SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" SnapPointsAlignment="Start" SnapPointsType="None" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.EmptyView><Label Margin="0,40" HorizontalTextAlignment="Center" Text="{Binding EmptyText}" TextColor="{DynamicResource MutedForeground}" /></CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:PersonCardViewModel">
+                        <Border HeightRequest="106" Margin="0,0,0,10" Padding="10" Style="{StaticResource CardBorderStyle}">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:PeoplePage}}, Path=ViewModel.OpenPersonCommand, x:DataType={x:Type pages:PeoplePage}}" CommandParameter="{Binding .}" /></Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="72,*,Auto" ColumnSpacing="14">
+                                <Border HeightRequest="86" BackgroundColor="{DynamicResource Muted}" StrokeThickness="0" StrokeShape="RoundRectangle 10" WidthRequest="72">
+                                    <Grid><Image Aspect="AspectFill" IsVisible="{Binding HasPhoto}" Source="{Binding PhotoPath}" /><Label FontAttributes="Bold" FontSize="25" HorizontalTextAlignment="Center" IsVisible="{Binding HasDefaultPhoto}" Text="{Binding Initial}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" /></Grid>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="16" Text="{Binding Name}" />
+                                    <Label FontSize="11" LineBreakMode="TailTruncation" MaxLines="1" Text="{Binding RoleSummary}" TextColor="{DynamicResource Primary}" />
+                                    <Label FontSize="10" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding TopWorksSummary}" TextColor="{DynamicResource MutedForeground}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" HorizontalOptions="End" Spacing="5">
+                                    <Label FontAttributes="Bold" FontSize="12" IsVisible="{Binding HasRating}" Text="{Binding AverageRatingText, StringFormat='★ {0}'}" TextColor="{StaticResource Warning}" />
+                                    <Label FontSize="10" Text="{Binding WorkCountText}" TextColor="{DynamicResource MutedForeground}" />
+                                    <Label FontSize="20" HorizontalTextAlignment="End" Text="&#x203A;" TextColor="{DynamicResource MutedForeground}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </Grid>
+    </Grid>
+</ContentPage>

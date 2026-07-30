@@ -1,0 +1,8 @@
+{
+  "tmdbReadAccessToken": "TMDB_API_READ_ACCESS_TOKEN",
+  "kinopoiskApiKey": "OPTIONAL_KINOPOISK_UNOFFICIAL_API_KEY",
+  "googleBooksApiKey": "OPTIONAL_GOOGLE_BOOKS_API_KEY",
+  "openLibraryContactEmail": "YOUR_CONTACT_EMAIL",
+  "comicVineApiKey": "OPTIONAL_COMIC_VINE_API_KEY",
+  "rawgApiKey": "OPTIONAL_RAWG_API_KEY"
+}

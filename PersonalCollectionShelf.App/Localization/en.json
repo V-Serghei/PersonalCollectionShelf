@@ -16,6 +16,8 @@
   "MediaType.Comic": "Comic",
   "MediaType.Game": "Game",
   "MediaType.Anime": "Anime",
+  "MediaType.Cartoon": "Cartoon",
+  "MediaType.AnimatedSeries": "Animated series",
   "MediaType.Other": "Other",
   "MediaStatus.Planned": "Planned",
   "MediaStatus.InProgress": "In progress",
@@ -28,9 +30,31 @@
   "Library.SearchPlaceholder": "Search collection",
   "Library.MediaTypeFilterPlaceholder": "Type",
   "Library.StatusFilterPlaceholder": "Status",
+  "Library.CategoryFilterPlaceholder": "Category",
+  "Library.TagFilterPlaceholder": "Tag",
+  "Library.SortByPlaceholder": "Sort by",
+  "Library.SortOption.DateAddedNewest": "Newest added",
+  "Library.SortOption.DateAddedOldest": "Oldest added",
+  "Library.SortOption.TitleAsc": "Title A-Z",
+  "Library.SortOption.TitleDesc": "Title Z-A",
+  "Library.SortOption.RatingHighest": "Highest rated",
+  "Library.SortOption.RatingLowest": "Lowest rated",
+  "Library.SortOption.ReleaseYearNewest": "Year: newest",
+  "Library.SortOption.ReleaseYearOldest": "Year: oldest",
   "Library.AddButton": "Add",
   "Library.Empty": "No media items yet.",
   "Library.OpenButton": "Open",
+  "Library.FavoriteMarker": "Favorite",
+  "Library.CategoryFormat": "Category: {0}",
+  "Library.TagsFormat": "Tags: {0}",
+  "Library.NoCategory": "No category",
+  "Library.NoTags": "No tags",
+  "Library.QuickFilter.All": "All",
+  "Library.QuickFilter.Favorites": "Favorites",
+  "Library.QuickFilter.MissingCategory": "No category",
+  "Library.QuickFilter.MissingCover": "No cover",
+  "Library.QuickFilter.Completed": "Completed",
+  "Library.QuickFilter.InProgress": "In progress",
   "Library.RatingFormat": "Rating: {0}/10",
   "Library.NoRating": "No rating",
   "Library.ProgressFormat": "Progress: {0}",
@@ -43,14 +67,28 @@
   "Details.NotesLabel": "Notes",
   "Details.OriginalTitleLabel": "Original title",
   "Details.DescriptionLabel": "Description",
+  "Details.ShowAll": "Show all",
+  "Details.ShowLess": "Show less",
+  "Details.CategoryLabel": "Category",
+  "Details.TagsLabel": "Tags",
+  "Details.CreatorLabel": "Creator",
+  "Details.PublisherLabel": "Publisher",
+  "Details.SerialNumberLabel": "ISBN / serial number",
+  "Details.CastLabel": "Actors",
+  "Details.MinutesFormat": "{0} min",
   "Details.StartDateLabel": "Start date",
   "Details.FinishDateLabel": "Finish date",
   "Details.ReleaseYearLabel": "Release year",
   "Details.FavoriteLabel": "Favorite",
   "Details.CreatedAtLabel": "Created",
   "Details.UpdatedAtLabel": "Updated",
-  "Details.EditButton": "Edit",
+  "Details.EditButton": "Edit item",
+  "Details.AddFavoriteButton": "Add to favorites",
+  "Details.RemoveFavoriteButton": "Remove from favorites",
   "Details.DeleteButton": "Delete",
+  "Details.DeleteConfirmTitle": "Delete item",
+  "Details.DeleteConfirmMessage": "Delete \"{0}\" from your local library?",
+  "Details.DeleteConfirmButton": "Delete",
   "Details.NotFound": "Media item was not found.",
   "Edit.Title.Create": "Create media item",
   "Edit.Title.Edit": "Edit media item",
@@ -60,6 +98,23 @@
   "Edit.Placeholder.OriginalTitle": "Enter original title",
   "Edit.Label.Description": "Description",
   "Edit.Placeholder.Description": "Enter description",
+  "Edit.Label.Category": "Category",
+  "Edit.Placeholder.Category": "Shelf, genre, backlog, work...",
+  "Edit.Label.Tags": "Tags",
+  "Edit.Placeholder.Tags": "Tag + Enter",
+  "Edit.Label.Creator.Director": "Director",
+  "Edit.Label.Creator.Author": "Author",
+  "Edit.Label.Creator.Developer": "Developer",
+  "Edit.Label.Creator.Studio": "Studio",
+  "Edit.Label.Creator.Generic": "Creator",
+  "Edit.Placeholder.Creator": "Optional",
+  "Edit.Label.Publisher": "Publisher",
+  "Edit.Label.Studio": "Studio / production company",
+  "Edit.Placeholder.Publisher": "Optional",
+  "Edit.Label.SerialNumber": "ISBN / serial number",
+  "Edit.Placeholder.SerialNumber": "Optional",
+  "Edit.Label.Cast": "Actors",
+  "Edit.Placeholder.Cast": "Actor + Enter",
   "Edit.Label.MediaType": "Media type",
   "Edit.Label.Status": "Status",
   "Edit.Label.Rating": "Rating",
@@ -68,40 +123,509 @@
   "Edit.Placeholder.ProgressCurrent": "0",
   "Edit.Label.ProgressTotal": "Total progress",
   "Edit.Placeholder.ProgressTotal": "Optional",
-  "Edit.Label.StartDate": "Use start date",
-  "Edit.Label.FinishDate": "Use finish date",
+  "Edit.Label.StartDate": "Start date",
+  "Edit.Label.FinishDate": "Finish date",
   "Edit.Label.ReleaseYear": "Release year",
   "Edit.Placeholder.ReleaseYear": "Optional",
+  "Edit.AddCover": "Add cover",
   "Edit.Label.CoverUrl": "Cover URL",
   "Edit.Placeholder.CoverUrl": "Optional",
+  "Edit.CoverPicker.Title": "Choose a cover image",
   "Edit.Label.Notes": "Notes",
   "Edit.Placeholder.Notes": "Personal notes",
   "Edit.Label.Favorite": "Favorite",
   "Edit.Error.NotFound": "The selected media item could not be loaded.",
+  "Edit.Section.Essentials": "Essentials",
+  "Edit.Section.Details": "Details",
+  "Edit.Section.Progress": "Progress",
   "Settings.Title": "Settings",
   "Settings.Account.Title": "Account",
-  "Settings.Account.Description": "Local account placeholder. Firebase Auth will be added later.",
+  "Settings.Account.Description": "Sign in with Google or email to synchronize your personal library.",
+  "Settings.Account.EmailPlaceholder": "Email",
+  "Settings.Account.PasswordPlaceholder": "Password",
+  "Settings.Account.SignIn": "Sign in",
+  "Settings.Account.SignOut": "Sign out",
+  "Settings.Account.SignUp": "Create account",
+  "Settings.Account.GoogleSignIn": "Continue with Google",
+  "Settings.Account.SignedIn": "Signed in",
+  "Settings.Account.SignedInMessage": "Signed in successfully.",
+  "Settings.Account.SignedOutMessage": "Signed out.",
   "Settings.Sync.Title": "Sync status",
-  "Settings.Sync.Description": "Cloud synchronization is prepared for Firebase and currently disabled.",
+  "Settings.Sync.Description": "Data syncs through Firebase; optimized images are stored in Google Drive.",
   "Settings.Sync.Button": "Sync now",
   "Settings.ExportImport.Title": "Export and import",
   "Settings.Export.Button": "Export",
   "Settings.Import.Button": "Import",
-  "Settings.Export.Placeholder": "Export will be available in a future version.",
-  "Settings.Import.Placeholder": "Import will be available in a future version.",
+  "Settings.Export.Completed": "Exported {0} item(s) to {1}",
+  "Settings.Export.ShareTitle": "Export collection JSON",
+  "Settings.Import.PickerTitle": "Choose collection JSON",
+  "Settings.Import.Completed": "Imported {0} item(s), updated {1} item(s).",
+  "Settings.Import.InvalidFile": "This file is not a valid collection export.",
   "Settings.Theme.Title": "Theme",
   "Settings.Theme.Description": "System theme is used for now.",
   "Settings.Language.Title": "Language",
   "Settings.Language.Description": "Choose the application language.",
+  "Auth.Error.EmailExists": "An account with this email already exists.",
+  "Auth.Error.InvalidCredentials": "Email or password is incorrect.",
+  "Auth.Error.InvalidEmail": "The email address is not valid.",
+  "Auth.Error.MissingCredentials": "Enter both email and password.",
+  "Auth.Error.Network": "Network error. Check your connection and try again.",
+  "Auth.Error.Cancelled": "Google sign-in was cancelled.",
+  "Auth.Error.GoogleNotConfigured": "Google sign-in is not configured. Add the OAuth client ID to firebase.json.",
+  "Auth.Google.Completed": "Authorization completed. You can return to the app.",
+  "Auth.Error.NotConfigured": "Firebase is not configured. Add firebase.json to enable accounts.",
+  "Auth.Error.TooManyAttempts": "Too many attempts. Try again later.",
+  "Auth.Error.Unknown": "Sign-in failed. Try again later.",
+  "Auth.Error.UserDisabled": "This account has been disabled.",
+  "Auth.Error.WeakPassword": "The password is too weak. Use at least 6 characters.",
   "Sync.Status.NotConfigured": "Firebase sync is not configured yet.",
-  "Sync.Status.Requested": "Sync request accepted. Cloud sync is still a placeholder.",
+  "Sync.Status.Ready": "Cloud sync is ready.",
+  "Sync.Status.SignInRequired": "Sign in to synchronize this device.",
+  "Sync.Status.Started": "Synchronization started…",
+  "Sync.Status.DataInProgress": "Synchronizing data through Firebase…",
+  "Sync.Status.DriveInProgress": "Preparing images and uploading a backup to Google Drive…",
+  "Sync.Status.InProgressButton": "Synchronizing…",
+  "Sync.Status.CompletedWithDrive": "Synchronization completed. Data was updated and a backup was saved to Google Drive.",
+  "Sync.Status.CompletedWithoutDrive": "Data was synchronized through Firebase, but a Google Drive backup was not created.",
+  "Sync.Status.Completed": "Synchronization completed. Only changed data was sent.",
+  "Sync.Status.CompletedWithWarnings": "Data synchronized. Some images could not be uploaded and will be retried during the next synchronization.",
+  "Sync.Status.NetworkFailed": "The connection was interrupted. Completed progress was saved; try synchronization again to continue.",
+  "Sync.Progress.Preparing": "Preparing synchronization…",
+  "Sync.Progress.Assets": "Checking changed images…",
+  "Sync.Progress.Scanning": "Checking changed data…",
+  "Sync.Progress.Downloading": "Downloading cloud changes…",
+  "Sync.Progress.Applying": "Applying cloud changes…",
+  "Sync.Progress.Uploading": "Uploading changed data…",
+  "Sync.Progress.Finalizing": "Finalizing synchronization…",
+  "Sync.Progress.Complete": "Synchronization complete.",
+  "Sync.Progress.CompleteWithWarnings": "Data synchronized, but some images are waiting to be uploaded again.",
+  "Sync.Progress.Retrying": "The connection was interrupted. Retrying…",
+  "Progress.Estimating": "Estimating remaining time…",
+  "Progress.Remaining": "About {0} remaining",
+  "Progress.Done": "Done",
+  "Progress.Stopped": "Operation stopped",
+  "CloudOperation.Cancelling": "Stopping operation…",
+  "CloudOperation.Cancelled": "Operation cancelled.",
+  "Sync.Status.Requested": "Synchronization completed.",
+  "Sync.Status.Failed": "Synchronization failed. Check the connection and Firebase configuration.",
+  "Settings.DriveBackup.Button": "Back up",
+  "Settings.DriveBackup.InProgressButton": "Backing up…",
+  "Settings.DriveBackup.Description": "Compressed images and checksummed versioned backups are stored in Google Drive.",
+  "Settings.DriveBackup.Preparing": "Preparing data and compressed images for backup…",
+  "Settings.DriveBackup.Uploading": "Uploading the backup to Google Drive…",
+  "Settings.DriveBackup.Completed": "Google Drive backup completed.",
+  "Settings.DriveBackup.Failed": "Google Drive backup failed. Sign in with Google and try again.",
+  "Settings.DriveRestore.Button": "Restore latest",
+  "Settings.DriveRestore.InProgressButton": "Restoring…",
+  "Settings.DriveRestore.Downloading": "Downloading the latest backup from Google Drive…",
+  "Settings.DriveRestore.Importing": "Verifying and merging backup data…",
+  "Settings.DriveRestore.Completed": "The latest Google Drive backup was restored.",
+  "Settings.DriveRestore.Failed": "The Google Drive backup could not be restored.",
+  "Settings.DriveRestore.NotFound": "No Personal Collection Shelf backups were found in Google Drive.",
+  "Settings.DriveRestore.ConfirmTitle": "Restore backup?",
+  "Settings.DriveRestore.ConfirmMessage": "The latest backup will be merged into this device and may update records with matching IDs.",
+  "Settings.DriveRestore.Confirm": "Restore",
   "Validation.IdRequired": "Media item id is required.",
   "Validation.UserRequired": "User is required.",
   "Validation.TitleRequired": "Title is required.",
-  "Validation.RatingRange": "Rating must be between 1 and 10.",
+  "Validation.RatingRange": "Rating must be between 0 and 10 with at most one decimal place.",
   "Validation.ProgressCurrentInvalid": "Current progress cannot be negative.",
   "Validation.ProgressTotalInvalid": "Total progress cannot be negative.",
   "Validation.ProgressCurrentExceedsTotal": "Current progress cannot be greater than total progress.",
   "Validation.ReleaseYearRange": "Release year must be between 1800 and 2200.",
-  "Validation.NumberInvalid": "Use whole numbers for numeric fields."
+  "Validation.NumberInvalid": "Enter valid numeric values.",
+  "Settings.Export.Description": "Back up the library, people, relationships, and photos. The file can be saved to Google Drive.",
+  "Settings.Import.ComingSoon": "Coming soon",
+  "Settings.Import.Description": "Restore a complete backup, including a file selected from Google Drive.",
+  "Settings.Import.Goodreads.Description": "Books, shelves, and reviews",
+  "Settings.Import.Letterboxd.Description": "Movies and TV series ratings",
+  "Settings.Import.Mal.Description": "Anime and manga lists",
+  "Settings.Import.Steam.Description": "Games, playtime, and achievements",
+  "Shell.Categories": "CATEGORIES",
+  "Shell.DarkMode": "Dark Mode",
+  "Shell.Home": "Home",
+  "Shell.ItemsCollected": "{0} items collected",
+  "Shell.LightMode": "Light Mode",
+  "Shell.LocalProfile": "Local profile",
+  "Shell.Statistics": "Statistics"
+  ,"Edit.Label.Authors": "Authors",
+  "Edit.Label.Translators": "Translators",
+  "Edit.Label.Illustrators": "Illustrators",
+  "Edit.Label.Editors": "Editors",
+  "Edit.Action.AddPerson": "Add person",
+  "Edit.Action.CreatePerson": "Create and add",
+  "Edit.Validation.PersonNameRequired": "Enter the new person's name first.",
+  "Edit.Error.CreatePerson": "The person could not be created. Please try again.",
+  "Edit.Placeholder.SearchPerson": "Search people or enter a new name",
+  "Edit.Contributor.Author": "Add author",
+  "Edit.Contributor.Translator": "Add translator",
+  "Edit.Contributor.Illustrator": "Add illustrator",
+  "Edit.Contributor.Editor": "Add editor",
+  "Edit.Label.Genres": "Genres",
+  "Edit.Placeholder.Genres": "Type a genre and press Enter",
+  "Edit.Section.BookDetails": "Book details",
+  "Edit.Section.MovieDetails": "Movie details",
+  "Edit.Section.CartoonDetails": "Cartoon details",
+  "Edit.Label.MovieRuntime": "Runtime (minutes)",
+  "Edit.Label.MovieOriginalLanguage": "Original language",
+  "Edit.Label.MovieLanguage": "Viewing language",
+  "Edit.Label.MovieCountry": "Country of origin",
+  "Edit.Label.MovieAgeRating": "Age rating",
+  "Edit.Section.Publication": "Edition and publication",
+  "Edit.Section.Collections": "Series, cycles and sagas",
+  "Edit.Section.Relations": "Related items",
+  "Edit.Label.Subtitle": "Subtitle",
+  "Edit.Label.Edition": "Edition",
+  "Edit.Label.EditionNumber": "Number",
+  "Edit.Label.BookFormat": "Format",
+  "Edit.Label.OriginalPublicationYear": "First published",
+  "Edit.Label.EditionYear": "Edition year",
+  "Edit.Label.TranslationYear": "Translation year",
+  "Edit.Label.OriginalLanguage": "Original language",
+  "Edit.Label.BookLanguage": "Edition language",
+  "Edit.Label.PageCount": "Pages",
+  "Edit.Label.Isbn10": "ISBN-10",
+  "Edit.Label.Isbn13": "ISBN-13",
+  "Edit.Label.Binding": "Binding",
+  "Edit.Label.CountryOfOrigin": "Country",
+  "Edit.Label.AgeRating": "Age rating",
+  "Edit.Placeholder.CollectionName": "Series, cycle or saga",
+  "Edit.Placeholder.RelatedItem": "Search the library",
+  "BookFormat.Hardcover": "Hardcover",
+  "BookFormat.Paperback": "Paperback",
+  "BookFormat.Ebook": "E-book",
+  "BookFormat.Audiobook": "Audiobook",
+  "BookFormat.Other": "Other",
+  "CollectionKind.Series": "Series",
+  "CollectionKind.Saga": "Saga",
+  "CollectionKind.Cycle": "Cycle",
+  "CollectionKind.Trilogy": "Trilogy",
+  "CollectionKind.Universe": "Universe",
+  "CollectionKind.Custom": "Custom",
+  "RelationKind.Sequel": "Sequel",
+  "RelationKind.Prequel": "Prequel",
+  "RelationKind.Adaptation": "Adaptation",
+  "RelationKind.Remake": "Remake",
+  "RelationKind.SpinOff": "Spin-off",
+  "RelationKind.SameUniverse": "Same universe",
+  "RelationKind.Translation": "Translation",
+  "RelationKind.Companion": "Companion",
+  "RelationKind.Other": "Other",
+  "Validation.BookDetailsType": "Book details can only be saved for a book.",
+  "Validation.MovieDetailsType": "Movie details can only be saved for a movie.",
+  "Validation.MovieRuntimeInvalid": "Runtime must be between 1 and 1440 minutes.",
+  "Validation.PageCountInvalid": "Page count must be greater than zero.",
+  "Validation.EditionNumberInvalid": "Edition number must be greater than zero.",
+  "Validation.Isbn10Invalid": "ISBN-10 must contain 10 characters.",
+  "Validation.Isbn13Invalid": "ISBN-13 must contain 13 characters.",
+  "Validation.BookYearRange": "Book years must be between 1 and 2200.",
+  "Common.Back": "Back",
+  "Common.Add": "Add",
+  "Common.Delete": "Delete",
+  "Settings.LibraryData.Title": "LIBRARY STRUCTURE",
+  "Settings.People.Title": "People and professions",
+  "Settings.People.Description": "Edit people, their professions, and relationships.",
+  "Settings.Categories.Title": "Custom categories",
+  "Settings.Categories.Description": "Design reusable metadata fields for your own categories.",
+  "People.Title": "People",
+  "People.New": "New person",
+  "People.Empty": "No people yet",
+  "People.Profile": "PROFILE",
+  "People.Professions": "PROFESSIONS",
+  "People.Relations": "RELATIONSHIPS",
+  "People.Name": "Display name",
+  "People.FirstName": "First name",
+  "People.LastName": "Last name",
+  "People.PenName": "Pen name",
+  "People.SortName": "Sort name",
+  "People.BirthYear": "Birth year",
+  "People.DeathYear": "Death year",
+  "People.Country": "Country",
+  "People.PlaceOfBirth": "Place of birth",
+  "People.Gender": "Gender",
+  "People.Website": "Official website",
+  "People.Tagline": "Short description",
+  "People.Description": "Biography",
+  "People.Notes": "Notes",
+  "People.ProfessionPlaceholder": "Writer, translator, director...",
+  "People.RelatedPerson": "Related person",
+  "People.RelationKind": "Relationship type",
+  "People.Validation.Name": "Enter a display name.",
+  "People.Validation.Year": "Years must be between 1 and 2200.",
+  "People.Saved": "Person saved.",
+  "People.RelationSaveFirst": "Save the person before adding relationships.",
+  "People.RelationRequired": "Choose a person and a relationship type.",
+  "Categories.Title": "Category schemas",
+  "Categories.New": "New category",
+  "Categories.Name": "Category name",
+  "Categories.BaseType": "Base media type",
+  "Categories.BaseType.None": "No base type",
+  "Categories.Fields": "DYNAMIC FIELDS",
+  "Categories.AddField": "Add field",
+  "Categories.Field.Key": "Key",
+  "Categories.Field.Label": "Label",
+  "Categories.Field.Type": "Type",
+  "Categories.Field.Required": "Required",
+  "Categories.SystemReadOnly": "System categories are read-only.",
+  "Categories.Saved": "Category schema saved.",
+  "Categories.Deleted": "Category deleted.",
+  "Categories.FieldType.text": "Short text",
+  "Categories.FieldType.multiline": "Long text",
+  "Categories.FieldType.number": "Number",
+  "Categories.FieldType.date": "Date",
+  "Categories.FieldType.boolean": "Yes / no",
+  "Categories.FieldType.choice": "Choice",
+  "PersonRelationKind.Spouse": "Spouse",
+  "PersonRelationKind.Partner": "Partner",
+  "PersonRelationKind.Child": "Child",
+  "PersonRelationKind.Parent": "Parent",
+  "PersonRelationKind.Sibling": "Sibling",
+  "PersonRelationKind.Relative": "Relative",
+  "PersonRelationKind.Colleague": "Colleague",
+  "PersonRelationKind.Mentor": "Mentor",
+  "PersonRelationKind.Student": "Student",
+  "PersonRelationKind.Collaborator": "Collaborator",
+  "PersonRelationKind.Other": "Other",
+  "Edit.Section.MoviePeople": "People and credits",
+  "Edit.Section.PublicationCredits": "Publication and contributors",
+  "Edit.Section.MovieStudios": "Studios and companies",
+  "Edit.Label.Directors": "Directors",
+  "Edit.Label.Screenwriters": "Screenwriters",
+  "Edit.Label.Producers": "Producers",
+  "Edit.Label.Cinematographers": "Cinematography",
+  "Edit.Label.Composers": "Music",
+  "Edit.Label.CastingDirectors": "Casting directors",
+  "Edit.Label.ProductionDesigners": "Production designers",
+  "Edit.Label.Actors": "Cast",
+  "Edit.Label.VoiceActors": "Voice cast",
+  "Edit.Label.CharacterName": "Character",
+  "Edit.Label.CreditedAs": "Credited as",
+  "Edit.Placeholder.MovieStudio": "Studio or company",
+  "Edit.Action.AddStudio": "Add studio",
+  "Edit.Contributor.Director": "Add director",
+  "Edit.Contributor.Screenwriter": "Add screenwriter",
+  "Edit.Contributor.Producer": "Add producer",
+  "Edit.Contributor.Cinematographer": "Add cinematographer",
+  "Edit.Contributor.Composer": "Add composer",
+  "Edit.Contributor.CastingDirector": "Add casting director",
+  "Edit.Contributor.ProductionDesigner": "Add production designer",
+  "Edit.Contributor.Actor": "Add actor",
+  "Edit.Contributor.VoiceActor": "Add voice actor",
+  "StudioRole.ProductionCompany": "Production",
+  "StudioRole.Distributor": "Distribution",
+  "StudioRole.VisualEffects": "Visual effects",
+  "StudioRole.AnimationStudio": "Animation",
+  "StudioRole.Broadcaster": "Broadcaster",
+  "StudioRole.Other": "Other"
+  ,"StudioRole.Developer": "Developer"
+  ,"StudioRole.Publisher": "Publisher"
+  ,"Edit.Section.EpisodicDetails": "Series and episodes"
+  ,"Edit.Section.GraphicDetails": "Volumes and publication"
+  ,"Edit.Section.GameDetails": "Game details"
+  ,"Edit.Label.SeasonCount": "Seasons"
+  ,"Edit.Label.EpisodeCount": "Episodes"
+  ,"Edit.Label.EpisodeRuntime": "Episode runtime (min)"
+  ,"Edit.Label.Network": "Network / service"
+  ,"Edit.Label.AiringStatus": "Airing status"
+  ,"Edit.Label.SourceMaterial": "Source material"
+  ,"Edit.Label.VolumeCount": "Volumes"
+  ,"Edit.Label.ChapterOrIssueCount": "Chapters / issues"
+  ,"Edit.Label.ReadingDirection": "Reading direction"
+  ,"Edit.Label.ColorEdition": "Full color"
+  ,"Edit.Label.PublicationStatus": "Publication status"
+  ,"Edit.Label.Imprint": "Imprint"
+  ,"Edit.Label.GamePlatform": "Platform"
+  ,"Edit.Label.MainStoryHours": "Main story (hours)"
+  ,"Edit.Label.CompletionistHours": "Completionist (hours)"
+  ,"Edit.Label.GameMode": "Game mode"
+  ,"Edit.Label.GameEngine": "Engine"
+  ,"Edit.Label.GameRegion": "Region"
+  ,"Edit.Label.Developers": "Developers"
+  ,"Edit.Contributor.Developer": "Add developer"
+  ,"People.Works": "Works and roles"
+  ,"Collections.Title": "Series and universes"
+  ,"Collections.Empty": "No series, cycles, or universes yet."
+  ,"Collections.SearchPlaceholder": "Search series, universes, and items"
+  ,"Collections.Loading": "Loading series and cover stacks…"
+  ,"Collections.Options": "List options"
+  ,"Collections.CategoryFilter": "Category"
+  ,"Collections.SortLabel": "Sort"
+  ,"Collections.ResultsFormat": "{0} series and collections"
+  ,"Collections.ItemCountFormat": "{0} items"
+  ,"Collections.DetailsTitle": "Series"
+  ,"Collections.DetailsEmpty": "There are no items in this series yet."
+  ,"Collections.LoadingDetails": "Loading series…"
+  ,"Collections.Sort.NameAscending": "Name: A–Z"
+  ,"Collections.Sort.NameDescending": "Name: Z–A"
+  ,"Collections.Sort.MostItems": "Most items"
+  ,"Collections.Sort.FewestItems": "Fewest items"
+  ,"Collections.Sort.Category": "Category"
+  ,"Collections.Sort.Kind": "Series type"
+  ,"Tags.Title": "Tags"
+  ,"Tags.Options": "Tag options"
+  ,"Tags.CategoryFilter": "Category"
+  ,"Tags.Loading": "Loading tags…"
+  ,"Tags.Empty": "No matching tags."
+  ,"Tags.SearchPlaceholder": "Search tags and linked items"
+  ,"Tags.Subtitle": "Choose a tag to see every linked item"
+  ,"Tags.SortPlaceholder": "Sort"
+  ,"Tags.ResultsFormat": "Tags found: {0}"
+  ,"Tags.ItemCountFormat": "Items: {0}"
+  ,"Tags.Sort.NameAscending": "Name A–Z"
+  ,"Tags.Sort.NameDescending": "Name Z–A"
+  ,"Tags.Sort.MostUsed": "Most used first"
+  ,"Tags.Sort.LeastUsed": "Least used first"
+  ,"Tags.DetailsTitle": "Tag contents"
+  ,"Tags.DetailsSubtitle": "Every item marked with this tag"
+  ,"Tags.DetailsEmpty": "Nothing matches the selected filters."
+  ,"Tags.DetailsSearchPlaceholder": "Search within this tag"
+  ,"Tags.ItemsResultFormat": "Items: {0}"
+  ,"Genres.Title": "Genres"
+  ,"Genres.Options": "Genre options"
+  ,"Genres.CategoryFilter": "Category"
+  ,"Genres.Loading": "Loading genres…"
+  ,"Genres.Empty": "No matching genres."
+  ,"Genres.SearchPlaceholder": "Search genres and linked items"
+  ,"Genres.Subtitle": "Choose a genre to see every matching item"
+  ,"Genres.SortPlaceholder": "Sort"
+  ,"Genres.ResultsFormat": "Genres found: {0}"
+  ,"Genres.ItemCountFormat": "Items: {0}"
+  ,"Genres.Sort.NameAscending": "Name A–Z"
+  ,"Genres.Sort.NameDescending": "Name Z–A"
+  ,"Genres.Sort.MostUsed": "Most used first"
+  ,"Genres.Sort.LeastUsed": "Least used first"
+  ,"Genres.DetailsTitle": "Genre contents"
+  ,"Genres.DetailsSubtitle": "Every item in the selected genre"
+  ,"Genres.DetailsEmpty": "Nothing matches the selected filters."
+  ,"Genres.DetailsSearchPlaceholder": "Search within this genre"
+  ,"Genres.ItemsResultFormat": "Items: {0}"
+  ,"Profile.Title": "Profile"
+  ,"Profile.Account": "Account and library"
+  ,"Profile.OpenSettings": "Account settings"
+  ,"Profile.OpenPeople": "People and contributors"
+  ,"People.SearchPlaceholder": "Search people"
+  ,"People.CatalogSubtitle": "Authors, actors, directors, and other contributors"
+  ,"People.ResultsFormat": "People found: {0}"
+  ,"People.NoDescription": "No description yet"
+  ,"People.WorkCountFormat": "Works: {0}"
+  ,"People.Sort.NameAscending": "Name A–Z"
+  ,"People.Sort.NameDescending": "Name Z–A"
+  ,"People.Sort.HighestRated": "Highest rated first"
+  ,"People.Sort.MostWorks": "Most works first"
+  ,"People.CreateTitle": "New person"
+  ,"People.EditTitle": "Edit profile"
+  ,"People.MiddleName": "Middle name"
+  ,"People.PickMainPhoto": "Choose main photo"
+  ,"People.PickPhotoTitle": "Choose a photo"
+  ,"People.AddPhoto": "Add photo"
+  ,"People.OpenGallery": "Open gallery"
+  ,"People.Gallery": "Photos"
+  ,"People.GalleryTitleFormat": "Gallery: {0}"
+  ,"People.GalleryEmpty": "No photos yet"
+  ,"People.GalleryPrevious": "Previous photo"
+  ,"People.GalleryNext": "Next photo"
+  ,"People.GalleryPositionFormat": "{0} of {1}"
+  ,"People.PrimaryPhoto": "Primary"
+  ,"People.About": "About"
+  ,"People.TopWorks": "My top 5 rated works"
+  ,"People.AllWorks": "All works and roles"
+  ,"People.CreativeCategories": "Creative categories"
+  ,"Common.Edit": "Edit"
+  ,"ContributionRole.Author": "Author"
+  ,"ContributionRole.Translator": "Translator"
+  ,"ContributionRole.Illustrator": "Illustrator"
+  ,"ContributionRole.Editor": "Editor"
+  ,"ContributionRole.Director": "Director"
+  ,"ContributionRole.Screenwriter": "Screenwriter"
+  ,"ContributionRole.Actor": "Actor"
+  ,"ContributionRole.Composer": "Composer"
+  ,"ContributionRole.Artist": "Artist"
+  ,"ContributionRole.Developer": "Developer"
+  ,"ContributionRole.VoiceActor": "Voice actor"
+  ,"ContributionRole.Other": "Other"
+  ,"ContributionRole.Producer": "Producer"
+  ,"ContributionRole.Cinematographer": "Cinematographer"
+  ,"ContributionRole.CastingDirector": "Casting director"
+  ,"ContributionRole.ProductionDesigner": "Production designer"
+  ,"Dashboard.Greeting.Morning": "Good morning"
+  ,"Dashboard.Greeting.Afternoon": "Good afternoon"
+  ,"Dashboard.Greeting.Evening": "Good evening"
+  ,"Dashboard.SubtitleFormat": "In progress: {0} · planned: {1}"
+  ,"Dashboard.Continue": "Continue"
+  ,"Dashboard.RecentlyAdded": "Recently added"
+  ,"Dashboard.CategoryOverview": "Category overview"
+  ,"Dashboard.SeeAll": "See all"
+  ,"Dashboard.FullStatistics": "Full statistics"
+  ,"Dashboard.ItemCountFormat": "{0} items"
+  ,"Statistics.AverageRating": "Average rating"
+  ,"Statistics.Completion": "Completion"
+  ,"Statistics.Collection": "Collection"
+  ,"Statistics.MonthlyActivity": "Monthly activity"
+  ,"Statistics.MonthlyActivityHint": "Items added to the library in each month."
+  ,"Statistics.ActivityYear": "Activity year"
+  ,"Statistics.ReleaseYearRange": "Release years"
+  ,"Statistics.ByCategory": "By category"
+  ,"Statistics.ByStatus": "By status"
+  ,"Statistics.Items": "items"
+  ,"Statistics.CompletionFormat": "{0} of {1} items completed"
+  ,"Statistics.CategoriesFormat": "{0} categories"
+  ,"Statistics.Tab.Overview": "Overview"
+  ,"Statistics.Tab.Time": "Timeline"
+  ,"Statistics.Tab.Genres": "Genres & countries"
+  ,"Statistics.Tab.Ratings": "Ratings"
+  ,"Statistics.ReleasesByYear": "Titles by release year"
+  ,"Statistics.AddedByYear": "Added to library by year"
+  ,"Statistics.ByDecade": "By decade"
+  ,"Statistics.ByGenre": "Top genres"
+  ,"Statistics.ByCountry": "Countries of origin"
+  ,"Statistics.RatingDistribution": "Personal rating distribution"
+  ,"Statistics.AverageRatingByType": "Average rating by type"
+  ,"Statistics.Scope": "Data scope"
+  ,"Statistics.LegendValueFormat": "{0} · {1}%"
+  ,"Details.FeaturedContributors": "Featured contributors"
+  ,"Details.ShowAllContributors": "Show full cast and crew →"
+  ,"Contributors.Title": "Cast and crew"
+  ,"Contributors.Empty": "No contributors have been added yet"
+  ,"Settings.Appearance.Title": "Appearance"
+  ,"Settings.GridDensity.Title": "Cards per row"
+  ,"Settings.GridDensity.Library": "Library"
+  ,"Settings.GridDensity.People": "People"
+  ,"Settings.Accent.Title": "Accent color"
+  ,"Settings.Accent.Description": "Personalize your highlight color"
+  ,"Settings.Background.Title": "Background"
+  ,"Settings.Background.CustomImage": "Custom background image"
+  ,"Settings.Background.ChooseImage": "Choose image..."
+  ,"Settings.Background.Remove": "Remove"
+  ,"Settings.Background.Blur": "Blur"
+  ,"Settings.Background.None": "No background selected"
+  ,"Settings.DataImport.Title": "Data & import"
+  ,"Settings.Theme.ModeDescription": "Switch between light and dark mode"
+  ,"Settings.Theme.Dark": "Dark"
+  ,"Settings.Theme.Light": "Light"
+  ,"Settings.Appearance.DarkEnabled": "Dark theme enabled"
+  ,"Settings.Appearance.LightEnabled": "Light theme enabled"
+  ,"Settings.Appearance.BackgroundUpdated": "Background image updated"
+  ,"Settings.Appearance.BackgroundLoadError": "Could not load background image"
+  ,"Settings.Appearance.BackgroundCleared": "Background image cleared"
+  ,"Settings.Appearance.AccentUpdated": "Accent color updated"
+  ,"Metadata.Action.Search": "Find and autofill"
+  ,"Metadata.Title.SearchResults": "Choose a title"
+  ,"Metadata.Hint.Choose": "Check the year and leading cast, then choose the correct title."
+  ,"Metadata.Label.ExternalRatings": "External ratings"
+  ,"Metadata.Kinopoisk": "Kinopoisk"
+  ,"Metadata.Error.UnsupportedType": "Autofill currently supports movies, cartoons, series, animated series, and anime."
+  ,"Metadata.Error.TitleRequired": "Enter a title before searching."
+  ,"Metadata.Error.NotConfigured": "TMDB is not configured. Add your free API Read Access Token to metadata.json."
+  ,"Metadata.Status.Searching": "Searching TMDB..."
+  ,"Metadata.Status.NoResults": "No matching titles were found."
+  ,"Metadata.Status.Loading": "Loading title details and ratings..."
+  ,"Metadata.Error.SearchFailed": "Could not search for this title. Check the internet connection and TMDB token."
+  ,"Metadata.Error.LoadFailed": "Could not load the selected title."
+  ,"Metadata.TmdbAttribution": "This product uses the TMDB API but is not endorsed or certified by TMDB."
+  ,"Metadata.Action.Refresh": "Refresh online information and ratings"
+  ,"Metadata.Error.RefreshFailed": "Could not refresh online information. Check the internet connection and try again."
+  ,"Metadata.Error.CatalogNotConfigured": "This source is not configured yet. Add the required provider key to metadata.json."
+  ,"Metadata.CatalogAttribution": "Metadata may come from Google Books, Open Library, Comic Vine, or RAWG. Select a result to store its source link and attribution."
+  ,"Metadata.Source.Format": "Source: {0}"
+  ,"Metadata.Source.Unknown": "online catalog"
 }

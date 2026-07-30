@@ -5,43 +5,331 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
     x:DataType="viewModels:SettingsViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False"
     Title="{Binding PageTitle}">
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="16">
-            <VerticalStackLayout Spacing="4">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding AccountSectionTitle}" />
-                <Label Text="{Binding AccountDescription}" />
-            </VerticalStackLayout>
+    <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
+        <Grid
+            x:Name="TopBar"
+            Grid.Row="0"
+            Padding="18,7"
+            BackgroundColor="{DynamicResource PageBackground}"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="10">
+            <Button Grid.Column="1" Command="{Binding CreateMediaItemCommand}" Text="{Binding AddItemText}" />
+        </Grid>
 
-            <VerticalStackLayout Spacing="8">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding SyncSectionTitle}" />
-                <Label Text="{Binding SyncDescription}" />
-                <Label Text="{Binding StatusMessage}" />
-                <Button Command="{Binding SyncNowCommand}" Text="{Binding SyncNowButtonText}" />
-            </VerticalStackLayout>
+        <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
+            <VerticalStackLayout
+                x:Name="SettingsContent"
+                BackgroundColor="{DynamicResource PageBackground}"
+                Padding="0,24,0,30"
+                HorizontalOptions="Fill"
+                MaximumWidthRequest="584"
+                Spacing="24">
+                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="30" Text="{Binding PageTitle}" />
 
-            <VerticalStackLayout Spacing="8">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding ExportImportSectionTitle}" />
-                <HorizontalStackLayout Spacing="10">
-                    <Button Command="{Binding ExportCommand}" Text="{Binding ExportButtonText}" />
-                    <Button Command="{Binding ImportCommand}" Text="{Binding ImportButtonText}" />
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AppearanceSectionTitle}" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding ThemeSectionTitle}" />
+                                    <Label FontSize="12" Text="{Binding ThemeModeDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="1" FontAttributes="Bold" FontSize="13" Text="{Binding ThemeSwitchLabel}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                                <Switch Grid.Column="2" IsToggled="{Binding IsDarkTheme, Mode=TwoWay}" OnColor="{DynamicResource Primary}" ThumbColor="White" VerticalOptions="Center" />
+                            </Grid>
 
-            <VerticalStackLayout Spacing="4">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding ThemeSectionTitle}" />
-                <Label Text="{Binding ThemeDescription}" />
-            </VerticalStackLayout>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
 
-            <VerticalStackLayout Spacing="8">
-                <Label FontAttributes="Bold" FontSize="18" Text="{Binding LanguageSectionTitle}" />
-                <Label Text="{Binding LanguageDescription}" />
-                <Picker
-                    ItemDisplayBinding="{Binding DisplayName}"
-                    ItemsSource="{Binding LanguageOptions}"
-                    SelectedItem="{Binding SelectedLanguageOption}"
-                    Title="{Binding LanguageSectionTitle}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccentColorTitle}" />
+                                    <Label FontSize="12" Text="{Binding AccentColorDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <HorizontalStackLayout Grid.Column="1" Spacing="7" VerticalOptions="Center">
+                                    <Border BackgroundColor="#9D7FF4" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#9D7FF4" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#60A5FA" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#60A5FA" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#4ADE80" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#4ADE80" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#FBBF24" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#FBBF24" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#F07CB8" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#F07CB8" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                    <Border BackgroundColor="#E07C54" HeightRequest="36" StrokeThickness="0" StrokeShape="RoundRectangle 18" WidthRequest="36">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetAccentColorCommand}" CommandParameter="#E07C54" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                </HorizontalStackLayout>
+                            </Grid>
+
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+
+                            <VerticalStackLayout Padding="16" Spacing="10">
+                                <Label FontAttributes="Bold" FontSize="14" Text="{Binding GridDensityTitle}" />
+                                <Grid ColumnDefinitions="*,82" ColumnSpacing="12">
+                                    <Label Text="{Binding LibraryGridDensityLabel}" VerticalTextAlignment="Center" />
+                                    <Picker Grid.Column="1" ItemsSource="{Binding GridColumnOptions}" SelectedItem="{Binding LibraryGridColumnCount}" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,82" ColumnSpacing="12">
+                                    <Label Text="{Binding PeopleGridDensityLabel}" VerticalTextAlignment="Center" />
+                                    <Picker Grid.Column="1" ItemsSource="{Binding GridColumnOptions}" SelectedItem="{Binding PeopleGridColumnCount}" />
+                                </Grid>
+                            </VerticalStackLayout>
+
+                            <Label
+                                Padding="16,0,16,16"
+                                FontSize="12"
+                                Text="{Binding AppearanceStatusMessage}"
+                                TextColor="{DynamicResource MutedForeground}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding BackgroundSectionTitle}" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <VerticalStackLayout Padding="16" Spacing="10">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding CustomBackgroundTitle}" />
+                                    <Label FontSize="12" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding BackgroundImageDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <FlexLayout Direction="Row" JustifyContent="End" Wrap="Wrap">
+                                    <Button Margin="0,0,8,8" Command="{Binding PickBackgroundImageCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding ChooseBackgroundImageText}" />
+                                    <Button Margin="0,0,0,8" Command="{Binding ClearBackgroundImageCommand}" IsVisible="{Binding HasBackgroundImage}" Style="{StaticResource DangerButtonStyle}" Text="{Binding RemoveBackgroundText}" />
+                                </FlexLayout>
+                            </VerticalStackLayout>
+
+                            <BoxView HeightRequest="1" IsVisible="{Binding HasBackgroundImage}" Color="{DynamicResource Border}" />
+
+                            <Grid Padding="16" ColumnDefinitions="*,60" ColumnSpacing="14" IsVisible="{Binding HasBackgroundImage}">
+                                <VerticalStackLayout Grid.Column="0" Spacing="8">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding BackgroundBlurLabel}" />
+                                    <Slider Maximum="40" Minimum="0" Value="{Binding BackgroundBlur, Mode=TwoWay}" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="1" FontSize="14" HorizontalTextAlignment="End" Text="{Binding BackgroundBlurText}" TextColor="{DynamicResource MutedForeground}" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding AccountSectionTitle}" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid Padding="16" ColumnDefinitions="44,*,Auto" ColumnSpacing="12" IsVisible="{Binding IsSignedIn}">
+                                <Border BackgroundColor="#269D7FF4" HeightRequest="40" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40">
+                                    <Label FontSize="17" HorizontalTextAlignment="Center" Text="●" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSignedInLabel}" />
+                                    <Label FontSize="12" Text="{Binding SignedInEmail}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="2" Command="{Binding SignOutCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding SignOutButtonText}" VerticalOptions="Center" />
+                            </Grid>
+
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14" IsVisible="{Binding IsAccountFormVisible}">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSectionTitle}" />
+                                    <Label FontSize="12" Text="{Binding AccountDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding OpenSignInCommand}" Text="{Binding SignInButtonText}" VerticalOptions="Center" />
+                            </Grid>
+
+                            <VerticalStackLayout Padding="16" Spacing="4" IsVisible="{Binding IsAccountNotConfigured}">
+                                <Label FontAttributes="Bold" FontSize="14" Text="{Binding AccountSectionTitle}" />
+                                <Label FontSize="12" Text="{Binding AccountDescription}" TextColor="{DynamicResource Primary}" />
+                            </VerticalStackLayout>
+
+                            <Label Padding="16,0,16,16" FontSize="12" Text="{Binding AccountStatusMessage}" TextColor="{DynamicResource MutedForeground}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding SyncSectionTitle}" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                                <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding SyncSectionTitle}" />
+                                </VerticalStackLayout>
+                                <ActivityIndicator
+                                    Grid.Column="1"
+                                    Color="{DynamicResource Primary}"
+                                    IsRunning="{Binding IsSyncing}"
+                                    IsVisible="{Binding IsSyncing}"
+                                    VerticalOptions="Center" />
+                                <Button Grid.Column="2" Command="{Binding SyncNowCommand}" FontSize="12" IsEnabled="{Binding IsNotBusy}" MaximumWidthRequest="160" Padding="12,8" Text="{Binding SyncNowButtonText}" />
+                                <Label Grid.Row="1" Grid.ColumnSpan="3" FontSize="12" Text="{Binding SyncDescription}" TextColor="{DynamicResource Primary}" />
+                                <Label Grid.Row="2" Grid.ColumnSpan="3" FontSize="12" Text="{Binding StatusMessage}" TextColor="{DynamicResource MutedForeground}" />
+                                <Grid Grid.Row="3" Grid.ColumnSpan="3" ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding HasSyncProgress}">
+                                    <ProgressBar
+                                        HeightRequest="8"
+                                        Progress="{Binding SyncProgress}"
+                                        ProgressColor="{DynamicResource Primary}"
+                                        VerticalOptions="Center" />
+                                    <Label
+                                        Grid.Column="1"
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        Text="{Binding SyncProgressPercentText}"
+                                        TextColor="{DynamicResource Primary}"
+                                        VerticalTextAlignment="Center" />
+                                </Grid>
+                                <Label Grid.Row="4" Grid.ColumnSpan="3" FontSize="11" IsVisible="{Binding HasSyncProgress}" Text="{Binding SyncProgressEtaText}" TextColor="{DynamicResource MutedForeground}" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Google Drive" />
+                                    <Label FontSize="12" Text="{Binding DriveBackupDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                                    <ActivityIndicator Color="{DynamicResource Primary}" IsRunning="{Binding IsDriveBackupRunning}" IsVisible="{Binding IsDriveBackupRunning}" />
+                                    <ActivityIndicator Color="{DynamicResource Primary}" IsRunning="{Binding IsDriveRestoreRunning}" IsVisible="{Binding IsDriveRestoreRunning}" />
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" HorizontalOptions="End" Spacing="8">
+                                    <Button Command="{Binding BackupToDriveCommand}" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding DriveBackupButtonText}" />
+                                    <Button Command="{Binding RestoreFromDriveCommand}" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource SecondaryButtonStyle}" Text="{Binding DriveRestoreButtonText}" />
+                                </HorizontalStackLayout>
+                                <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding HasDriveProgress}">
+                                    <ProgressBar HeightRequest="8" Progress="{Binding DriveProgress}" ProgressColor="{DynamicResource Primary}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" FontAttributes="Bold" FontSize="12" Text="{Binding DriveProgressPercentText}" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                                </Grid>
+                                <Label Grid.Row="3" Grid.ColumnSpan="2" FontSize="11" IsVisible="{Binding HasDriveProgress}" Text="{Binding DriveProgressEtaText}" TextColor="{DynamicResource MutedForeground}" />
+                            </Grid>
+                            <Button
+                                Margin="16,0,16,16"
+                                Command="{Binding CancelCloudOperationCommand}"
+                                IsEnabled="{Binding CanCancelCloudOperation}"
+                                IsVisible="{Binding HasActiveCloudOperation}"
+                                Style="{StaticResource CriticalButtonStyle}"
+                                Text="{Binding CancelCloudOperationText}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding LibraryDataSectionTitle}" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding PeopleEditorTitle}" />
+                                    <Label FontSize="12" Text="{Binding PeopleEditorDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding OpenPeopleCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="&#x2192;" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding CategoryEditorTitle}" />
+                                    <Label FontSize="12" Text="{Binding CategoryEditorDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding OpenCategoriesCommand}" Style="{StaticResource SecondaryButtonStyle}" Text="&#x2192;" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding DataImportSectionTitle}" />
+                    <Border Padding="0" Style="{StaticResource CardBorderStyle}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding ExportButtonText}" />
+                                    <Label FontSize="12" Text="{Binding ExportDescriptionText}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding ExportCommand}" Style="{StaticResource LinkButtonStyle}" Text="›" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="{Binding ImportButtonText}" />
+                                    <Label FontSize="12" Text="{Binding ImportDescriptionText}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Command="{Binding ImportCommand}" Style="{StaticResource LinkButtonStyle}" Text="›" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" Opacity="0.55">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Letterboxd" />
+                                    <Label FontSize="12" Text="{Binding ImportLetterboxdDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="10" Text="{Binding ComingSoonText}" TextColor="{DynamicResource MutedForeground}" />
+                                </Border>
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" Opacity="0.55">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Goodreads" />
+                                    <Label FontSize="12" Text="{Binding ImportGoodreadsDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="10" Text="{Binding ComingSoonText}" TextColor="{DynamicResource MutedForeground}" />
+                                </Border>
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" Opacity="0.55">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="Steam" />
+                                    <Label FontSize="12" Text="{Binding ImportSteamDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="10" Text="{Binding ComingSoonText}" TextColor="{DynamicResource MutedForeground}" />
+                                </Border>
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{DynamicResource Border}" />
+                            <Grid Padding="16" ColumnDefinitions="*,Auto" Opacity="0.55">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label FontAttributes="Bold" FontSize="14" Text="MyAnimeList" />
+                                    <Label FontSize="12" Text="{Binding ImportMalDescription}" TextColor="{DynamicResource Primary}" />
+                                </VerticalStackLayout>
+                                <Border Grid.Column="1" Padding="8,3" BackgroundColor="{DynamicResource MutedSoft}" StrokeThickness="0" StrokeShape="RoundRectangle 9" VerticalOptions="Center">
+                                    <Label FontAttributes="Bold" FontSize="10" Text="{Binding ComingSoonText}" TextColor="{DynamicResource MutedForeground}" />
+                                </Border>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TinyCapsLabelStyle}" Text="{Binding LanguageSectionTitle}" />
+                    <Border Padding="16" Style="{StaticResource CardBorderStyle}">
+                        <Grid ColumnDefinitions="*,190" ColumnSpacing="14">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                <Label FontAttributes="Bold" FontSize="14" Text="{Binding LanguageSectionTitle}" />
+                                <Label FontSize="12" Text="{Binding LanguageDescription}" TextColor="{DynamicResource Primary}" />
+                            </VerticalStackLayout>
+                            <Picker Grid.Column="1" ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguageOption}" />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
             </VerticalStackLayout>
-        </VerticalStackLayout>
-    </ScrollView>
+        </ScrollView>
+    </Grid>
 </ContentPage>

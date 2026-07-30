@@ -22,7 +22,7 @@
         Description="PersonalCollectionShelf"
         Square150x150Logo="appicon.png"
         Square44x44Logo="appicon.png"
-        BackgroundColor="transparent" />
+        BackgroundColor="#201C2D" />
     </Application>
   </Applications>
 </Package>

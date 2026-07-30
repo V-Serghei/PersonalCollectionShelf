@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PersonalCollectionShelf.App.Pages.DashboardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:PersonalCollectionShelf.App.ViewModels"
+    xmlns:pages="clr-namespace:PersonalCollectionShelf.App.Pages"
+    x:DataType="viewModels:LibraryViewModel"
+    BackgroundColor="{DynamicResource PageBackground}"
+    Shell.NavBarIsVisible="False"
+    Title="{Binding DashboardTitle}">
+    <Grid BackgroundColor="{DynamicResource PageBackground}" RowDefinitions="52,*">
+        <Grid
+            x:Name="TopBar"
+            Grid.Row="0"
+            Padding="18,7"
+            BackgroundColor="{DynamicResource PageBackground}"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="10">
+            <Border Grid.Column="0" Padding="12,0" Style="{StaticResource MutedBorderStyle}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Label
+                        FontSize="15"
+                        Text="⌕"
+                        TextColor="{DynamicResource MutedForeground}"
+                        VerticalTextAlignment="Center" />
+                    <Entry
+                        Grid.Column="1"
+                        BackgroundColor="Transparent"
+                        Placeholder="{Binding SearchPlaceholder}"
+                        Text="{Binding SearchTerm}" />
+                    <Border
+                        Grid.Column="2"
+                        IsVisible="{OnIdiom Phone=False, Default=True}"
+                        Padding="6,2"
+                        BackgroundColor="{DynamicResource MutedSoft}"
+                        Stroke="{DynamicResource Border}"
+                        StrokeShape="RoundRectangle 4"
+                        StrokeThickness="1"
+                        VerticalOptions="Center">
+                        <Label FontSize="10" Text="Ctrl K" TextColor="{DynamicResource MutedForeground}" />
+                    </Border>
+                </Grid>
+            </Border>
+            <Button
+                Grid.Column="1"
+                Command="{Binding CreateMediaItemCommand}"
+                Text="{Binding AddButtonText}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1" BackgroundColor="{DynamicResource PageBackground}">
+            <VerticalStackLayout
+                x:Name="DashboardContent"
+                BackgroundColor="{DynamicResource PageBackground}"
+                Padding="0,24,0,30"
+                HorizontalOptions="Fill"
+                MaximumWidthRequest="920"
+                Spacing="28">
+                <VerticalStackLayout Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        FontFamily="Cambria"
+                        FontSize="30"
+                        Text="{Binding DashboardTitle}" />
+                    <Label
+                        FontSize="14"
+                        Text="{Binding DashboardSubtitle}"
+                        TextColor="{DynamicResource Primary}" />
+                </VerticalStackLayout>
+
+                <Grid x:Name="StatsGrid" ColumnDefinitions="*,*,*,*" ColumnSpacing="10">
+                    <Border x:Name="TotalItemsCard" Grid.Column="0" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenLibraryCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid RowDefinitions="Auto,*" RowSpacing="7">
+                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding TotalItemsLabel}" TextColor="{DynamicResource Primary}" />
+                            <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
+                                <Border BackgroundColor="#269D7FF4" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
+                                    <Label FontAttributes="Bold" FontSize="11" HorizontalTextAlignment="Center" Text="Σ" TextColor="{DynamicResource Primary}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding TotalItemCount}" VerticalTextAlignment="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
+                    <Border x:Name="CompletedItemsCard" Grid.Column="1" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenCompletedCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid RowDefinitions="Auto,*" RowSpacing="7">
+                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding CompletedItemsLabel}" TextColor="{DynamicResource Primary}" />
+                            <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
+                                <Border BackgroundColor="#224ADE80" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
+                                    <Label FontSize="13" HorizontalTextAlignment="Center" Text="✓" TextColor="{StaticResource Success}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding CompletedItemCount}" VerticalTextAlignment="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
+                    <Border x:Name="InProgressItemsCard" Grid.Column="2" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenInProgressCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid RowDefinitions="Auto,*" RowSpacing="7">
+                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding InProgressItemsLabel}" TextColor="{DynamicResource Primary}" />
+                            <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
+                                <Border BackgroundColor="#2260A5FA" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
+                                    <Label FontSize="11" HorizontalTextAlignment="Center" Text="▶" TextColor="{StaticResource Info}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding InProgressItemCount}" VerticalTextAlignment="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
+                    <Border x:Name="WishlistItemsCard" Grid.Column="3" Padding="12,9" HeightRequest="78" Style="{StaticResource CardBorderStyle}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenPlannedCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid RowDefinitions="Auto,*" RowSpacing="7">
+                            <Label FontAttributes="Bold" FontSize="10" Text="{Binding WishlistItemsLabel}" TextColor="{DynamicResource Primary}" />
+                            <HorizontalStackLayout Grid.Row="1" Spacing="8" VerticalOptions="Center">
+                                <Border BackgroundColor="#22FBBF24" HeightRequest="24" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="24">
+                                    <Label FontSize="15" HorizontalTextAlignment="Center" Text="☆" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
+                                </Border>
+                                <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="24" Text="{Binding WishlistItemCount}" VerticalTextAlignment="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding ContinueSectionTitle}" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding OpenLibraryCommand}"
+                            Style="{StaticResource LinkButtonStyle}"
+                            Text="{Binding SeeAllText}" />
+                    </Grid>
+                    <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding InProgressItems}" SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout ItemSpacing="12" Orientation="Horizontal" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
+                                <VerticalStackLayout Spacing="8" WidthRequest="108">
+                                    <VerticalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:DashboardPage}}, Path=ViewModel.OpenMediaItemCommand, x:DataType={x:Type pages:DashboardPage}}" CommandParameter="{Binding .}" />
+                                    </VerticalStackLayout.GestureRecognizers>
+                                    <Border BackgroundColor="{DynamicResource Muted}" HeightRequest="154" StrokeThickness="0" StrokeShape="RoundRectangle 8" WidthRequest="108">
+                                        <Grid>
+                                            <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                                            <Label FontAttributes="Bold" FontSize="36" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+                                    <Label FontAttributes="Bold" FontSize="12" LineBreakMode="TailTruncation" MaxLines="2" Text="{Binding Title}" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding RecentlyAddedSectionTitle}" />
+                        <Button Grid.Column="1" Command="{Binding OpenLibraryCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding SeeAllText}" />
+                    </Grid>
+                    <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding RecentItems}" SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout ItemSpacing="12" Orientation="Horizontal" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
+                                <Border Padding="0" Style="{StaticResource CardBorderStyle}" WidthRequest="124">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:DashboardPage}}, Path=ViewModel.OpenMediaItemCommand, x:DataType={x:Type pages:DashboardPage}}" CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid RowDefinitions="186,Auto">
+                                        <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                                        <Label FontAttributes="Bold" FontSize="38" HorizontalTextAlignment="Center" IsVisible="{Binding HasNoCoverUrl}" Text="{Binding Initial}" TextColor="{DynamicResource MutedForeground}" VerticalTextAlignment="Center" />
+                                        <Grid Grid.Row="1" Padding="10" RowDefinitions="Auto,Auto">
+                                            <Label FontAttributes="Bold" FontSize="12" LineBreakMode="TailTruncation" Text="{Binding Title}" />
+                                            <Label Grid.Row="1" FontSize="11" Text="{Binding ReleaseYearText}" TextColor="{DynamicResource MutedForeground}" />
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding FavoritesSectionTitle}" />
+                        <Label Grid.Column="1" FontSize="18" Text="♥" TextColor="#F07CB8" />
+                    </Grid>
+                    <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding FavoriteItems}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:MediaItemListItemViewModel">
+                                <Grid Padding="16,10" ColumnDefinitions="48,*,Auto,Auto" ColumnSpacing="12">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:DashboardPage}}, Path=ViewModel.OpenMediaItemCommand, x:DataType={x:Type pages:DashboardPage}}" CommandParameter="{Binding .}" />
+                                    </Grid.GestureRecognizers>
+                                    <Border BackgroundColor="{DynamicResource Muted}" HeightRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 12" WidthRequest="48">
+                                        <Image Aspect="AspectFill" IsVisible="{Binding HasCoverUrl}" Source="{Binding CoverUrl}" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label FontAttributes="Bold" FontSize="14" Text="{Binding Title}" />
+                                        <Label FontSize="12" Text="{Binding Metadata}" TextColor="{DynamicResource Primary}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" FontAttributes="Bold" Text="{Binding RatingShort}" TextColor="{StaticResource Warning}" VerticalTextAlignment="Center" />
+                                    <Border Grid.Column="3" Padding="8,3" BackgroundColor="{Binding StatusBackgroundColor}" Stroke="{Binding StatusForegroundColor}" StrokeShape="RoundRectangle 10" StrokeThickness="1" VerticalOptions="Center">
+                                        <Label FontAttributes="Bold" FontSize="10" Text="{Binding StatusLabel}" TextColor="{Binding StatusForegroundColor}" />
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label FontAttributes="Bold" FontFamily="Cambria" FontSize="20" Text="{Binding CategoryOverviewTitle}" />
+                        <Button Grid.Column="1" Command="{Binding OpenStatisticsCommand}" Style="{StaticResource LinkButtonStyle}" Text="{Binding FullStatsText}" />
+                    </Grid>
+                    <CollectionView BackgroundColor="{DynamicResource PageBackground}" ItemsSource="{Binding CategorySummaries}" SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout x:Name="CategoryGridLayout" HorizontalItemSpacing="12" Orientation="Vertical" Span="3" VerticalItemSpacing="12" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:CategorySummaryViewModel">
+                                <Border Padding="16" Style="{StaticResource CardBorderStyle}">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type pages:DashboardPage}}, Path=ViewModel.OpenCategoryCommand, x:DataType={x:Type pages:DashboardPage}}" CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="42,*" ColumnSpacing="12">
+                                        <Border BackgroundColor="{Binding Color}" HeightRequest="34" StrokeThickness="0" StrokeShape="RoundRectangle 17" WidthRequest="34">
+                                            <Label FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="Center" Text="&#x2022;" TextColor="White" VerticalTextAlignment="Center" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label FontAttributes="Bold" FontSize="14" Text="{Binding Label}" />
+                                            <Label FontSize="11" Text="{Binding CountText}" TextColor="{DynamicResource Primary}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Grid
+            Grid.RowSpan="2"
+            BackgroundColor="#66000000"
+            IsVisible="{Binding ShowMediaItemLoading}"
+            ZIndex="100">
+            <Border
+                Padding="22"
+                BackgroundColor="{DynamicResource Card}"
+                HorizontalOptions="Center"
+                Stroke="{DynamicResource Border}"
+                StrokeShape="RoundRectangle 14"
+                VerticalOptions="Center">
+                <ActivityIndicator Color="{DynamicResource Primary}" IsRunning="{Binding ShowMediaItemLoading}" />
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>
