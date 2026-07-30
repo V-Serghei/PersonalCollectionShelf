@@ -63,11 +63,14 @@ internal static class AndroidNativeCatalogRenderer
         recyclerView.SetItemAnimator(null);
         recyclerView.HasFixedSize = true;
         recyclerView.NestedScrollingEnabled = true;
-        recyclerView.SetItemViewCacheSize(32);
-        recyclerView.GetRecycledViewPool().SetMaxRecycledViews(0, 48);
-        recyclerView.SetLayoutManager(grid
-            ? new GridLayoutManager(recyclerView.Context, Math.Clamp(span, 1, 4))
-            : new LinearLayoutManager(recyclerView.Context));
+        recyclerView.SetItemViewCacheSize(96);
+        recyclerView.GetRecycledViewPool().SetMaxRecycledViews(0, 96);
+        var layoutManager = grid
+            ? (LinearLayoutManager)new NativeBufferedGridLayoutManager(recyclerView.Context!, Math.Clamp(span, 1, 4))
+            : new NativeBufferedLinearLayoutManager(recyclerView.Context!);
+        layoutManager.ItemPrefetchEnabled = true;
+        layoutManager.InitialPrefetchItemCount = 64;
+        recyclerView.SetLayoutManager(layoutManager);
     }
 
     internal sealed class NativeCatalogBinding<T> : IDisposable where T : class
@@ -196,7 +199,8 @@ internal static class AndroidNativeCatalogRenderer
                 ? (_span >= 3 ? $"{item.StatusIcon}  {item.ReleaseYearText}" : $"{item.StatusLabel}  ·  {item.CategoryLine}")
                 : $"{item.CategoryLine}  ·  {item.StatusLabel}";
             _trailing.Text = item.HasRating ? $"★ {item.RatingShort}" : item.ReleaseYearText;
-            BindImage(_image, _placeholder, item.OriginalCoverUrl, item.Initial, key => _imageKey = key, () => _imageKey);
+            var imageSource = string.IsNullOrWhiteSpace(item.CoverUrl) ? item.OriginalCoverUrl : item.CoverUrl;
+            BindImage(_image, _placeholder, imageSource, item.Initial, key => _imageKey = key, () => _imageKey);
         }
 
         private static AView CreateRoot(
@@ -277,7 +281,8 @@ internal static class AndroidNativeCatalogRenderer
             _name.Text = item.Name;
             _details.Text = _grid ? item.RoleSummary : $"{item.RoleSummary}\n{item.TopWorksSummary}";
             _rating.Text = item.HasRating ? $"★ {item.AverageRatingText}  ·  {item.WorkCountText}" : item.WorkCountText;
-            BindImage(_image, _placeholder, item.OriginalPhotoPath, item.Initial, key => _imageKey = key, () => _imageKey);
+            var imageSource = string.IsNullOrWhiteSpace(item.PhotoPath) ? item.OriginalPhotoPath : item.PhotoPath;
+            BindImage(_image, _placeholder, imageSource, item.Initial, key => _imageKey = key, () => _imageKey);
         }
 
         private static AView CreateRoot(
@@ -371,6 +376,29 @@ internal static class AndroidNativeCatalogRenderer
         drawable.SetCornerRadius(Dp(context, radius));
         if (stroke != AColor.Transparent) drawable.SetStroke(Dp(context, 1), stroke);
         return drawable;
+    }
+
+    private sealed class NativeBufferedGridLayoutManager(Android.Content.Context context, int span)
+        : GridLayoutManager(context, span)
+    {
+        protected override void CalculateExtraLayoutSpace(RecyclerView.State? state, int[]? extraLayoutSpace) =>
+            FillExtraLayoutSpace(this, extraLayoutSpace);
+    }
+
+    private sealed class NativeBufferedLinearLayoutManager(Android.Content.Context context)
+        : LinearLayoutManager(context)
+    {
+        protected override void CalculateExtraLayoutSpace(RecyclerView.State? state, int[]? extraLayoutSpace) =>
+            FillExtraLayoutSpace(this, extraLayoutSpace);
+    }
+
+    private static void FillExtraLayoutSpace(RecyclerView.LayoutManager manager, int[]? extraLayoutSpace)
+    {
+        if (extraLayoutSpace is null || extraLayoutSpace.Length < 2) return;
+        var viewport = manager.CanScrollVertically() ? manager.Height : manager.Width;
+        var bufferedSpace = Math.Max(viewport, 1) * 5;
+        extraLayoutSpace[0] = bufferedSpace;
+        extraLayoutSpace[1] = bufferedSpace;
     }
 
     private static int Dp(Android.Content.Context context, int value) =>
